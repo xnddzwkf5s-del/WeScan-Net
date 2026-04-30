@@ -87,6 +87,18 @@
       </div>
       <div class="text-sm text-gray-400 mt-1">SMTP passwords set</div>
     </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-5">
+      <div class="text-3xl font-bold {% if stats.blocked_today > 0 %}text-red-500{% else %}text-gray-300{% endif %}">
+        {{ stats.blocked_today }}
+      </div>
+      <div class="text-sm text-gray-400 mt-1">Blocked today</div>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-5">
+      <div class="text-3xl font-bold {% if stats.blocked_30d > 0 %}text-orange-400{% else %}text-gray-300{% endif %}">
+        {{ stats.blocked_30d }}
+      </div>
+      <div class="text-sm text-gray-400 mt-1">Blocked (30 days)</div>
+    </div>
   </div>
 
   <!-- Users section -->

@@ -59,6 +59,16 @@ class OTPToken(db.Model):
             datetime.utcnow() < self.expires_at
         )
 
+class BlockedEmail(db.Model):
+    """Lightweight record of a blocked/rejected delivery attempt.
+    No email content is stored — only metadata for admin stats."""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # null if unknown sender
+    smtp_username = db.Column(db.String(50))   # who tried to send
+    attempted_recipient = db.Column(db.String(120))  # where they tried to send
+    reason = db.Column(db.String(50), default='not_whitelisted')  # not_whitelisted | unknown_user
+    blocked_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
 class Plan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20))

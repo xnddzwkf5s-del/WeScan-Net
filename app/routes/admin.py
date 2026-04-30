@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, abort, flash
 from flask_login import login_required, current_user
-from app.models import db, User, UsageStat, Recipient
+from app.models import db, User, UsageStat, Recipient, BlockedEmail
 from datetime import datetime, timedelta
 from sqlalchemy import func
 
@@ -63,6 +63,8 @@ def index():
         'emails_30d':       UsageStat.query.filter(UsageStat.sent_at > cutoff_30d).count(),
         'total_recipients': Recipient.query.filter_by(is_active=True).count(),
         'smtp_active':      User.query.filter(User.smtp_password_hash.isnot(None)).count(),
+        'blocked_today':    BlockedEmail.query.filter(BlockedEmail.blocked_at > cutoff_1d).count(),
+        'blocked_30d':      BlockedEmail.query.filter(BlockedEmail.blocked_at > cutoff_30d).count(),
     }
 
     return render_template('admin/index.html', users=users, stats=stats)
