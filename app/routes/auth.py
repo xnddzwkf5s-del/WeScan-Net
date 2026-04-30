@@ -55,7 +55,7 @@ def login_page():
 
 @auth.route('/login/<provider>')
 def oauth_login(provider):
-    if provider not in ['google', 'microsoft', 'apple']:
+    if provider not in ['google', 'microsoft']:
         return 'Invalid OAuth provider', 400
     if not os.getenv('GOOGLE_CLIENT_ID'):
         return redirect('/signup.html?error=oauth_not_configured')
