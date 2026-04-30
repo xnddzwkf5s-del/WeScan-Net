@@ -16,6 +16,31 @@
   {% endif %}
   {% endwith %}
 
+  <!-- ── Trial banner ───────────────────────────────────────────── -->
+  {% if trial_days_left is not none %}
+  <div style="margin-bottom:20px;padding:16px 20px;background:#f0fff4;border:1px solid #9ae6b4;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <span style="font-size:14px;font-weight:700;color:#276749;">🎉 Enterprise Trial — {{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }} remaining</span>
+      <span style="font-size:13px;color:#48bb78;margin-left:8px;">You have full Enterprise access until your trial ends.</span>
+    </div>
+    <button onclick="document.getElementById('upgrade-section').scrollIntoView({behavior:'smooth'})"
+      style="background:#276749;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;margin-left:16px;">
+      Upgrade now
+    </button>
+  </div>
+  {% elif trial_expired %}
+  <div style="margin-bottom:20px;padding:16px 20px;background:#fffbeb;border:1px solid #f6e05e;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <span style="font-size:14px;font-weight:700;color:#7b6002;">⚠️ Your trial has ended</span>
+      <span style="font-size:13px;color:#975a16;margin-left:8px;">You've been moved to the free plan. Upgrade to regain Enterprise access.</span>
+    </div>
+    <button onclick="document.getElementById('upgrade-section').scrollIntoView({behavior:'smooth'})"
+      style="background:#d69e2e;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;margin-left:16px;">
+      Upgrade
+    </button>
+  </div>
+  {% endif %}
+
   <!-- Page header -->
   <div style="margin-bottom:28px;">
     <h1 style="margin:0 0 4px;font-size:22px;font-weight:700;color:#111;">Dashboard</h1>
@@ -189,6 +214,42 @@
   </div>
   {% endif %}
 
+  <!-- ── Upgrade section ──────────────────────────────────────── -->
+  {% if user.plan != 'enterprise' or trial_days_left is not none or trial_expired %}
+  <div id="upgrade-section" style="background:#000;color:#fff;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <h2 style="margin:0 0 6px;font-size:16px;font-weight:700;">Upgrade to Enterprise</h2>
+    <p style="margin:0 0 20px;font-size:13px;color:#aaa;">100 recipients &middot; 25 MB files &middot; Unlimited emails &middot; Priority support</p>
+
+    <div style="margin-bottom:16px;">
+      <p style="font-size:12px;font-weight:500;color:#aaa;margin:0 0 10px;">SELECT CURRENCY</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <label style="cursor:pointer;">
+          <input type="radio" name="currency" value="aud" checked style="display:none;" onchange="updatePrice(this)">
+          <span class="currency-btn" data-val="aud" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#fff;color:#000;">AUD $30</span>
+        </label>
+        <label style="cursor:pointer;">
+          <input type="radio" name="currency" value="usd" style="display:none;" onchange="updatePrice(this)">
+          <span class="currency-btn" data-val="usd" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#333;color:#fff;">USD $22</span>
+        </label>
+        <label style="cursor:pointer;">
+          <input type="radio" name="currency" value="eur" style="display:none;" onchange="updatePrice(this)">
+          <span class="currency-btn" data-val="eur" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#333;color:#fff;">EUR €19</span>
+        </label>
+        <label style="cursor:pointer;">
+          <input type="radio" name="currency" value="gbp" style="display:none;" onchange="updatePrice(this)">
+          <span class="currency-btn" data-val="gbp" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#333;color:#fff;">GBP £16</span>
+        </label>
+      </div>
+    </div>
+
+    <button onclick="startCheckout()" id="checkout-btn"
+      style="background:#fff;color:#000;border:none;border-radius:8px;padding:12px 28px;font-size:14px;font-weight:600;cursor:pointer;">
+      Upgrade — AUD $30/month
+    </button>
+    <p style="margin:10px 0 0;font-size:12px;color:#666;">Secure checkout via Stripe. Cancel anytime.</p>
+  </div>
+  {% endif %}
+
 </div>
 </div>
 
@@ -219,6 +280,39 @@ function copyField(btn) {
   const orig = btn.textContent;
   btn.textContent = 'Copied!';
   setTimeout(() => btn.textContent = orig, 1500);
+}
+
+const priceLabels = { aud: 'AUD $30', usd: 'USD $22', eur: 'EUR €19', gbp: 'GBP £16' };
+
+function updatePrice(radio) {
+  document.querySelectorAll('.currency-btn').forEach(btn => {
+    const active = btn.dataset.val === radio.value;
+    btn.style.background = active ? '#fff' : '#333';
+    btn.style.color = active ? '#000' : '#fff';
+  });
+  const btn = document.getElementById('checkout-btn');
+  if (btn) btn.textContent = `Upgrade — ${priceLabels[radio.value]}/month`;
+}
+
+async function startCheckout() {
+  const btn = document.getElementById('checkout-btn');
+  const currency = document.querySelector('input[name="currency"]:checked')?.value || 'aud';
+  btn.textContent = 'Redirecting…';
+  btn.disabled = true;
+  try {
+    const resp = await fetch('/create-checkout-session', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: `currency=${currency}`
+    });
+    const data = await resp.json();
+    if (data.url) window.location.href = data.url;
+    else throw new Error(data.error || 'Unknown error');
+  } catch(e) {
+    alert('Checkout failed: ' + e.message);
+    btn.textContent = `Upgrade — ${priceLabels[currency]}/month`;
+    btn.disabled = false;
+  }
 }
 </script>
 {% endblock %}

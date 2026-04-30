@@ -44,11 +44,14 @@
 
       <!-- Sign Up Card -->
       <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100" data-aos="fade-up" data-aos-delay="100">
-        <h2 class="text-2xl font-semibold mb-6">Create your account</h2>
+        <div id="trial-badge" style="display:none;" class="mb-4 px-4 py-2 bg-green-50 border border-green-200 rounded-full text-sm text-green-700 text-center font-medium">
+          🎉 14-Day Enterprise Trial — No credit card required
+        </div>
+        <h2 id="signup-heading" class="text-2xl font-semibold mb-6">Create your account</h2>
 
         <!-- OAuth Buttons -->
         <div class="space-y-4 mb-8">
-          <button onclick="window.location.href='/login/google'"
+          <button onclick="oauthLogin('google')"
                   class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
             <!-- Google SVG logo -->
             <svg class="h-5 w-5 mr-2" viewBox="0 0 24 24">
@@ -60,7 +63,7 @@
             Continue with Google
           </button>
 
-          <button onclick="window.location.href='/login/microsoft'"
+          <button onclick="oauthLogin('microsoft')"
                   class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
             <!-- Microsoft SVG logo -->
             <svg class="h-5 w-5 mr-2" viewBox="0 0 21 21">
@@ -85,6 +88,7 @@
 
         <!-- Email Form -->
         <form action="/api/auth/signup" method="POST" class="space-y-4" id="signup-form">
+          <input type="hidden" name="plan" id="plan-input" value="free">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
               Work email
@@ -128,8 +132,20 @@
   <script>
     AOS.init({ duration: 800, offset: 100, once: true });
 
-    // Show error banner from query param
+    // Plan intent from query param
     const params = new URLSearchParams(window.location.search);
+    const plan = params.get('plan') || 'free';
+    document.getElementById('plan-input').value = plan;
+    if (plan === 'enterprise-trial') {
+      document.getElementById('trial-badge').style.display = 'block';
+      document.getElementById('signup-heading').textContent = 'Start Your 14-Day Enterprise Trial';
+    }
+
+    function oauthLogin(provider) {
+      window.location.href = `/login/${provider}?plan=${plan}`;
+    }
+
+    // Show error banner from query param
     const err = params.get('error');
     if (err) {
       const msgs = {

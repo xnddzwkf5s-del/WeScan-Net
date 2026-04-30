@@ -40,12 +40,24 @@ def index():
         .filter(BlockedEmail.blocked_at > cutoff_30d)\
         .order_by(BlockedEmail.blocked_at.desc()).limit(10).all()
 
+    # Trial state
+    trial_days_left = None
+    trial_expired = False
+    if current_user.trial_end:
+        delta = (current_user.trial_end - now).days
+        if delta >= 0:
+            trial_days_left = delta
+        else:
+            trial_expired = True
+
     return render_template('dashboard/index.html',
         user=current_user,
         recipients=recipients,
         usage=usage,
         stats=stats,
-        blocked_recent=blocked_recent
+        blocked_recent=blocked_recent,
+        trial_days_left=trial_days_left,
+        trial_expired=trial_expired
     )
 
 @dashboard.route('/dashboard/smtp/generate', methods=['POST'])

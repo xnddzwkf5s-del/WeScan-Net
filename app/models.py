@@ -16,6 +16,7 @@ class User(UserMixin, db.Model):
     plan = db.Column(db.String(20), default='free')
     stripe_customer_id = db.Column(db.String(100))
     stripe_subscription_id = db.Column(db.String(100))
+    trial_end = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

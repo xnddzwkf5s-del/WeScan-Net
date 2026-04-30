@@ -3,8 +3,24 @@ from flask_login import login_user, logout_user, login_required, current_user
 from authlib.integrations.flask_client import OAuth
 from app.models import db, User, OTPToken
 from app.email import send_otp_email, send_welcome_email
+from datetime import datetime, timedelta
 import os
 import requests as http_requests
+
+
+def _apply_trial_if_requested(user, plan):
+    """If plan is enterprise-trial and user is new (free), grant 14-day trial."""
+    if plan == 'enterprise-trial' and user.trial_end is None and user.plan == 'free':
+        user.plan = 'enterprise'
+        user.trial_end = datetime.utcnow() + timedelta(days=14)
+
+
+def _expire_trial_if_due(user):
+    """Downgrade user if trial has expired."""
+    if user.trial_end and datetime.utcnow() > user.trial_end:
+        user.plan = 'free'
+        user.trial_end = None
+        db.session.commit()
 
 
 def verify_turnstile(token):
@@ -68,13 +84,14 @@ def oauth_login(provider):
         return 'Invalid OAuth provider', 400
     if not os.getenv(f'{provider.upper()}_CLIENT_ID'):
         return redirect('/signup.html?error=oauth_not_configured')
-    return oauth.create_client(provider).authorize_redirect(
-        redirect_uri=url_for('auth.oauth_callback', provider=provider, _external=True)
-    )
+    plan = request.args.get('plan', 'free')
+    callback_url = url_for('auth.oauth_callback', provider=provider, plan=plan, _external=True)
+    return oauth.create_client(provider).authorize_redirect(redirect_uri=callback_url)
 
 
 @auth.route('/auth/callback/<provider>')
 def oauth_callback(provider):
+    plan = request.args.get('plan', 'free')
     if provider == 'microsoft':
         # Manual Microsoft OAuth: exchange code for token, then call Graph API
         code = request.args.get('code')
@@ -137,6 +154,7 @@ def oauth_callback(provider):
             )
             db.session.add(user)
             db.session.flush()
+            _apply_trial_if_requested(user, plan)
             db.session.commit()
             try:
                 send_welcome_email(user.email, user.smtp_username)
@@ -145,6 +163,7 @@ def oauth_callback(provider):
             login_user(user)
             return redirect(url_for('dashboard.index'))
 
+    _expire_trial_if_due(user)
     db.session.commit()
     login_user(user)
     return redirect(url_for('dashboard.index'))
@@ -160,6 +179,7 @@ def email_signup():
         return redirect('/signup.html?error=captcha_failed')
 
     email = request.form.get('email', '').strip().lower()
+    plan = request.form.get('plan', 'free')
     if not email:
         return redirect('/signup.html?error=missing_email')
 
@@ -177,7 +197,7 @@ def email_signup():
         db.session.commit()
         return redirect(f'/signup.html?error=email_failed')
 
-    return redirect(f'/verify.html?email={email}')
+    return redirect(f'/verify.html?email={email}&plan={plan}')
 
 
 @auth.route('/api/auth/verify', methods=['POST'])
@@ -189,6 +209,7 @@ def email_verify():
 
     email = request.form.get('email', '').strip().lower()
     code = request.form.get('code', '').strip()
+    plan = request.form.get('plan', 'free')
 
     if not email or not code:
         return redirect(f'/verify.html?email={email}&error=missing')
@@ -211,7 +232,11 @@ def email_verify():
             plan='free'
         )
         db.session.add(user)
+        db.session.flush()
+        _apply_trial_if_requested(user, plan)
         is_new_user = True
+    else:
+        _expire_trial_if_due(user)
 
     db.session.commit()
     login_user(user)
@@ -220,7 +245,7 @@ def email_verify():
         try:
             send_welcome_email(user.email, user.smtp_username)
         except Exception:
-            pass  # Don't block login if welcome email fails
+            pass
 
     return redirect(url_for('dashboard.index'))
 
