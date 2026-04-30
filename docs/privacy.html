@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Privacy Policy - WeScan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-white">
+
+  <!-- Navigation -->
+  <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex justify-between h-20">
+        <div class="flex items-center">
+          <a href="index.html" class="text-2xl font-light tracking-tight">
+            We<span class="font-semibold">Scan</span>
+          </a>
+        </div>
+        <div class="flex items-center space-x-8">
+          <a href="index.html#features" class="text-sm text-gray-600 hover:text-black transition-colors">Features</a>
+          <a href="index.html#pricing" class="text-sm text-gray-600 hover:text-black transition-colors">Pricing</a>
+          <a href="setup-guide.html" class="text-sm text-gray-600 hover:text-black transition-colors">Setup Guide</a>
+          <a href="signup.html" class="text-sm text-gray-600 hover:text-black transition-colors">Sign In</a>
+          <a href="signup.html" class="text-sm px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
+            Start Free
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="pt-32 pb-24 px-6">
+    <div class="max-w-3xl mx-auto">
+
+      <h1 class="text-4xl font-light tracking-tight text-gray-900 mb-4">Privacy Policy</h1>
+      <p class="text-gray-400 text-sm mb-12">Last updated: April 2026</p>
+
+      <div class="prose prose-gray max-w-none space-y-8 text-gray-600 leading-relaxed">
+
+        <p>
+          WeScan ("we", "our", "us") provides a scan-to-email relay service. This policy explains
+          what data we collect, why we collect it, and what we do with it.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">1. What We Collect</h2>
+
+        <h3 class="font-medium text-gray-900 mt-6">Account Information</h3>
+        <p>
+          When you sign up, we collect your email address and a generated SMTP username.
+          If you use OAuth (Google, Microsoft, Apple), we receive the email address associated
+          with that account.
+        </p>
+
+        <h3 class="font-medium text-gray-900 mt-6">Recipient Information</h3>
+        <p>
+          Email addresses you add to your recipient whitelist are stored so we can verify
+          and relay scanned documents to those addresses.
+        </p>
+
+        <h3 class="font-medium text-gray-900 mt-6">Email Metadata</h3>
+        <p>
+          We temporarily log sender, recipient, subject line, timestamp, and size for
+          operational purposes (delivery tracking, rate limiting, abuse prevention).
+          These logs are retained for 30 days then automatically purged.
+        </p>
+
+        <h3 class="font-medium text-gray-900 mt-6">Email Content</h3>
+        <p>
+          WeScan acts as a relay — scanned document emails pass through our servers but
+          are not stored or inspected beyond what is technically necessary for delivery.
+          We do not read, store, or analyse the content of your scanned documents.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">2. What We Don't Collect</h2>
+        <p>
+          We do not collect browsing history, behavioural tracking data, personal identifiers
+          beyond your email, or any information from devices other than what is needed to
+          provide the SMTP relay service. We do not use cookies for tracking purposes.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">3. How We Use Your Data</h2>
+        <ul class="list-disc pl-6 space-y-2">
+          <li>To operate and maintain the SMTP relay service</li>
+          <li>To authenticate your printer when it connects to our servers</li>
+          <li>To send you service-related emails (welcome, password changes, invoices)</li>
+          <li>To enforce rate limits and detect abuse</li>
+          <li>To improve service reliability and troubleshoot issues</li>
+        </ul>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">4. Data Sharing</h2>
+        <p>
+          We do not sell your personal information. We may share data with:
+        </p>
+        <ul class="list-disc pl-6 space-y-2">
+          <li><strong>Mailgun</strong> — used to deliver transactional emails (OTP codes, welcome emails)</li>
+          <li><strong>Cloudflare</strong> — used for Turnstile bot protection and CDN</li>
+          <li><strong>Stripe</strong> — if you purchase an Enterprise plan, payment is processed by Stripe.
+              We do not store credit card information</li>
+        </ul>
+        <p>
+          These providers are contractually bound to use your data only for the purposes
+          of providing their services to us.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">5. Data Retention</h2>
+        <ul class="list-disc pl-6 space-y-2">
+          <li>Account data: retained while your account is active, plus 90 days after deletion</li>
+          <li>Email logs: automatically deleted after 30 days</li>
+          <li>Blocked/denied email records: retained for 30 days for abuse monitoring</li>
+          <li>Payment records: retained as required by Australian tax law (7 years)</li>
+        </ul>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">6. Security</h2>
+        <p>
+          All SMTP connections require STARTTLS encryption. Passwords are hashed and never
+          stored in plaintext. SMTP credentials are generated server-side and shown once.
+          Our infrastructure is hosted in Sydney, Australia (DigitalOcean data centre SYD1).
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">7. Your Rights</h2>
+        <p>
+          If you are in Australia (or the EU/UK), you have the right to:
+        </p>
+        <ul class="list-disc pl-6 space-y-2">
+          <li>Access the personal data we hold about you</li>
+          <li>Request correction or deletion of your data</li>
+          <li>Export your data in a portable format</li>
+          <li>Withdraw consent (where processing is based on consent)</li>
+        </ul>
+        <p>
+          To exercise these rights, email us at <a href="mailto:support@wescan.net" class="text-black underline">support@wescan.net</a>.
+          We will respond within 30 days.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">8. Changes to This Policy</h2>
+        <p>
+          We may update this policy from time to time. Material changes will be notified
+          via email. Continued use of the service after changes take effect constitutes
+          acceptance of the updated policy.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">9. Contact</h2>
+        <p>
+          WeScan is operated from Sydney, Australia.<br>
+          Email: <a href="mailto:support@wescan.net" class="text-black underline">support@wescan.net</a>
+        </p>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-100 py-12">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid md:grid-cols-4 gap-8">
+        <div>
+          <a href="index.html" class="text-2xl font-light tracking-tight">
+            We<span class="font-semibold">Scan</span>
+          </a>
+          <p class="mt-4 text-sm text-gray-500">
+            Professional scan-to-email solution for businesses and individuals.
+          </p>
+        </div>
+        <div>
+          <h4 class="font-medium mb-4">Product</h4>
+          <ul class="space-y-2 text-sm text-gray-500">
+            <li><a href="index.html#features" class="hover:text-black transition-colors">Features</a></li>
+            <li><a href="index.html#pricing" class="hover:text-black transition-colors">Pricing</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium mb-4">Support</h4>
+          <ul class="space-y-2 text-sm text-gray-500">
+            <li><a href="setup-guide.html" class="hover:text-black transition-colors">Setup Guide</a></li>
+            <li><a href="troubleshooting.html" class="hover:text-black transition-colors">Troubleshooting</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center">
+        <div class="text-sm text-gray-500">
+          &copy; 2026 WeScan. All rights reserved.
+        </div>
+        <div class="text-sm text-gray-500">
+          Built for reliable scan-to-email
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

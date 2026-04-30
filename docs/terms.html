@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Terms of Service - WeScan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-white">
+
+  <!-- Navigation -->
+  <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex justify-between h-20">
+        <div class="flex items-center">
+          <a href="index.html" class="text-2xl font-light tracking-tight">
+            We<span class="font-semibold">Scan</span>
+          </a>
+        </div>
+        <div class="flex items-center space-x-8">
+          <a href="index.html#features" class="text-sm text-gray-600 hover:text-black transition-colors">Features</a>
+          <a href="index.html#pricing" class="text-sm text-gray-600 hover:text-black transition-colors">Pricing</a>
+          <a href="setup-guide.html" class="text-sm text-gray-600 hover:text-black transition-colors">Setup Guide</a>
+          <a href="signup.html" class="text-sm text-gray-600 hover:text-black transition-colors">Sign In</a>
+          <a href="signup.html" class="text-sm px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
+            Start Free
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="pt-32 pb-24 px-6">
+    <div class="max-w-3xl mx-auto">
+
+      <h1 class="text-4xl font-light tracking-tight text-gray-900 mb-4">Terms of Service</h1>
+      <p class="text-gray-400 text-sm mb-12">Last updated: April 2026</p>
+
+      <div class="prose prose-gray max-w-none space-y-8 text-gray-600 leading-relaxed">
+
+        <p>
+          These Terms of Service ("Terms") govern your use of the WeScan scan-to-email
+          relay service (the "Service") operated by WeScan ("we", "our", "us").
+          By signing up or using the Service, you agree to these Terms.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">1. Service Description</h2>
+        <p>
+          WeScan provides an SMTP relay service that allows authorised multifunction
+          printers and scanners to send scanned documents as email attachments to
+          a whitelist of approved recipients. The Service consists of:
+        </p>
+        <ul class="list-disc pl-6 space-y-2">
+          <li>An SMTP relay server at smtp.wescan.net (port 587 with STARTTLS)</li>
+          <li>A web dashboard for managing recipients and credentials</li>
+          <li>Account authentication via email OTP or OAuth providers</li>
+        </ul>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">2. Accounts</h2>
+
+        <h3 class="font-medium text-gray-900 mt-6">Registration</h3>
+        <p>
+          You must provide a valid email address to create an account. You are responsible
+          for maintaining the confidentiality of your SMTP credentials. SMTP passwords
+          are shown once at generation time — if lost, you must generate a new password.
+        </p>
+
+        <h3 class="font-medium text-gray-900 mt-6">Eligibility</h3>
+        <p>
+          You must be at least 18 years old to use the Service. By creating an account,
+          you represent that you meet this requirement.
+        </p>
+
+        <h3 class="font-medium text-gray-900 mt-6">Account Termination</h3>
+        <p>
+          You may delete your account at any time by contacting us. We may suspend or
+          terminate accounts for violation of these Terms, illegal activity, or extended
+          inactivity (12+ months with no usage).
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">3. Acceptable Use</h2>
+        <p>You agree not to use the Service to:</p>
+        <ul class="list-disc pl-6 space-y-2">
+          <li>Send spam, unsolicited bulk emails, or commercial advertising</li>
+          <li>Send illegal, harassing, defamatory, or abusive content</li>
+          <li>Scan copyrighted material without authorisation</li>
+          <li>Attempt to bypass rate limits, authentication, or security controls</li>
+          <li>Use the Service in a way that degrades performance for other users</li>
+          <li>Relay email through our servers for purposes other than scan-to-email
+              (e.g., general email sending, newsletter delivery)</li>
+        </ul>
+        <p>
+          Violation of these rules may result in immediate suspension without notice.
+          We reserve the right to block specific senders, recipients, or content types.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">4. Plans and Payments</h2>
+
+        <h3 class="font-medium text-gray-900 mt-6">Essential (Free) Plan</h3>
+        <ul class="list-disc pl-6 space-y-2">
+          <li>5 whitelisted recipients</li>
+          <li>5 MB file size limit</li>
+          <li>10 emails per hour rate limit</li>
+          <li>For personal use only</li>
+        </ul>
+
+        <h3 class="font-medium text-gray-900 mt-6">Enterprise Plan ($20/month)</h3>
+        <ul class="list-disc pl-6 space-y-2">
+          <li>100 whitelisted recipients</li>
+          <li>25 MB file size limit</li>
+          <li>Unlimited emails (subject to fair use)</li>
+          <li>Priority support</li>
+        </ul>
+
+        <h3 class="font-medium text-gray-900 mt-6">Billing</h3>
+        <p>
+          Enterprise plans are billed monthly via Stripe. Payment is due at the start
+          of each billing period. Refunds are provided on a case-by-case basis for
+          service outages exceeding 24 hours. You may downgrade to the Free plan at
+          any time — downgrades take effect at the end of the current billing period.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">5. Service Level</h2>
+        <p>
+          We aim for 99.9% uptime but do not guarantee uninterrupted service. The
+          Service is provided "as is" without warranty of any kind. We are not liable
+          for lost scanned documents, failed deliveries, or any indirect damages
+          arising from use of the Service.
+        </p>
+        <p>
+          In the event of a service outage, we will restore service as quickly as
+          possible. Enterprise plan users will receive priority restoration.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">6. Limitation of Liability</h2>
+        <p>
+          To the maximum extent permitted by Australian Consumer Law, our total
+          liability for any claim arising from these Terms or the Service is limited
+          to the amount you have paid us in the 12 months preceding the claim.
+          We are not liable for:
+        </p>
+        <ul class="list-disc pl-6 space-y-2">
+          <li>Loss of data or documents</li>
+          <li>Delayed or failed email delivery</li>
+          <li>Damages caused by third-party services (Mailgun, Stripe, Cloudflare)</li>
+          <li>Consequential or incidental damages</li>
+        </ul>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">7. Privacy</h2>
+        <p>
+          Our <a href="privacy.html" class="text-black underline">Privacy Policy</a> explains how we collect, use, and protect your data.
+          By using the Service, you consent to the practices described in that policy.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">8. Modifications</h2>
+        <p>
+          We may modify these Terms at any time. Material changes will be notified
+          via email to the address associated with your account. Continued use of
+          the Service after changes take effect constitutes acceptance of the new Terms.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">9. Governing Law</h2>
+        <p>
+          These Terms are governed by the laws of New South Wales, Australia.
+          Any disputes arising from these Terms shall be resolved in the courts
+          of Sydney, New South Wales.
+        </p>
+
+        <h2 class="text-xl font-semibold text-gray-900 mt-10 mb-4">10. Contact</h2>
+        <p>
+          Questions about these Terms can be directed to:<br>
+          <a href="mailto:support@wescan.net" class="text-black underline">support@wescan.net</a>
+        </p>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-100 py-12">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid md:grid-cols-4 gap-8">
+        <div>
+          <a href="index.html" class="text-2xl font-light tracking-tight">
+            We<span class="font-semibold">Scan</span>
+          </a>
+          <p class="mt-4 text-sm text-gray-500">
+            Professional scan-to-email solution for businesses and individuals.
+          </p>
+        </div>
+        <div>
+          <h4 class="font-medium mb-4">Product</h4>
+          <ul class="space-y-2 text-sm text-gray-500">
+            <li><a href="index.html#features" class="hover:text-black transition-colors">Features</a></li>
+            <li><a href="index.html#pricing" class="hover:text-black transition-colors">Pricing</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium mb-4">Support</h4>
+          <ul class="space-y-2 text-sm text-gray-500">
+            <li><a href="setup-guide.html" class="hover:text-black transition-colors">Setup Guide</a></li>
+            <li><a href="troubleshooting.html" class="hover:text-black transition-colors">Troubleshooting</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center">
+        <div class="text-sm text-gray-500">
+          &copy; 2026 WeScan. All rights reserved.
+        </div>
+        <div class="text-sm text-gray-500">
+          Built for reliable scan-to-email
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
