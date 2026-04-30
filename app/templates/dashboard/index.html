@@ -250,6 +250,19 @@
   </div>
   {% endif %}
 
+  {% if user.stripe_customer_id and user.plan == 'enterprise' and not trial_days_left %}
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px 28px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <span style="font-size:14px;font-weight:600;color:#111;">Billing</span>
+      <span style="font-size:13px;color:#999;margin-left:8px;">Manage your subscription, invoices, and payment method</span>
+    </div>
+    <button onclick="openBillingPortal()"
+      style="background:#000;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer;">
+      Manage billing
+    </button>
+  </div>
+  {% endif %}
+
 </div>
 </div>
 
@@ -292,6 +305,20 @@ function updatePrice(radio) {
   });
   const btn = document.getElementById('checkout-btn');
   if (btn) btn.textContent = `Upgrade — ${priceLabels[radio.value]}/month`;
+}
+
+async function openBillingPortal() {
+  try {
+    const resp = await fetch('/billing-portal', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    });
+    const data = await resp.json();
+    if (data.url) window.location.href = data.url;
+    else throw new Error(data.error || 'Unknown error');
+  } catch(e) {
+    alert('Could not open billing portal: ' + e.message);
+  }
 }
 
 async function startCheckout() {
