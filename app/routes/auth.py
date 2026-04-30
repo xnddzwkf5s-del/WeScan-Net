@@ -28,8 +28,7 @@ if os.getenv('GOOGLE_CLIENT_ID'):
         name='google',
         client_id=os.getenv('GOOGLE_CLIENT_ID'),
         client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
-        access_token_url='https://accounts.google.com/o/oauth2/token',
-        authorize_url='https://accounts.google.com/o/oauth2/auth',
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
         api_base_url='https://www.googleapis.com/oauth2/v1/',
         client_kwargs={'scope': 'openid email profile'}
     )
@@ -41,8 +40,7 @@ if os.getenv('MICROSOFT_CLIENT_ID'):
         client_secret=os.getenv('MICROSOFT_CLIENT_SECRET'),
         access_token_url='https://login.microsoftonline.com/common/oauth2/v2.0/token',
         authorize_url='https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-        client_kwargs={'scope': 'openid email profile'},
-        server_metadata_url='https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration'
+        client_kwargs={'scope': 'User.Read openid email profile'}
     )
 
 
@@ -68,7 +66,7 @@ def login_page():
 def oauth_login(provider):
     if provider not in ['google', 'microsoft']:
         return 'Invalid OAuth provider', 400
-    if not os.getenv('GOOGLE_CLIENT_ID'):
+    if not os.getenv(f'{provider.upper()}_CLIENT_ID'):
         return redirect('/signup.html?error=oauth_not_configured')
     return oauth.create_client(provider).authorize_redirect(
         redirect_uri=url_for('auth.oauth_callback', provider=provider, _external=True)
@@ -77,35 +75,68 @@ def oauth_login(provider):
 
 @auth.route('/auth/callback/<provider>')
 def oauth_callback(provider):
-    token = oauth.create_client(provider).authorize_access_token()
-    resp = oauth.create_client(provider).get('userinfo')
-    user_info = resp.json()
+    if provider == 'microsoft':
+        # Manual Microsoft OAuth: exchange code for token, then call Graph API
+        code = request.args.get('code')
+        token_resp = http_requests.post(
+            'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+            data={
+                'client_id': os.getenv('MICROSOFT_CLIENT_ID'),
+                'client_secret': os.getenv('MICROSOFT_CLIENT_SECRET'),
+                'code': code,
+                'redirect_uri': url_for('auth.oauth_callback', provider='microsoft', _external=True),
+                'grant_type': 'authorization_code',
+            },
+            timeout=10
+        )
+        token_data = token_resp.json()
+        access_token = token_data.get('access_token')
+        if not access_token:
+            return 'OAuth token exchange failed', 400
+
+        graph_resp = http_requests.get(
+            'https://graph.microsoft.com/v1.0/me',
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=10
+        )
+        user_info = graph_resp.json()
+        oauth_id = user_info.get('id')
+        email = user_info.get('mail') or user_info.get('userPrincipalName') or ''
+        name = user_info.get('displayName', email.split('@')[0])
+    else:
+        # Google uses authlib's built-in flow
+        token = oauth.create_client(provider).authorize_access_token()
+        resp = oauth.create_client(provider).get('userinfo')
+        user_info = resp.json()
+        oauth_id = user_info['id']
+        email = user_info['email']
+        name = user_info.get('name', email.split('@')[0])
 
     # Look up by OAuth ID first, then by email (handles existing email-signup users)
     user = User.query.filter_by(
         oauth_provider=provider,
-        oauth_id=user_info['id']
+        oauth_id=oauth_id
     ).first()
 
     if not user:
         # Check if email already exists (created via email signup)
-        user = User.query.filter_by(email=user_info['email']).first()
+        user = User.query.filter_by(email=email).first()
         if user:
             # Link OAuth to existing account
             user.oauth_provider = provider
-            user.oauth_id = user_info['id']
+            user.oauth_id = oauth_id
         else:
             # Brand new user via OAuth
             user = User(
-                email=user_info['email'],
-                name=user_info.get('name', user_info['email'].split('@')[0]),
+                email=email,
+                name=name,
                 oauth_provider=provider,
-                oauth_id=user_info['id'],
+                oauth_id=oauth_id,
                 smtp_username=f"s_{os.urandom(6).hex()}",
                 plan='free'
             )
             db.session.add(user)
-            db.session.flush()  # get user.id before commit
+            db.session.flush()
             db.session.commit()
             try:
                 send_welcome_email(user.email, user.smtp_username)
