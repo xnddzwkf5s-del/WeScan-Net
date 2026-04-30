@@ -47,12 +47,32 @@ def index():
         .all()
     )
 
+    # Per-user blocked counts
+    blocked_30d_by_user = dict(
+        db.session.query(BlockedEmail.user_id, func.count(BlockedEmail.id))
+        .filter(BlockedEmail.blocked_at > cutoff_30d, BlockedEmail.user_id.isnot(None))
+        .group_by(BlockedEmail.user_id)
+        .all()
+    )
+
+    # Recent blocked attempts per user (last 20 per user)
+    blocked_recent_by_user = {}
+    for row in (
+        db.session.query(BlockedEmail)
+        .filter(BlockedEmail.user_id.isnot(None), BlockedEmail.blocked_at > cutoff_30d)
+        .order_by(BlockedEmail.blocked_at.desc())
+        .all()
+    ):
+        blocked_recent_by_user.setdefault(row.user_id, []).append(row)
+
     users = User.query.order_by(User.created_at.desc()).all()
     for u in users:
-        u.email_count_30d = counts_30d.get(u.id, 0)
-        u.email_count_7d  = counts_7d.get(u.id, 0)
-        u.email_count_1d  = counts_1d.get(u.id, 0)
-        u.recipients = Recipient.query.filter_by(user_id=u.id, is_active=True).all()
+        u.email_count_30d  = counts_30d.get(u.id, 0)
+        u.email_count_7d   = counts_7d.get(u.id, 0)
+        u.email_count_1d   = counts_1d.get(u.id, 0)
+        u.recipients       = Recipient.query.filter_by(user_id=u.id, is_active=True).all()
+        u.blocked_count_30d = blocked_30d_by_user.get(u.id, 0)
+        u.blocked_emails   = blocked_recent_by_user.get(u.id, [])[:20]
 
     stats = {
         'total_users':      len(users),
