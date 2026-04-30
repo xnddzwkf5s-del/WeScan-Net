@@ -1,5 +1,5 @@
-from flask import Blueprint, redirect, url_for, request, jsonify
-from flask_login import login_user, logout_user, login_required
+from flask import Blueprint, redirect, url_for, request, jsonify, render_template_string
+from flask_login import login_user, logout_user, login_required, current_user
 from authlib.integrations.flask_client import OAuth
 from app.models import db, User, OTPToken
 from app.email import send_otp_email
@@ -8,24 +8,42 @@ import os
 auth = Blueprint('auth', __name__)
 oauth = OAuth()
 
-# OAuth configs
-oauth.register(
-    name='google',
-    client_id=os.getenv('GOOGLE_CLIENT_ID'),
-    client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
-    access_token_url='https://accounts.google.com/o/oauth2/token',
-    authorize_url='https://accounts.google.com/o/oauth2/auth',
-    api_base_url='https://www.googleapis.com/oauth2/v1/',
-    client_kwargs={'scope': 'openid email profile'}
-)
+# OAuth configs (only register if keys present)
+if os.getenv('GOOGLE_CLIENT_ID'):
+    oauth.register(
+        name='google',
+        client_id=os.getenv('GOOGLE_CLIENT_ID'),
+        client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+        access_token_url='https://accounts.google.com/o/oauth2/token',
+        authorize_url='https://accounts.google.com/o/oauth2/auth',
+        api_base_url='https://www.googleapis.com/oauth2/v1/',
+        client_kwargs={'scope': 'openid email profile'}
+    )
+
+
+# ── Login page (for returning email users) ──────────────────────────────────
+
+@auth.route('/login')
+def login_page():
+    """Returning users land here — sends a fresh OTP."""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+    # Serve the signup page (it works for both new and returning users)
+    return redirect('/signup.html')
+
+
+# ── OAuth routes ─────────────────────────────────────────────────────────────
 
 @auth.route('/login/<provider>')
 def oauth_login(provider):
     if provider not in ['google', 'microsoft', 'apple']:
         return 'Invalid OAuth provider', 400
+    if not os.getenv('GOOGLE_CLIENT_ID'):
+        return redirect('/signup.html?error=oauth_not_configured')
     return oauth.create_client(provider).authorize_redirect(
         redirect_uri=url_for('auth.oauth_callback', provider=provider, _external=True)
     )
+
 
 @auth.route('/auth/callback/<provider>')
 def oauth_callback(provider):
@@ -33,48 +51,58 @@ def oauth_callback(provider):
     resp = oauth.create_client(provider).get('userinfo')
     user_info = resp.json()
 
+    # Look up by OAuth ID first, then by email (handles existing email-signup users)
     user = User.query.filter_by(
         oauth_provider=provider,
         oauth_id=user_info['id']
     ).first()
 
     if not user:
-        user = User(
-            email=user_info['email'],
-            name=user_info['name'],
-            oauth_provider=provider,
-            oauth_id=user_info['id'],
-            smtp_username=f"s_{os.urandom(6).hex()}"
-        )
-        db.session.add(user)
-        db.session.commit()
+        # Check if email already exists (created via email signup)
+        user = User.query.filter_by(email=user_info['email']).first()
+        if user:
+            # Link OAuth to existing account
+            user.oauth_provider = provider
+            user.oauth_id = user_info['id']
+        else:
+            # Brand new user via OAuth
+            user = User(
+                email=user_info['email'],
+                name=user_info.get('name', user_info['email'].split('@')[0]),
+                oauth_provider=provider,
+                oauth_id=user_info['id'],
+                smtp_username=f"s_{os.urandom(6).hex()}",
+                plan='free'
+            )
+            db.session.add(user)
 
+    db.session.commit()
     login_user(user)
     return redirect(url_for('dashboard.index'))
+
+
+# ── Email OTP signup / sign-in ───────────────────────────────────────────────
 
 @auth.route('/api/auth/signup', methods=['POST'])
 def email_signup():
     email = request.form.get('email', '').strip().lower()
     if not email:
-        return 'Email is required', 400
+        return redirect('/signup.html?error=missing_email')
 
-    # Invalidate any previous unused tokens for this email
+    # Invalidate previous unused tokens
     OTPToken.query.filter_by(email=email, used=False).delete()
 
-    # Generate and store OTP
     token = OTPToken.generate(email)
     db.session.add(token)
     db.session.commit()
 
-    # Send OTP email
     try:
         send_otp_email(email, token.code)
     except Exception as e:
         db.session.delete(token)
         db.session.commit()
-        return jsonify({'error': f'Failed to send verification email: {str(e)}'}), 500
+        return redirect(f'/signup.html?error=email_failed')
 
-    # Redirect to verify page
     return redirect(f'/verify.html?email={email}')
 
 
@@ -86,17 +114,14 @@ def email_verify():
     if not email or not code:
         return redirect(f'/verify.html?email={email}&error=missing')
 
-    # Find latest valid token
     token = OTPToken.query.filter_by(email=email, used=False)\
         .order_by(OTPToken.created_at.desc()).first()
 
     if not token or not token.is_valid(code):
         return redirect(f'/verify.html?email={email}&error=invalid')
 
-    # Mark token used
     token.used = True
 
-    # Create or fetch user
     user = User.query.filter_by(email=email).first()
     if not user:
         user = User(
@@ -111,8 +136,10 @@ def email_verify():
     login_user(user)
     return redirect(url_for('dashboard.index'))
 
+
+# ── Logout ───────────────────────────────────────────────────────────────────
+
 @auth.route('/logout')
-@login_required
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect('/')

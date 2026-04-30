@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app.models import db, User, Recipient, UsageStat
 import subprocess
@@ -63,6 +63,9 @@ def manage_recipients():
         )
         db.session.add(recipient)
         db.session.commit()
+        flash(f'{email} added as a recipient.', 'success')
+    else:
+        flash('Email is required.', 'error')
 
     return redirect(url_for('dashboard.index'))
 
@@ -71,6 +74,8 @@ def manage_recipients():
 def delete_recipient(id):
     recipient = Recipient.query.get_or_404(id)
     if recipient.user_id == current_user.id:
+        email = recipient.email
         db.session.delete(recipient)
         db.session.commit()
-    return redirect(url_for('dashboard.manage_recipients'))
+        flash(f'{email} removed.', 'success')
+    return redirect(url_for('dashboard.index'))

@@ -131,6 +131,22 @@
   <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
   <script>
     AOS.init({ duration: 800, offset: 100, once: true });
+
+    // Show error banner from query param
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('error');
+    if (err) {
+      const msgs = {
+        'email_failed': 'Could not send verification email. Please try again.',
+        'missing_email': 'Please enter your email address.',
+        'oauth_not_configured': 'OAuth sign-in is not yet available. Please use email.',
+      };
+      const banner = document.createElement('div');
+      banner.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-red-50 border border-red-200 text-red-700 text-sm px-6 py-3 rounded-full shadow z-50';
+      banner.textContent = msgs[err] || 'Something went wrong. Please try again.';
+      document.body.prepend(banner);
+      setTimeout(() => banner.remove(), 5000);
+    }
   </script>
 </body>
 </html>
