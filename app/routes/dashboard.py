@@ -64,13 +64,7 @@ def manage_recipients():
         db.session.add(recipient)
         db.session.commit()
 
-    recipients = Recipient.query.filter_by(
-        user_id=current_user.id
-    ).all()
-
-    return render_template('dashboard/recipients.html',
-        recipients=recipients
-    )
+    return redirect(url_for('dashboard.index'))
 
 @dashboard.route('/dashboard/recipients/<int:id>/delete', methods=['POST'])
 @login_required

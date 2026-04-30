@@ -49,19 +49,53 @@
         </div>
 
         <div class="mt-8">
-            <h3 class="text-xl font-bold mb-4">Recipients</h3>
-            <div class="space-y-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Recipients</h3>
+                <span class="text-sm text-gray-500">
+                    {{ recipients|length }} / {{ 5 if user.plan == 'free' else 100 }} used
+                    ({{ user.plan|capitalize }} plan)
+                </span>
+            </div>
+
+            <!-- Add recipient form -->
+            {% if (user.plan == 'free' and recipients|length < 5) or (user.plan != 'free' and recipients|length < 100) %}
+            <form method="POST" action="{{ url_for('dashboard.manage_recipients') }}" class="flex gap-2 mb-6">
+                <input type="email" name="email" placeholder="recipient@example.com" required
+                       class="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black">
+                <input type="text" name="name" placeholder="Display name (optional)"
+                       class="w-48 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black">
+                <button type="submit"
+                        class="bg-black text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors">
+                    Add
+                </button>
+            </form>
+            {% else %}
+            <div class="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+                Recipient limit reached for your plan.
+                {% if user.plan == 'free' %}
+                <a href="/signup.html#pricing" class="underline font-medium">Upgrade to Enterprise</a> for up to 100 recipients.
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Recipient list -->
+            <div class="space-y-2">
                 {% for recipient in recipients %}
-                <div class="flex justify-between items-center py-2 border-b">
-                    <span>{{ recipient.email }}</span>
-                    <form method="POST" action="{{ url_for('dashboard.delete_recipient', id=recipient.id) }}"
-                          class="inline">
-                        <button type="submit" 
-                                class="text-red-500 hover:text-red-700">
-                            Delete
+                <div class="flex justify-between items-center py-2 px-3 border rounded-lg">
+                    <div>
+                        <span class="font-medium text-sm">{{ recipient.email }}</span>
+                        {% if recipient.display_name %}
+                        <span class="text-gray-400 text-sm ml-2">— {{ recipient.display_name }}</span>
+                        {% endif %}
+                    </div>
+                    <form method="POST" action="{{ url_for('dashboard.delete_recipient', id=recipient.id) }}" class="inline">
+                        <button type="submit" class="text-red-400 hover:text-red-600 text-sm">
+                            Remove
                         </button>
                     </form>
                 </div>
+                {% else %}
+                <p class="text-gray-400 text-sm py-4 text-center">No recipients added yet. Add one above.</p>
                 {% endfor %}
             </div>
         </div>
