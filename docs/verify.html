@@ -84,11 +84,24 @@
             el.classList.remove('hidden');
         }
 
-        // Auto-submit when 6 digits entered
+        // Auto-submit when 6 digits entered — but wait for Turnstile token first
         document.getElementById('code-input').addEventListener('input', function() {
             if (this.value.replace(/\D/g, '').length === 6) {
                 this.value = this.value.replace(/\D/g, '');
-                this.closest('form').submit();
+                const form = this.closest('form');
+                const token = form.querySelector('[name="cf-turnstile-response"]');
+                if (token && token.value) {
+                    form.submit();
+                } else {
+                    // Turnstile not ready yet — poll until it is
+                    const interval = setInterval(() => {
+                        const t = form.querySelector('[name="cf-turnstile-response"]');
+                        if (t && t.value) {
+                            clearInterval(interval);
+                            form.submit();
+                        }
+                    }, 200);
+                }
             }
         });
 
