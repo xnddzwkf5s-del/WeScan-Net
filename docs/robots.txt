@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /login/
+Disallow: /auth/
+
+Sitemap: https://wescan.net/sitemap.xml
