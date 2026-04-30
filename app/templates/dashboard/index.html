@@ -1,124 +1,224 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-2xl font-bold mb-4">SMTP Settings</h2>
+<div style="font-family:'Inter',sans-serif;background:#f8f8f8;min-height:100vh;padding:32px 0;">
+<div style="max-width:960px;margin:0 auto;padding:0 24px;">
 
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium">SMTP Server</label>
-                <div class="flex">
-                    <input type="text" value="smtp.wescan.net" readonly 
-                           class="bg-gray-50 px-3 py-2 rounded border flex-1">
-                    <button onclick="copyToClipboard(this)" 
-                            class="ml-2 bg-blue-500 text-white px-3 py-2 rounded">
-                        Copy
-                    </button>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium">Port</label>
-                <input type="text" value="587" readonly 
-                       class="bg-gray-50 px-3 py-2 rounded border w-full">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium">Username</label>
-                <div class="flex">
-                    <input type="text" value="{{ user.smtp_username }}" readonly 
-                           class="bg-gray-50 px-3 py-2 rounded border flex-1">
-                    <button onclick="copyToClipboard(this)" 
-                            class="ml-2 bg-blue-500 text-white px-3 py-2 rounded">
-                        Copy
-                    </button>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium">Password</label>
-                <button onclick="generatePassword()" 
-                        class="bg-green-500 text-white px-4 py-2 rounded">
-                    Generate New Password
-                </button>
-                <div id="password_container" class="hidden mt-2">
-                    <input type="text" id="smtp_password" readonly 
-                           class="bg-gray-50 px-3 py-2 rounded border w-full">
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-8">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold">Recipients</h3>
-                <span class="text-sm text-gray-500">
-                    {{ recipients|length }} / {{ 5 if user.plan == 'free' else 100 }} used
-                    ({{ user.plan|capitalize }} plan)
-                </span>
-            </div>
-
-            <!-- Add recipient form -->
-            {% if (user.plan == 'free' and recipients|length < 5) or (user.plan != 'free' and recipients|length < 100) %}
-            <form method="POST" action="{{ url_for('dashboard.manage_recipients') }}" class="flex gap-2 mb-6">
-                <input type="email" name="email" placeholder="recipient@example.com" required
-                       class="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black">
-                <input type="text" name="name" placeholder="Display name (optional)"
-                       class="w-48 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black">
-                <button type="submit"
-                        class="bg-black text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors">
-                    Add
-                </button>
-            </form>
-            {% else %}
-            <div class="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
-                Recipient limit reached for your plan.
-                {% if user.plan == 'free' %}
-                <a href="/signup.html#pricing" class="underline font-medium">Upgrade to Enterprise</a> for up to 100 recipients.
-                {% endif %}
-            </div>
-            {% endif %}
-
-            <!-- Recipient list -->
-            <div class="space-y-2">
-                {% for recipient in recipients %}
-                <div class="flex justify-between items-center py-2 px-3 border rounded-lg">
-                    <div>
-                        <span class="font-medium text-sm">{{ recipient.email }}</span>
-                        {% if recipient.display_name %}
-                        <span class="text-gray-400 text-sm ml-2">— {{ recipient.display_name }}</span>
-                        {% endif %}
-                    </div>
-                    <form method="POST" action="{{ url_for('dashboard.delete_recipient', id=recipient.id) }}" class="inline">
-                        <button type="submit" class="text-red-400 hover:text-red-600 text-sm">
-                            Remove
-                        </button>
-                    </form>
-                </div>
-                {% else %}
-                <p class="text-gray-400 text-sm py-4 text-center">No recipients added yet. Add one above.</p>
-                {% endfor %}
-            </div>
-        </div>
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+    <div style="margin-bottom:16px;padding:12px 16px;border-radius:8px;font-size:14px;
+      {% if category == 'error' %}background:#fff5f5;color:#c53030;border:1px solid #fed7d7;
+      {% else %}background:#f0fff4;color:#276749;border:1px solid #c6f6d5;{% endif %}">
+      {{ message }}
     </div>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+  <!-- Page header -->
+  <div style="margin-bottom:28px;">
+    <h1 style="margin:0 0 4px;font-size:22px;font-weight:700;color:#111;">Dashboard</h1>
+    <p style="margin:0;font-size:14px;color:#888;">
+      {{ user.email }} &nbsp;·&nbsp;
+      <span style="text-transform:capitalize;{% if user.plan == 'enterprise' %}font-weight:600;color:#111;{% endif %}">
+        {{ user.plan }} plan
+      </span>
+    </p>
+  </div>
+
+  <!-- ── Stats row ─────────────────────────────────────────────────── -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
+
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;">
+      <div style="font-size:28px;font-weight:700;color:#111;">{{ stats.emails_today }}</div>
+      <div style="font-size:12px;color:#999;margin-top:4px;">Emails today</div>
+    </div>
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;">
+      <div style="font-size:28px;font-weight:700;color:#111;">{{ stats.emails_7d }}</div>
+      <div style="font-size:12px;color:#999;margin-top:4px;">Emails (7 days)</div>
+    </div>
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;">
+      <div style="font-size:28px;font-weight:700;color:#111;">{{ stats.emails_30d }}</div>
+      <div style="font-size:12px;color:#999;margin-top:4px;">Emails (30 days)</div>
+    </div>
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;">
+      <div style="font-size:28px;font-weight:700;color:#111;">{{ stats.emails_total }}</div>
+      <div style="font-size:12px;color:#999;margin-top:4px;">Emails (all time)</div>
+    </div>
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;">
+      <div style="font-size:28px;font-weight:700;{% if stats.blocked_today > 0 %}color:#e53e3e;{% else %}color:#ccc;{% endif %}">
+        {{ stats.blocked_today }}
+      </div>
+      <div style="font-size:12px;color:#999;margin-top:4px;">Blocked today</div>
+    </div>
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;">
+      <div style="font-size:28px;font-weight:700;{% if stats.blocked_30d > 0 %}color:#dd6b20;{% else %}color:#ccc;{% endif %}">
+        {{ stats.blocked_30d }}
+      </div>
+      <div style="font-size:12px;color:#999;margin-top:4px;">Blocked (30 days)</div>
+    </div>
+
+  </div>
+
+  <!-- ── SMTP Settings ──────────────────────────────────────────────── -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <h2 style="margin:0 0 20px;font-size:16px;font-weight:700;color:#111;">SMTP Settings</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:#888;margin-bottom:6px;">SMTP Server</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" value="smtp.wescan.net" readonly
+                 style="flex:1;background:#f9f9f9;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;font-family:monospace;color:#111;">
+          <button onclick="copyField(this)" style="background:#000;color:#fff;border:none;border-radius:6px;padding:9px 14px;font-size:12px;cursor:pointer;">Copy</button>
+        </div>
+      </div>
+
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:#888;margin-bottom:6px;">Port / Security</label>
+        <input type="text" value="587  ·  STARTTLS" readonly
+               style="width:100%;background:#f9f9f9;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;font-family:monospace;color:#111;box-sizing:border-box;">
+      </div>
+
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:#888;margin-bottom:6px;">Username</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" value="{{ user.smtp_username }}" readonly id="smtp_username"
+                 style="flex:1;background:#f9f9f9;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;font-family:monospace;color:#111;">
+          <button onclick="copyField(this)" style="background:#000;color:#fff;border:none;border-radius:6px;padding:9px 14px;font-size:12px;cursor:pointer;">Copy</button>
+        </div>
+      </div>
+
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:#888;margin-bottom:6px;">Password</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="smtp_password" placeholder="Click Generate to create a password" readonly
+                 style="flex:1;background:#f9f9f9;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;font-family:monospace;color:#111;">
+          <button onclick="copyField(this)" id="copy_pwd_btn" style="background:#111;color:#fff;border:none;border-radius:6px;padding:9px 14px;font-size:12px;cursor:pointer;display:none;">Copy</button>
+        </div>
+        <button onclick="generatePassword()" id="gen_btn"
+                style="margin-top:8px;background:#000;color:#fff;border:none;border-radius:6px;padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;">
+          Generate Password
+        </button>
+        <p style="margin:6px 0 0;font-size:11px;color:#aaa;">Generating a new password invalidates the previous one.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Recipients ────────────────────────────────────────────────── -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="margin:0;font-size:16px;font-weight:700;color:#111;">Whitelisted Recipients</h2>
+      <span style="font-size:13px;color:#999;">
+        {{ recipients|length }} / {{ stats.recipient_limit }} used
+      </span>
+    </div>
+
+    {% if recipients|length < stats.recipient_limit %}
+    <form method="POST" action="{{ url_for('dashboard.manage_recipients') }}"
+          style="display:flex;gap:8px;margin-bottom:20px;">
+      <input type="email" name="email" placeholder="recipient@example.com" required
+             style="flex:1;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;outline:none;">
+      <input type="text" name="name" placeholder="Display name (optional)"
+             style="width:180px;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;outline:none;">
+      <button type="submit"
+              style="background:#000;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer;">
+        Add
+      </button>
+    </form>
+    {% else %}
+    <div style="margin-bottom:20px;padding:12px 16px;background:#fffbeb;border:1px solid #f5e27a;border-radius:6px;font-size:13px;color:#7a5c00;">
+      Recipient limit reached.
+      {% if user.plan == 'free' %}
+      <a href="/#pricing" style="color:#7a5c00;font-weight:600;">Upgrade to Enterprise</a> for up to 100 recipients.
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      {% for r in recipients %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #f0f0f0;border-radius:8px;">
+        <div>
+          <span style="font-size:14px;font-weight:500;color:#111;">{{ r.email }}</span>
+          {% if r.display_name %}
+          <span style="font-size:13px;color:#aaa;margin-left:8px;">— {{ r.display_name }}</span>
+          {% endif %}
+        </div>
+        <form method="POST" action="{{ url_for('dashboard.delete_recipient', id=r.id) }}" style="display:inline;">
+          <button type="submit" style="background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0;"
+                  onmouseover="this.style.color='#e53e3e'" onmouseout="this.style.color='#ccc'">
+            Remove
+          </button>
+        </form>
+      </div>
+      {% else %}
+      <p style="text-align:center;color:#bbb;font-size:14px;padding:24px 0;margin:0;">
+        No recipients added yet.
+      </p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── Blocked attempts (last 30 days) ───────────────────────────── -->
+  {% if blocked_recent %}
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <h2 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#111;">
+      Blocked Delivery Attempts
+      <span style="font-size:13px;font-weight:400;color:#aaa;margin-left:8px;">last 30 days</span>
+    </h2>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      {% for b in blocked_recent %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff8f8;border:1px solid #fee;border-radius:8px;">
+        <div style="font-size:13px;">
+          <span style="color:#111;">{{ b.attempted_recipient }}</span>
+          <span style="margin-left:8px;padding:2px 8px;border-radius:4px;font-size:11px;
+            {% if b.reason == 'not_whitelisted' %}background:#fff0f0;color:#e53e3e;
+            {% else %}background:#fff8f0;color:#dd6b20;{% endif %}">
+            {{ b.reason | replace('_', ' ') }}
+          </span>
+        </div>
+        <span style="font-size:12px;color:#ccc;">{{ b.blocked_at.strftime('%d %b %H:%M') }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <p style="margin:12px 0 0;font-size:12px;color:#ccc;">
+      Email content is never stored. Only the attempt is logged.
+    </p>
+  </div>
+  {% endif %}
+
+</div>
 </div>
 
 <script>
 async function generatePassword() {
-    const response = await fetch('/dashboard/smtp/generate', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    });
-    const data = await response.json();
-
-    document.getElementById('smtp_password').value = data.smtp_password;
-    document.getElementById('password_container').classList.remove('hidden');
+  const btn = document.getElementById('gen_btn');
+  btn.textContent = 'Generating…';
+  btn.disabled = true;
+  try {
+    const resp = await fetch('/dashboard/smtp/generate', { method: 'POST' });
+    const data = await resp.json();
+    const field = document.getElementById('smtp_password');
+    field.value = data.smtp_password;
+    document.getElementById('copy_pwd_btn').style.display = 'inline-block';
+    btn.textContent = 'Regenerate Password';
+  } catch(e) {
+    alert('Failed to generate password. Please try again.');
+    btn.textContent = 'Generate Password';
+  }
+  btn.disabled = false;
 }
-function copyToClipboard(button) {
-    const input = button.previousElementSibling;
-    input.select();
-    document.execCommand('copy');
+
+function copyField(btn) {
+  const input = btn.previousElementSibling;
+  input.select();
+  input.setSelectionRange(0, 99999);
+  document.execCommand('copy');
+  const orig = btn.textContent;
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = orig, 1500);
 }
 </script>
 {% endblock %}
