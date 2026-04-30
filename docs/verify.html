@@ -34,6 +34,8 @@
         <!-- OTP form -->
         <form action="/api/auth/verify" method="POST" class="space-y-4" id="verify-form">
             <input type="hidden" name="email" id="email-field">
+            <!-- Cloudflare Turnstile (top of the box) -->
+            <div class="cf-turnstile flex justify-center" data-sitekey="0x4AAAAAADGQ3EGbYMfM5fgX" data-theme="light"></div>
             <div>
                 <input type="text" name="code" id="code-input"
                        class="otp-input w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-black transition-colors"
@@ -44,8 +46,6 @@
                        autofocus
                        required>
             </div>
-            <!-- Cloudflare Turnstile -->
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAADGQ3EGbYMfM5fgX" data-theme="light"></div>
 
             <button type="submit"
                     class="w-full bg-black text-white py-3 rounded-full font-medium hover:bg-gray-800 transition-colors">
