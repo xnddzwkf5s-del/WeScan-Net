@@ -76,7 +76,7 @@ EOL
 # Configure master.cf
 cat >> /etc/postfix/master.cf << EOL
 wescan_filter unix - n n - 10 pipe
-    flags=Rq user=nobody argv=/opt/wescan/scripts/content-filter.py \${sender} \${recipient}
+    flags=q user=nobody argv=/opt/wescan/scripts/content-filter.py \${sasl_username} \${recipient}
 EOL
 
 # Configure Nginx
