@@ -16,8 +16,9 @@ def validate():
     except EmailNotValidError:
         return 'Invalid email format', 400
 
-    # Get user from sender
-    user = User.query.filter_by(smtp_username=sender).first()
+    # Get user from sender (strip @domain if present)
+    smtp_user = sender.split('@')[0] if '@' in sender else sender
+    user = User.query.filter_by(smtp_username=smtp_user).first()
     if not user or not user.is_active:
         return 'Invalid sender', 403
 
