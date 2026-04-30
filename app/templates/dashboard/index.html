@@ -100,10 +100,16 @@
   </div>
 
   <!-- ── Setup Wizard ──────────────────────────────────────────── -->
-  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
-    <h2 style="margin:0 0 6px;font-size:16px;font-weight:700;color:#111;">📋 Setup Wizard</h2>
-    <p style="margin:0 0 24px;font-size:13px;color:#999;">Follow these steps to connect your scanner to WeScan.</p>
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;margin-bottom:20px;">
+    <button onclick="toggleWizard()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:none;border:none;cursor:pointer;text-align:left;">
+      <div>
+        <span style="font-size:16px;font-weight:700;color:#111;">📋 Setup Wizard</span>
+        <span style="font-size:13px;color:#999;margin-left:10px;">Follow these steps to connect your scanner to WeScan.</span>
+      </div>
+      <span id="wizard-chevron" style="font-size:18px;color:#999;transition:transform 0.2s;">▸</span>
+    </button>
 
+    <div id="wizard-body" style="display:none;padding:0 24px 24px;">
     <div style="display:flex;flex-direction:column;gap:16px;">
 
       <!-- Step 1: SMTP Credentials -->
@@ -203,6 +209,7 @@
       </div>
 
     </div>
+    </div><!-- /wizard-body -->
   </div>
 
   <!-- ── SMTP Settings ──────────────────────────────────────────────── -->
@@ -386,6 +393,14 @@
 </div>
 
 <script>
+function toggleWizard() {
+  const body = document.getElementById('wizard-body');
+  const chevron = document.getElementById('wizard-chevron');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  chevron.textContent = open ? '▸' : '▾';
+}
+
 
 async function sendTestEmail() {
   const btn = document.getElementById('btn-test-email');
