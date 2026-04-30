@@ -21,28 +21,48 @@ def admin_required(f):
 @login_required
 @admin_required
 def index():
-    cutoff_30d = datetime.utcnow() - timedelta(days=30)
-    cutoff_1d  = datetime.utcnow() - timedelta(days=1)
+    now        = datetime.utcnow()
+    cutoff_30d = now - timedelta(days=30)
+    cutoff_7d  = now - timedelta(days=7)
+    cutoff_1d  = now - timedelta(days=1)
 
-    # Per-user 30-day email counts in one query
-    counts = dict(
-        db.session.query(UsageStat.user_id, func.count(UsageStat.id))
-        .filter(UsageStat.sent_at > cutoff_30d)
-        .group_by(UsageStat.user_id)
+    # Per-user counts at multiple windows
+    def user_counts(cutoff):
+        return dict(
+            db.session.query(UsageStat.user_id, func.count(UsageStat.id))
+            .filter(UsageStat.sent_at > cutoff)
+            .group_by(UsageStat.user_id)
+            .all()
+        )
+
+    counts_30d = user_counts(cutoff_30d)
+    counts_7d  = user_counts(cutoff_7d)
+    counts_1d  = user_counts(cutoff_1d)
+
+    # Active users = had at least one email in last 7 days
+    active_user_ids = set(
+        db.session.query(UsageStat.user_id)
+        .filter(UsageStat.sent_at > cutoff_7d)
+        .distinct()
         .all()
     )
 
-    # Attach derived fields to each user
     users = User.query.order_by(User.created_at.desc()).all()
     for u in users:
-        u.email_count_30d = counts.get(u.id, 0)
+        u.email_count_30d = counts_30d.get(u.id, 0)
+        u.email_count_7d  = counts_7d.get(u.id, 0)
+        u.email_count_1d  = counts_1d.get(u.id, 0)
         u.recipients = Recipient.query.filter_by(user_id=u.id, is_active=True).all()
 
     stats = {
         'total_users':      len(users),
+        'free_users':       sum(1 for u in users if u.plan == 'free'),
         'enterprise_users': sum(1 for u in users if u.plan == 'enterprise'),
+        'active_7d':        len(active_user_ids),
         'emails_today':     UsageStat.query.filter(UsageStat.sent_at > cutoff_1d).count(),
+        'emails_30d':       UsageStat.query.filter(UsageStat.sent_at > cutoff_30d).count(),
         'total_recipients': Recipient.query.filter_by(is_active=True).count(),
+        'smtp_active':      User.query.filter(User.smtp_password_hash.isnot(None)).count(),
     }
 
     return render_template('admin/index.html', users=users, stats=stats)
