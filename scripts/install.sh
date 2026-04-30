@@ -2,7 +2,7 @@
 set -e
 
 # Accept parameters
-DOMAIN="scanner2email.com"
+DOMAIN="scanner2mail.com"
 CF_API_TOKEN=$1
 CF_ZONE_ID=$2
 GOOGLE_CLIENT_ID=$3

@@ -1,4 +1,4 @@
-# Scanner2Email.com
+# Scanner2Mail.com
 
 Cloud-based scanner-to-email SMTP relay. Run your own. $6/mo on DigitalOcean.
 

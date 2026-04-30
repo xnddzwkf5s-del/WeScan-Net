@@ -51,7 +51,7 @@ def generate_smtp(user_id):
     # Build SMTP username
     prefix = user_id[:8]
     suffix = user_id[8:16]
-    username = f"scanner@{prefix}.{suffix}.scanner2email.com"
+    username = f"scanner@{prefix}.{suffix}.scanner2mail.com"
     conn.execute('UPDATE user SET smtp_password = ? WHERE id = ?', (hashed, user_id))
     conn.commit()
     print(f"SMTP Username: {username}")
