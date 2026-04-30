@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Troubleshooting Guide - Scanner2Email</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .solution-card { transition: all 0.3s ease; }
+  </style>
+</head>
+<body class="bg-white">
+
+  <!-- Navigation -->
+  <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex justify-between h-20">
+        <div class="flex items-center">
+          <a href="index.html" class="text-2xl font-light tracking-tight">
+            Scanner<span class="font-semibold">2Email</span>
+          </a>
+        </div>
+        <div class="flex items-center space-x-8">
+          <a href="index.html" class="text-sm text-gray-600 hover:text-black transition-colors">Home</a>
+          <a href="setup-guide.html" class="text-sm text-gray-600 hover:text-black transition-colors">Setup Guide</a>
+          <a href="troubleshooting.html" class="text-sm text-black font-medium transition-colors">Help</a>
+          <a href="#" class="text-sm px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="pt-32 pb-16 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center" data-aos="fade-up">
+        <span class="text-xs font-medium text-gray-400 uppercase tracking-widest">Support</span>
+        <h1 class="text-5xl font-light tracking-tight text-gray-900 mt-4 mb-8">
+          Troubleshooting <span class="font-semibold">Guide</span>
+        </h1>
+        <p class="text-xl text-gray-500 max-w-2xl mx-auto mb-12">
+          Quick solutions for common issues. Select your printer brand or search for specific error messages.
+        </p>
+      </div>
+
+      <!-- Brand Filters -->
+      <div class="flex flex-wrap justify-center gap-4" data-aos="fade-up" data-aos-delay="100">
+        <a href="#common" class="px-6 py-3 rounded-full border border-black text-black hover:bg-black hover:text-white transition-colors text-sm">Common Issues</a>
+        <a href="#brand-specific" class="px-6 py-3 rounded-full border border-black text-black hover:bg-black hover:text-white transition-colors text-sm">Brand Solutions</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Content -->
+  <section class="pb-24 px-6">
+    <div class="max-w-4xl mx-auto space-y-12">
+
+      <!-- Common Issues -->
+      <div id="common" class="bg-white rounded-2xl p-8 md:p-12 border border-gray-100" data-aos="fade-up">
+        <h2 class="text-2xl font-semibold mb-8">Common Issues</h2>
+
+        <div class="space-y-8">
+
+          <!-- Error 1 -->
+          <div class="solution-card">
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-12 h-12 bg-red-50 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div class="ml-4 flex-1">
+                <h3 class="text-lg font-medium">&ldquo;Unable to Connect to SMTP Server&rdquo;</h3>
+                <div class="mt-2 text-gray-500">
+                  <p class="mb-2">Common causes:</p>
+                  <ul class="list-disc list-inside space-y-1">
+                    <li>Incorrect SMTP server address</li>
+                    <li>Port 587 is blocked by firewall</li>
+                    <li>Network connectivity issues</li>
+                  </ul>
+                  <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <p class="font-medium mb-2">Solution:</p>
+                    <ol class="list-decimal list-inside space-y-2">
+                      <li>Verify <code class="text-sm bg-white px-1.5 py-0.5 rounded border">smtp.scanner2email.com</code> is entered correctly</li>
+                      <li>Ensure port 587 is open on your network</li>
+                      <li>Test network connection using printer's built-in test</li>
+                      <li>Try connecting to a different network (e.g., mobile hotspot)</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error 2 -->
+          <div class="solution-card">
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-12 h-12 bg-red-50 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div class="ml-4 flex-1">
+                <h3 class="text-lg font-medium">&ldquo;Authentication Failed&rdquo;</h3>
+                <div class="mt-2 text-gray-500">
+                  <p class="mb-2">Common causes:</p>
+                  <ul class="list-disc list-inside space-y-1">
+                    <li>Incorrect username or password</li>
+                    <li>Password containing special characters</li>
+                    <li>Expired credentials</li>
+                  </ul>
+                  <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <p class="font-medium mb-2">Solution:</p>
+                    <ol class="list-decimal list-inside space-y-2">
+                      <li>Verify username format (<code class="text-sm bg-white px-1.5 py-0.5 rounded border">s_xxxxx</code>)</li>
+                      <li>Generate new password from dashboard</li>
+                      <li>Use copy buttons to avoid typing errors</li>
+                      <li>Check for leading/trailing spaces</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error 3 -->
+          <div class="solution-card">
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-12 h-12 bg-red-50 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div class="ml-4 flex-1">
+                <h3 class="text-lg font-medium">&ldquo;Recipient Not Allowed&rdquo;</h3>
+                <div class="mt-2 text-gray-500">
+                  <p class="mb-2">Common causes:</p>
+                  <ul class="list-disc list-inside space-y-1">
+                    <li>Email address not in whitelist</li>
+                    <li>Recipient limit reached</li>
+                    <li>Typo in email address</li>
+                  </ul>
+                  <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <p class="font-medium mb-2">Solution:</p>
+                    <ol class="list-decimal list-inside space-y-2">
+                      <li>Check recipient list in dashboard</li>
+                      <li>Verify email address spelling</li>
+                      <li>Upgrade plan if recipient limit reached</li>
+                      <li>Remove unused recipients to free up slots</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error 4 - File Size -->
+          <div class="solution-card">
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-12 h-12 bg-red-50 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div class="ml-4 flex-1">
+                <h3 class="text-lg font-medium">&ldquo;File Too Large&rdquo; or &ldquo;Size Limit Exceeded&rdquo;</h3>
+                <div class="mt-2 text-gray-500">
+                  <p class="mb-2">Common causes:</p>
+                  <ul class="list-disc list-inside space-y-1">
+                    <li>Scan resolution set too high</li>
+                    <li>Multi-page document exceeds plan limit</li>
+                    <li>File contains embedded images</li>
+                  </ul>
+                  <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <p class="font-medium mb-2">Solution:</p>
+                    <ol class="list-decimal list-inside space-y-2">
+                      <li>Reduce scan resolution to 200 DPI or lower</li>
+                      <li>Scan in black &amp; white instead of colour</li>
+                      <li>Split large documents into multiple scans</li>
+                      <li>Upgrade to Enterprise for 25MB limit</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Brand-Specific Issues -->
+      <div id="brand-specific" class="bg-white rounded-2xl p-8 md:p-12 border border-gray-100" data-aos="fade-up" data-aos-delay="100">
+        <h2 class="text-2xl font-semibold mb-8">Brand-Specific Solutions</h2>
+
+        <!-- HP -->
+        <div class="mb-10">
+          <div class="flex items-center mb-4">
+            <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+              <span class="text-white font-bold text-xs">HP</span>
+            </div>
+            <h3 class="text-xl font-medium ml-3">HP Printers</h3>
+          </div>
+          <div class="p-4 bg-gray-50 rounded-lg space-y-4">
+            <div>
+              <p class="font-medium">SSL Certificate Error:</p>
+              <p class="text-gray-500 text-sm mt-1">Update printer firmware to latest version. HP printers require current SSL certificates for secure connections.</p>
+            </div>
+            <div>
+              <p class="font-medium">&ldquo;Digital Send&rdquo; Error:</p>
+              <p class="text-gray-500 text-sm mt-1">Enable &ldquo;Scan to Email&rdquo; in EWS (Embedded Web Server) settings. This feature is sometimes disabled by default.</p>
+            </div>
+            <div>
+              <p class="font-medium">Connection Timeout:</p>
+              <p class="text-gray-500 text-sm mt-1">HP printers have a short timeout. Ensure your network is stable and the printer is connected via Ethernet if possible.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Brother -->
+        <div class="mb-10">
+          <div class="flex items-center mb-4">
+            <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+              <span class="text-white font-bold text-xs">BR</span>
+            </div>
+            <h3 class="text-xl font-medium ml-3">Brother Printers</h3>
+          </div>
+          <div class="p-4 bg-gray-50 rounded-lg space-y-4">
+            <div>
+              <p class="font-medium">SMTP Connection Error:</p>
+              <p class="text-gray-500 text-sm mt-1">Check &ldquo;Connection Security&rdquo; is set to <strong>STARTTLS</strong>, not SSL/TLS. Brother menus can be confusing — look for the option under SMTP Port settings.</p>
+            </div>
+            <div>
+              <p class="font-medium">Address Book Sync:</p>
+              <p class="text-gray-500 text-sm mt-1">Manual entry required — Brother printers don't sync with online address books. Enter recipient email addresses directly.</p>
+            </div>
+            <div>
+              <p class="font-medium">Scan to Email Greyed Out:</p>
+              <p class="text-gray-500 text-sm mt-1">Ensure SMTP settings are saved and the printer has been restarted after configuration changes.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Epson -->
+        <div class="mb-10">
+          <div class="flex items-center mb-4">
+            <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+              <span class="text-white font-bold text-xs">EP</span>
+            </div>
+            <h3 class="text-xl font-medium ml-3">Epson Printers</h3>
+          </div>
+          <div class="p-4 bg-gray-50 rounded-lg space-y-4">
+            <div>
+              <p class="font-medium">Communication Error:</p>
+              <p class="text-gray-500 text-sm mt-1">Use <strong>Standard port (587)</strong> instead of SSL port (465). Keep the SSL/TLS setting set to <strong>OFF</strong> — Epson handles encryption via STARTTLS.</p>
+            </div>
+            <div>
+              <p class="font-medium">Email Size Limit:</p>
+              <p class="text-gray-500 text-sm mt-1">Adjust scan resolution if exceeding plan limits. 200 DPI black &amp; white is recommended for text documents.</p>
+            </div>
+            <div>
+              <p class="font-medium">SMTP Authentication Not Working:</p>
+              <p class="text-gray-500 text-sm mt-1">Epson requires POP/IMAP settings to be configured alongside SMTP for some models. If prompted, enter any valid email address as the receiving server.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canon -->
+        <div class="mb-10">
+          <div class="flex items-center mb-4">
+            <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+              <span class="text-white font-bold text-xs">CN</span>
+            </div>
+            <h3 class="text-xl font-medium ml-3">Canon Printers</h3>
+          </div>
+          <div class="p-4 bg-gray-50 rounded-lg space-y-4">
+            <div>
+              <p class="font-medium">Cannot Find SMTP Settings:</p>
+              <p class="text-gray-500 text-sm mt-1">Use Canon's web interface instead of the printer touchscreen. Go to <strong>Settings/Registration</strong> &rarr; <strong>Network</strong> &rarr; <strong>TCP/IP</strong> &rarr; <strong>SMTP/E-mail</strong>.</p>
+            </div>
+            <div>
+              <p class="font-medium">STARTTLS Not Supported:</p>
+              <p class="text-gray-500 text-sm mt-1">Older Canon models may not support STARTTLS. Try using <strong>SSL</strong> on port <strong>465</strong> if STARTTLS fails, or update your printer firmware.</p>
+            </div>
+            <div>
+              <p class="font-medium">Authentication Required Error:</p>
+              <p class="text-gray-500 text-sm mt-1">Ensure SMTP authentication is set to <strong>ON</strong> and both username and password are entered in the correct fields. Canon uses separate fields for email address and SMTP username.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Still Need Help? -->
+      <div class="bg-black text-white rounded-2xl p-12 text-center" data-aos="fade-up" data-aos-delay="200">
+        <h2 class="text-3xl font-light mb-4">Still Need Help?</h2>
+        <p class="text-gray-400 mb-8 max-w-lg mx-auto">
+          Our support team is available to assist with any technical issues. We typically respond within 2 hours during business hours.
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a href="mailto:support@scanner2email.com" class="inline-block px-8 py-4 bg-white text-black rounded-full hover:bg-gray-100 transition-colors text-sm font-medium">
+            Contact Support
+          </a>
+          <a href="setup-guide.html" class="inline-block px-8 py-4 border border-white rounded-full hover:bg-white hover:text-black transition-colors text-sm font-medium">
+            View Setup Guide
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-100 py-12">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="text-sm text-gray-400">
+          &copy; 2024 Scanner2Email. All rights reserved.
+        </div>
+        <div class="flex space-x-6">
+          <a href="compatibility.html" class="text-sm text-gray-400 hover:text-black transition-colors">Compatible Devices</a>
+          <a href="setup-guide.html" class="text-sm text-gray-400 hover:text-black transition-colors">Setup Guide</a>
+          <a href="#" class="text-sm text-gray-400 hover:text-black transition-colors">Privacy</a>
+          <a href="#" class="text-sm text-gray-400 hover:text-black transition-colors">Terms</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+  <script>
+    AOS.init({ duration: 800, offset: 100, once: true });
+  </script>
+</body>
+</html>
