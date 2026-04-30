@@ -35,6 +35,11 @@ if os.getenv('GOOGLE_CLIENT_ID'):
     )
 
 
+def init_oauth(app):
+    """Bind OAuth to the Flask app instance."""
+    oauth.init_app(app)
+
+
 # ── Login page (for returning email users) ──────────────────────────────────
 
 @auth.route('/login')
