@@ -34,6 +34,17 @@ if os.getenv('GOOGLE_CLIENT_ID'):
         client_kwargs={'scope': 'openid email profile'}
     )
 
+if os.getenv('MICROSOFT_CLIENT_ID'):
+    oauth.register(
+        name='microsoft',
+        client_id=os.getenv('MICROSOFT_CLIENT_ID'),
+        client_secret=os.getenv('MICROSOFT_CLIENT_SECRET'),
+        access_token_url='https://login.microsoftonline.com/common/oauth2/v2.0/token',
+        authorize_url='https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+        client_kwargs={'scope': 'openid email profile'},
+        server_metadata_url='https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration'
+    )
+
 
 def init_oauth(app):
     """Bind OAuth to the Flask app instance."""
