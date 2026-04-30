@@ -18,6 +18,18 @@
 
   <!-- ── Trial banner ───────────────────────────────────────────── -->
   {% if trial_days_left is not none %}
+  {% if cancelling %}
+  <div style="margin-bottom:20px;padding:16px 20px;background:#fff8f0;border:1px solid #f6ad55;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <span style="font-size:14px;font-weight:700;color:#c05621;">⚠️ Subscription cancelled — Enterprise access ends in {{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }}</span>
+      <span style="font-size:13px;color:#dd6b20;margin-left:8px;">You can reactivate anytime before then.</span>
+    </div>
+    <button onclick="openBillingPortal()"
+      style="background:#c05621;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;margin-left:16px;">
+      Reactivate
+    </button>
+  </div>
+  {% else %}
   <div style="margin-bottom:20px;padding:16px 20px;background:#f0fff4;border:1px solid #9ae6b4;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
     <div>
       <span style="font-size:14px;font-weight:700;color:#276749;">🎉 Enterprise Trial — {{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }} remaining</span>
@@ -28,6 +40,7 @@
       Upgrade now
     </button>
   </div>
+  {% endif %}
   {% elif trial_expired %}
   <div style="margin-bottom:20px;padding:16px 20px;background:#fffbeb;border:1px solid #f6e05e;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
     <div>

@@ -40,13 +40,19 @@ def index():
         .filter(BlockedEmail.blocked_at > cutoff_30d)\
         .order_by(BlockedEmail.blocked_at.desc()).limit(10).all()
 
-    # Trial state
+    # Trial / cancellation state
     trial_days_left = None
     trial_expired = False
+    cancelling = False  # paid sub cancelled, still active until period end
     if current_user.trial_end:
         delta = (current_user.trial_end - now).days
         if delta >= 0:
-            trial_days_left = delta
+            # Distinguish: has stripe_subscription_id = cancelling paid sub, else = trial
+            if current_user.stripe_subscription_id:
+                cancelling = True
+                trial_days_left = delta
+            else:
+                trial_days_left = delta
         else:
             trial_expired = True
 
@@ -57,7 +63,8 @@ def index():
         stats=stats,
         blocked_recent=blocked_recent,
         trial_days_left=trial_days_left,
-        trial_expired=trial_expired
+        trial_expired=trial_expired,
+        cancelling=cancelling
     )
 
 @dashboard.route('/dashboard/smtp/generate', methods=['POST'])
