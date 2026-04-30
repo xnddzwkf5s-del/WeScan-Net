@@ -1,7 +1,9 @@
 from app import db
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
+import random
+import string
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,6 +36,28 @@ class UsageStat(db.Model):
     file_size_bytes = db.Column(db.Integer)
     status = db.Column(db.String(20))
     sent_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class OTPToken(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), nullable=False, index=True)
+    code = db.Column(db.String(6), nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @staticmethod
+    def generate(email):
+        code = ''.join(random.choices(string.digits, k=6))
+        expires = datetime.utcnow() + timedelta(minutes=10)
+        token = OTPToken(email=email, code=code, expires_at=expires)
+        return token
+
+    def is_valid(self, code):
+        return (
+            not self.used and
+            self.code == code and
+            datetime.utcnow() < self.expires_at
+        )
 
 class Plan(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -1,7 +1,8 @@
-from flask import Blueprint, redirect, url_for, request
+from flask import Blueprint, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, login_required
 from authlib.integrations.flask_client import OAuth
-from app.models import db, User
+from app.models import db, User, OTPToken
+from app.email import send_otp_email
 import os
 
 auth = Blueprint('auth', __name__)
@@ -57,6 +58,45 @@ def email_signup():
     if not email:
         return 'Email is required', 400
 
+    # Invalidate any previous unused tokens for this email
+    OTPToken.query.filter_by(email=email, used=False).delete()
+
+    # Generate and store OTP
+    token = OTPToken.generate(email)
+    db.session.add(token)
+    db.session.commit()
+
+    # Send OTP email
+    try:
+        send_otp_email(email, token.code)
+    except Exception as e:
+        db.session.delete(token)
+        db.session.commit()
+        return jsonify({'error': f'Failed to send verification email: {str(e)}'}), 500
+
+    # Redirect to verify page
+    return redirect(f'/verify.html?email={email}')
+
+
+@auth.route('/api/auth/verify', methods=['POST'])
+def email_verify():
+    email = request.form.get('email', '').strip().lower()
+    code = request.form.get('code', '').strip()
+
+    if not email or not code:
+        return redirect(f'/verify.html?email={email}&error=missing')
+
+    # Find latest valid token
+    token = OTPToken.query.filter_by(email=email, used=False)\
+        .order_by(OTPToken.created_at.desc()).first()
+
+    if not token or not token.is_valid(code):
+        return redirect(f'/verify.html?email={email}&error=invalid')
+
+    # Mark token used
+    token.used = True
+
+    # Create or fetch user
     user = User.query.filter_by(email=email).first()
     if not user:
         user = User(
@@ -66,8 +106,8 @@ def email_signup():
             plan='free'
         )
         db.session.add(user)
-        db.session.commit()
 
+    db.session.commit()
     login_user(user)
     return redirect(url_for('dashboard.index'))
 

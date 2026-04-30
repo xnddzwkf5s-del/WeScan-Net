@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email — WeScan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .otp-input { letter-spacing: 0.3em; font-size: 1.5rem; text-align: center; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center px-4">
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 w-full max-w-md p-8">
+
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <a href="index.html" class="text-2xl font-bold tracking-tight">
+                We<span class="text-gray-400">Scan</span>
+            </a>
+        </div>
+
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Check your email</h1>
+        <p class="text-gray-500 mb-6 text-sm">
+            We sent a 6-digit code to <strong id="email-display"></strong>.<br>
+            Enter it below to verify your account.
+        </p>
+
+        <!-- Error message -->
+        <div id="error-msg" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"></div>
+
+        <!-- OTP form -->
+        <form action="/api/auth/verify" method="POST" class="space-y-4">
+            <input type="hidden" name="email" id="email-field">
+            <div>
+                <input type="text" name="code" id="code-input"
+                       class="otp-input w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-black transition-colors"
+                       placeholder="000000"
+                       maxlength="6"
+                       inputmode="numeric"
+                       autocomplete="one-time-code"
+                       autofocus
+                       required>
+            </div>
+            <button type="submit"
+                    class="w-full bg-black text-white py-3 rounded-full font-medium hover:bg-gray-800 transition-colors">
+                Verify email
+            </button>
+        </form>
+
+        <!-- Resend -->
+        <p class="text-center text-sm text-gray-400 mt-6">
+            Didn't receive it?
+            <button onclick="resendCode()" class="text-black underline font-medium hover:no-underline">Resend code</button>
+        </p>
+
+        <p class="text-center text-sm text-gray-400 mt-3">
+            <a href="signup.html" class="hover:text-gray-600">← Back to sign up</a>
+        </p>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const email = params.get('email') || '';
+        const error = params.get('error');
+
+        document.getElementById('email-display').textContent = email;
+        document.getElementById('email-field').value = email;
+
+        if (error === 'invalid') {
+            const el = document.getElementById('error-msg');
+            el.textContent = 'Invalid or expired code. Please check your email or request a new code.';
+            el.classList.remove('hidden');
+        } else if (error === 'missing') {
+            const el = document.getElementById('error-msg');
+            el.textContent = 'Please enter the 6-digit code from your email.';
+            el.classList.remove('hidden');
+        }
+
+        // Auto-submit when 6 digits entered
+        document.getElementById('code-input').addEventListener('input', function() {
+            if (this.value.replace(/\D/g, '').length === 6) {
+                this.value = this.value.replace(/\D/g, '');
+                this.closest('form').submit();
+            }
+        });
+
+        async function resendCode() {
+            const btn = document.querySelector('button[onclick="resendCode()"]');
+            btn.textContent = 'Sending...';
+            btn.disabled = true;
+
+            const form = new FormData();
+            form.append('email', email);
+            const resp = await fetch('/api/auth/signup', { method: 'POST', body: form });
+
+            if (resp.redirected || resp.ok) {
+                btn.textContent = 'Code sent!';
+            } else {
+                btn.textContent = 'Failed — try again';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
