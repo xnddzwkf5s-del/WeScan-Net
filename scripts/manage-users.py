@@ -9,7 +9,7 @@ import sqlite3
 import secrets
 from werkzeug.security import generate_password_hash
 
-DB_PATH = '/opt/scanner2email/instance/wescan.db'
+DB_PATH = '/opt/wescan/instance/wescan.db'
 
 
 def get_db():

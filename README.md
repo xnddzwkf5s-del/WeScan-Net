@@ -27,7 +27,7 @@ Single DigitalOcean droplet. Everything on one box. Cloudflare for TLS + DNS.
 ## Project Structure
 
 ```
-scanner2email/
+wescan/
 ├── .github/workflows/deploy.yml   # CI/CD pipeline
 ├── app/
 │   ├── __init__.py                # Flask factory + DB init
@@ -42,7 +42,7 @@ scanner2email/
 ├── config/
 │   ├── nginx.conf                 # Performance + security tuning
 │   ├── postfix-main.cf            # Reference Postfix config
-│   └── scanner2email.service      # systemd unit
+│   └── wescan.service      # systemd unit
 ├── scripts/
 │   ├── install.sh                 # One-command DO deploy
 │   ├── manage-sasl.sh             # Postfix SASL user management
@@ -65,7 +65,7 @@ One command:
 sudo ./scripts/install.sh CF_API_TOKEN CF_ZONE_ID admin@email.com
 ```
 
-Then fill in OAuth + Stripe keys in `/opt/scanner2email/.env`.
+Then fill in OAuth + Stripe keys in `/opt/wescan/.env`.
 
 ## Plans
 

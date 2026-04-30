@@ -1,15 +1,15 @@
 #!/bin/bash
-# scanner2email - Daily backup
+# WeScan - Daily backup
 set -euo pipefail
 
-INSTALL_DIR="/opt/scanner2email"
+INSTALL_DIR="/opt/wescan"
 BACKUP_DIR="$INSTALL_DIR/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
 
 mkdir -p "$BACKUP_DIR"
 
 # Backup database
-cp "$INSTALL_DIR/data/scanner2email.db" "$BACKUP_DIR/db_$DATE.sqlite"
+cp "$INSTALL_DIR/data/wescan.db" "$BACKUP_DIR/db_$DATE.sqlite"
 
 # Backup config
 tar -czf "$BACKUP_DIR/config_$DATE.tar.gz" \

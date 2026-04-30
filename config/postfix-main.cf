@@ -1,4 +1,4 @@
-# scanner2email - Postfix main.cf
+# WeScan - Postfix main.cf
 # Replace /etc/postfix/main.cf with this, then adjust domain/IP
 
 myhostname = smtp.wescan.net
@@ -44,7 +44,7 @@ message_size_limit = 26214400
 mailbox_size_limit = 0
 
 # Content filter
-content_filter = scanner2email_filter:dummy
+content_filter = wescan_filter:dummy
 
 # Performance
 default_process_limit = 100

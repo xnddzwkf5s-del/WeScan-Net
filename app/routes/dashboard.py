@@ -26,7 +26,7 @@ def generate_smtp_password():
 
     subprocess.run([
         'sudo',
-        '/opt/scanner2email/scripts/manage-sasl.sh',
+        '/opt/wescan/scripts/manage-sasl.sh',
         'add',
         current_user.smtp_username,
         password

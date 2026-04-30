@@ -24,8 +24,8 @@ apt-get update && apt-get install -y \
     sqlite3
 
 # Create application directory
-mkdir -p /opt/scanner2email
-cd /opt/scanner2email
+mkdir -p /opt/wescan
+cd /opt/wescan
 
 # Setup Python environment
 python3 -m venv venv
@@ -33,7 +33,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Create .env file
-cat > /opt/scanner2email/.env << EOL
+cat > /opt/wescan/.env << EOL
 DOMAIN=${DOMAIN}
 CF_API_TOKEN=${CF_API_TOKEN}
 CF_ZONE_ID=${CF_ZONE_ID}
@@ -41,7 +41,7 @@ GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
 GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
 STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
 EOL
-chmod 600 /opt/scanner2email/.env
+chmod 600 /opt/wescan/.env
 
 # Configure Postfix
 cat > /etc/postfix/main.cf << EOL
@@ -64,7 +64,7 @@ smtpd_recipient_restrictions =
     permit_sasl_authenticated,
     reject_unauth_destination
 
-content_filter = scanner2email_filter:dummy
+content_filter = wescan_filter:dummy
 message_size_limit = 26214400
 
 myhostname = smtp.${DOMAIN}
@@ -75,8 +75,8 @@ EOL
 
 # Configure master.cf
 cat >> /etc/postfix/master.cf << EOL
-scanner2email_filter unix - n n - 10 pipe
-    flags=Rq user=nobody argv=/opt/scanner2email/scripts/content-filter.py \${sender} \${recipient}
+wescan_filter unix - n n - 10 pipe
+    flags=Rq user=nobody argv=/opt/wescan/scripts/content-filter.py \${sender} \${recipient}
 EOL
 
 # Configure Nginx
@@ -115,16 +115,16 @@ ufw --force enable
 certbot --nginx -d ${DOMAIN} -d smtp.${DOMAIN} --non-interactive --agree-tos -m admin@${DOMAIN}
 
 # Setup systemd service
-cat > /etc/systemd/system/scanner2email.service << EOL
+cat > /etc/systemd/system/wescan.service << EOL
 [Unit]
-Description=Scanner2Email
+Description=WeScan Email Relay
 After=network.target
 
 [Service]
 User=www-data
-WorkingDirectory=/opt/scanner2email
-Environment="PATH=/opt/scanner2email/venv/bin"
-ExecStart=/opt/scanner2email/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 app:app
+WorkingDirectory=/opt/wescan
+Environment="PATH=/opt/wescan/venv/bin"
+ExecStart=/opt/wescan/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 run:app
 Restart=always
 
 [Install]
@@ -132,14 +132,14 @@ WantedBy=multi-user.target
 EOL
 
 # Configure sudoers
-cat > /etc/sudoers.d/scanner2email << EOL
-www-data ALL=(ALL) NOPASSWD: /opt/scanner2email/scripts/manage-sasl.sh
+cat > /etc/sudoers.d/wescan << EOL
+www-data ALL=(ALL) NOPASSWD: /opt/wescan/scripts/manage-sasl.sh
 EOL
-chmod 440 /etc/sudoers.d/scanner2email
+chmod 440 /etc/sudoers.d/wescan
 
 # Start services
-systemctl enable scanner2email
-systemctl start scanner2email
-systemctl restart postfix nginx
+systemctl enable wescan
+systemctl start wescan
+systemctl restart nginx postfix
 
 echo "Installation complete!"

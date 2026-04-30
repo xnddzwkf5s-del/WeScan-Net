@@ -17,7 +17,7 @@ check_disk() {
 # Check services
 check_service postfix
 check_service nginx
-check_service scanner2email
+check_service wescan
 
 # Check disk space
 check_disk

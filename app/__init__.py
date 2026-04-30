@@ -13,7 +13,7 @@ def create_app():
 
     # Configuration
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///scanner2email.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///wescan.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialize extensions
