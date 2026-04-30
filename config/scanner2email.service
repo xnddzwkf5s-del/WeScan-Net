@@ -1,0 +1,15 @@
+[Unit]
+Description=Scanner2Email Flask App
+After=network.target
+
+[Service]
+User=scanner2email
+Group=scanner2email
+WorkingDirectory=/opt/scanner2email
+Environment="PATH=/opt/scanner2email/venv/bin"
+ExecStart=/opt/scanner2email/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 run:app
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

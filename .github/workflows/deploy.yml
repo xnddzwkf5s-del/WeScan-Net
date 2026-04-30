@@ -1,0 +1,28 @@
+name: Deploy Scanner2Email
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /opt/scanner2email
+            git pull origin main
+            source venv/bin/activate
+            pip install -q -r requirements.txt
+            systemctl restart scanner2email
+            systemctl restart postfix nginx || true
+            echo "Deployed $(date)"
