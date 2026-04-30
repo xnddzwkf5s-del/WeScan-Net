@@ -51,45 +51,48 @@
     <p class="text-sm text-gray-400 mt-1">All registered accounts and activity</p>
   </div>
 
-  <!-- Stats: row 1 (4 key cards) -->
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2">
+  <!-- Stats: 2 rows × 5 cols, uniform cards -->
+  <div class="grid grid-cols-5 gap-3 mb-6">
     <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
-      <div class="text-2xl font-bold text-gray-900">{{ stats.total_users }}</div>
+      <div class="text-xl font-bold text-gray-900">{{ stats.total_users }}</div>
       <div class="text-xs text-gray-400 mt-0.5">Accounts</div>
     </div>
     <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
-      <div class="text-2xl font-bold text-gray-900">{{ stats.active_7d }}</div>
+      <div class="text-xl font-bold text-gray-900">{{ stats.active_7d }}</div>
       <div class="text-xs text-gray-400 mt-0.5">Active (7d)</div>
     </div>
     <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
-      <div class="text-2xl font-bold text-gray-900">{{ stats.emails_30d }}</div>
+      <div class="text-xl font-bold text-gray-900">{{ stats.emails_today }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Emails today</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div class="text-xl font-bold text-gray-900">{{ stats.emails_30d }}</div>
       <div class="text-xs text-gray-400 mt-0.5">Emails (30d)</div>
     </div>
     <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
-      <div class="text-2xl font-bold text-gray-900">{{ stats.blocked_30d }}</div>
+      <div class="text-xl font-bold text-gray-900">{{ stats.total_recipients }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Whitelisted</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div class="text-xl font-bold text-gray-900">{{ stats.free_users }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Free plan</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div class="text-xl font-bold text-gray-900">{{ stats.enterprise_users }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Enterprise</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div class="text-xl font-bold {% if stats.smtp_active > 0 %}text-green-600{% else %}text-gray-300{% endif %}">{{ stats.smtp_active }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">SMTP set</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div class="text-xl font-bold {% if stats.blocked_today > 0 %}text-red-500{% else %}text-gray-300{% endif %}">{{ stats.blocked_today }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Blocked today</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div class="text-xl font-bold {% if stats.blocked_30d > 0 %}text-orange-400{% else %}text-gray-300{% endif %}">{{ stats.blocked_30d }}</div>
       <div class="text-xs text-gray-400 mt-0.5">Blocked (30d)</div>
     </div>
-  </div>
-
-  <!-- Stats: row 2 (6 mini pills) -->
-  <div class="flex flex-wrap items-center gap-2 mb-6">
-    <span class="bg-white border border-gray-100 rounded-lg px-3 py-1.5 text-xs text-gray-500 flex items-baseline gap-1">
-      <strong class="text-sm text-gray-900">{{ stats.emails_today }}</strong> today
-    </span>
-    <span class="bg-white border border-gray-100 rounded-lg px-3 py-1.5 text-xs text-gray-500 flex items-baseline gap-1">
-      <strong class="text-sm text-gray-900">{{ stats.total_recipients }}</strong> whitelisted
-    </span>
-    <span class="bg-white border border-gray-100 rounded-lg px-3 py-1.5 text-xs text-gray-500 flex items-baseline gap-1">
-      <strong class="text-sm text-gray-900">{{ stats.free_users }}</strong> free
-      <span class="text-gray-300">|</span>
-      <strong class="text-sm text-gray-900">{{ stats.enterprise_users }}</strong> enterprise
-    </span>
-    <span class="bg-white border border-gray-100 rounded-lg px-3 py-1.5 text-xs text-gray-500 flex items-baseline gap-1">
-      <strong class="text-sm {% if stats.smtp_active > 0 %}text-green-600{% else %}text-gray-400{% endif %}">{{ stats.smtp_active }}</strong> SMTP set
-    </span>
-    <span class="bg-white border border-gray-100 rounded-lg px-3 py-1.5 text-xs text-gray-500 flex items-baseline gap-1">
-      <strong class="text-sm {% if stats.blocked_today > 0 %}text-red-500{% else %}text-gray-400{% endif %}">{{ stats.blocked_today }}</strong> blocked today
-    </span>
   </div>
 
   <!-- Users section -->
