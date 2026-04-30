@@ -30,16 +30,31 @@ def get_env():
 
 
 def validate(sender, recipient):
+    """Returns user_id on success, None on failure."""
     try:
         resp = requests.post(
             f'{FLASK_URL}/api/smtp/validate',
             json={'sender': sender, 'recipient': recipient},
             timeout=5
         )
-        return resp.status_code == 200
+        if resp.status_code == 200:
+            return resp.json().get('user_id')
+        return None
     except Exception as e:
         sys.stderr.write(f'Validation error: {e}\n')
-        return False
+        return None
+
+
+def record_sent(user_id, recipient, file_size_bytes):
+    """Record a successful delivery in the Flask DB."""
+    try:
+        requests.post(
+            f'{FLASK_URL}/api/smtp/record',
+            json={'user_id': user_id, 'recipient': recipient, 'file_size_bytes': file_size_bytes},
+            timeout=5
+        )
+    except Exception as e:
+        sys.stderr.write(f'Record error (non-fatal): {e}\n')
 
 
 def fix_from_header(raw_message, sender, domain):
@@ -102,7 +117,8 @@ if __name__ == '__main__':
     raw_message = sys.stdin.buffer.read()
 
     # 1. Validate recipient against whitelist
-    if not validate(sender, recipient):
+    user_id = validate(sender, recipient)
+    if not user_id:
         sys.stderr.write(f'Rejected: {sender} ___ {recipient}\n')
         sys.exit(1)
 
@@ -111,5 +127,8 @@ if __name__ == '__main__':
     if not send_via_mailgun(env, sender, recipient, raw_message):
         sys.stderr.write(f'Delivery failed: {sender} ___ {recipient}\n')
         sys.exit(1)
+
+    # 3. Record successful delivery
+    record_sent(user_id, recipient, len(raw_message))
 
     sys.exit(0)

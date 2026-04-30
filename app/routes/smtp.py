@@ -47,4 +47,26 @@ def validate():
         db.session.commit()
         return 'Recipient not whitelisted', 403
 
+    return jsonify({'ok': True, 'user_id': user.id}), 200
+
+
+@smtp.route('/api/smtp/record', methods=['POST'])
+def record_sent():
+    """Called by content filter after successful Mailgun delivery."""
+    data      = request.json or {}
+    user_id   = data.get('user_id')
+    recipient = data.get('recipient', '')
+    file_size = data.get('file_size_bytes', 0)
+
+    if not user_id:
+        return 'Missing user_id', 400
+
+    stat = UsageStat(
+        user_id=user_id,
+        recipient_email=recipient,
+        file_size_bytes=file_size,
+        status='sent'
+    )
+    db.session.add(stat)
+    db.session.commit()
     return 'OK', 200
