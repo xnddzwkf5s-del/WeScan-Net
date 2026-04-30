@@ -48,7 +48,7 @@
 
         <!-- OAuth Buttons -->
         <div class="space-y-4 mb-8">
-          <button onclick="window.location.href='#'"
+          <button onclick="window.location.href='/login/google'"
                   class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
             <!-- Google SVG logo -->
             <svg class="h-5 w-5 mr-2" viewBox="0 0 24 24">
@@ -60,7 +60,7 @@
             Continue with Google
           </button>
 
-          <button onclick="window.location.href='#'"
+          <button onclick="window.location.href='/login/microsoft'"
                   class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
             <!-- Microsoft SVG logo -->
             <svg class="h-5 w-5 mr-2" viewBox="0 0 21 21">
@@ -72,7 +72,7 @@
             Continue with Microsoft
           </button>
 
-          <button onclick="window.location.href='#'"
+          <button onclick="window.location.href='/login/apple'"
                   class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
             <!-- Apple SVG logo -->
             <svg class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
@@ -92,7 +92,7 @@
         </div>
 
         <!-- Email Form -->
-        <form action="#" method="POST" class="space-y-4">
+        <form action="/api/auth/signup" method="POST" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
               Work email
