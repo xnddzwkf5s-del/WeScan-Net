@@ -2,7 +2,7 @@ from flask import Blueprint, redirect, url_for, request, jsonify, render_templat
 from flask_login import login_user, logout_user, login_required, current_user
 from authlib.integrations.flask_client import OAuth
 from app.models import db, User, OTPToken
-from app.email import send_otp_email
+from app.email import send_otp_email, send_welcome_email
 import os
 import requests as http_requests
 
@@ -89,6 +89,14 @@ def oauth_callback(provider):
                 plan='free'
             )
             db.session.add(user)
+            db.session.flush()  # get user.id before commit
+            db.session.commit()
+            try:
+                send_welcome_email(user.email, user.smtp_username)
+            except Exception:
+                pass
+            login_user(user)
+            return redirect(url_for('dashboard.index'))
 
     db.session.commit()
     login_user(user)
@@ -146,6 +154,7 @@ def email_verify():
 
     token.used = True
 
+    is_new_user = False
     user = User.query.filter_by(email=email).first()
     if not user:
         user = User(
@@ -155,9 +164,17 @@ def email_verify():
             plan='free'
         )
         db.session.add(user)
+        is_new_user = True
 
     db.session.commit()
     login_user(user)
+
+    if is_new_user:
+        try:
+            send_welcome_email(user.email, user.smtp_username)
+        except Exception:
+            pass  # Don't block login if welcome email fails
+
     return redirect(url_for('dashboard.index'))
 
 
