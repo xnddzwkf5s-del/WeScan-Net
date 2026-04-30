@@ -17,6 +17,8 @@ class User(UserMixin, db.Model):
     stripe_customer_id = db.Column(db.String(100))
     stripe_subscription_id = db.Column(db.String(100))
     trial_end = db.Column(db.DateTime, nullable=True)
+    verify_requested_at = db.Column(db.DateTime, nullable=True)
+    scan_verified_at = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

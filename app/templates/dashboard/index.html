@@ -99,6 +99,97 @@
 
   </div>
 
+  <!-- ── Setup Wizard ──────────────────────────────────────────── -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <h2 style="margin:0 0 6px;font-size:16px;font-weight:700;color:#111;">📋 Setup Wizard</h2>
+    <p style="margin:0 0 24px;font-size:13px;color:#999;">Follow these steps to connect your scanner to WeScan.</p>
+
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- Step 1: SMTP Credentials -->
+      <div style="display:flex;align-items:flex-start;gap:16px;padding:16px 20px;background:#f9f9fb;border-radius:10px;">
+        <div style="width:28px;height:28px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">1</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:4px;">Get your SMTP credentials</div>
+          <div style="font-size:13px;color:#666;">Use these details to configure your scanner. Copy the fields below.</div>
+          <div style="font-size:11px;color:#999;margin-top:4px;">
+            <span style="display:inline-flex;align-items:center;gap:4px;">✅ Server: <strong>smtp.wescan.net</strong> | Port: <strong>587</strong> | Encryption: <strong>STARTTLS</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Test Email -->
+      <div style="display:flex;align-items:flex-start;gap:16px;padding:16px 20px;background:#f9f9fb;border-radius:10px;">
+        <div style="width:28px;height:28px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">2</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:4px;">Test your SMTP server</div>
+          <div style="font-size:13px;color:#666;margin-bottom:10px;">We'll send a test email to <strong>{{ user.email }}</strong> to confirm the server is working.</div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button id="btn-test-email" onclick="sendTestEmail()"
+              style="background:#000;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;">
+              📨 Send Test Email
+            </button>
+            <span id="test-email-status" style="font-size:13px;color:#999;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Configure Printer -->
+      <div style="display:flex;align-items:flex-start;gap:16px;padding:16px 20px;background:#f9f9fb;border-radius:10px;">
+        <div style="width:28px;height:28px;background:#999;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">3</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:4px;">Configure your scanner</div>
+          <div style="font-size:13px;color:#666;">Enter the SMTP credentials above into your printer's scan-to-email settings.</div>
+          <a href="/setup-guide.html" target="_blank"
+            style="display:inline-block;margin-top:8px;font-size:13px;color:#111;font-weight:500;text-decoration:underline;">
+            View setup guide →
+          </a>
+        </div>
+      </div>
+
+      <!-- Step 4: Verify Connection -->
+      <div style="display:flex;align-items:flex-start;gap:16px;padding:16px 20px;background:#f9f9fb;border-radius:10px;">
+        <div style="width:28px;height:28px;
+          {% if scan_verify_status == 'verified' %}background:#38a169;{% else %}background:#999;{% endif %}
+          color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">
+          {% if scan_verify_status == 'verified' %}✓{% else %}4{% endif %}
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:4px;">
+            {% if scan_verify_status == 'verified' %}✅ Scanner connected{% else %}Verify your connection{% endif %}
+          </div>
+          {% if scan_verify_status == 'verified' %}
+          <div style="font-size:13px;color:#38a169;font-weight:500;">
+            Your scanner is live! We detected an incoming scan on {{ user.scan_verified_at.strftime('%d %b %Y at %H:%M') }}.
+          </div>
+          {% elif scan_verify_status == 'waiting' %}
+          <div style="font-size:13px;color:#dd6b20;">
+            ⏳ Waiting for your first scan — scan a document to any whitelisted recipient.
+          </div>
+          {% elif scan_verify_status == 'expired' %}
+          <div style="font-size:13px;color:#dd6b20;margin-bottom:8px;">
+            ⏰ Verification request expired (no scan received within 1 hour). Try again.
+          </div>
+          <button id="btn-verify" onclick="requestVerify()"
+            style="background:#000;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;">
+            🔄 Try Again
+          </button>
+          {% else %}
+          <div style="font-size:13px;color:#666;margin-bottom:10px;">
+            After configuring your scanner, click this button and scan a document. We'll detect it and confirm everything works.
+          </div>
+          <button id="btn-verify" onclick="requestVerify()"
+            style="background:#000;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;">
+            🔗 Verify My Scanner
+          </button>
+          {% endif %}
+          <span id="verify-status" style="font-size:13px;color:#999;margin-left:10px;"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ── SMTP Settings ──────────────────────────────────────────────── -->
   <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
     <h2 style="margin:0 0 20px;font-size:16px;font-weight:700;color:#111;">SMTP Settings</h2>
@@ -280,6 +371,84 @@
 </div>
 
 <script>
+
+async function sendTestEmail() {
+  const btn = document.getElementById('btn-test-email');
+  const status = document.getElementById('test-email-status');
+  const userEmail = '{{ user.email }}';
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
+  status.textContent = '';
+  try {
+    const resp = await fetch('/dashboard/send-test-email', { method: 'POST' });
+    const data = await resp.json();
+    if (data.ok) {
+      status.style.color = '#38a169';
+      status.textContent = '✅ Sent! Check ' + userEmail;
+      btn.textContent = '📨 Send Again';
+    } else {
+      throw new Error(data.error);
+    }
+  } catch(e) {
+    status.style.color = '#e53e3e';
+    status.textContent = '❌ Failed: ' + e.message;
+    btn.textContent = '📨 Send Test Email';
+  }
+  btn.disabled = false;
+}
+
+async function requestVerify() {
+  const btn = document.getElementById('btn-verify');
+  const status = document.getElementById('verify-status');
+  btn.textContent = 'Waiting…';
+  btn.disabled = true;
+  status.textContent = '';
+  try {
+    const resp = await fetch('/dashboard/verify-scan', { method: 'POST' });
+    const data = await resp.json();
+    if (data.ok) {
+      status.style.color = '#38a169';
+      status.textContent = '✅ Now scan a document to any whitelisted recipient!';
+      btn.textContent = '🔗 Waiting for Scan…';
+      // Poll every 10 seconds for 2 minutes
+      pollVerifyStatus(0);
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch(e) {
+    status.style.color = '#e53e3e';
+    status.textContent = '❌ ' + e.message;
+    btn.textContent = '🔗 Try Again';
+    btn.disabled = false;
+  }
+}
+
+function pollVerifyStatus(attempt) {
+  if (attempt > 12) {  // 12 * 10s = 2 minutes max
+    document.getElementById('verify-status').textContent = '⏰ Timed out — try again if your scanner is configured.';
+    const btn = document.getElementById('btn-verify');
+    btn.textContent = '🔗 Try Again';
+    btn.disabled = false;
+    return;
+  }
+  setTimeout(async () => {
+    try {
+      const resp = await fetch('/dashboard/verify-scan');
+      const data = await resp.json();
+      if (data.status === 'verified') {
+        document.getElementById('verify-status').textContent = '✅ Scanner detected! Connection verified.';
+        document.getElementById('verify-status').style.color = '#38a169';
+        // Refresh page after 2 seconds to show the verified badge
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        pollVerifyStatus(attempt + 1);
+      }
+    } catch(e) {
+      pollVerifyStatus(attempt + 1);
+    }
+  }, 10000);
+}
+
 async function generatePassword() {
   const btn = document.getElementById('gen_btn');
   btn.textContent = 'Generating…';

@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.models import db, User, Recipient, UsageStat, BlockedEmail
 from email_validator import validate_email, EmailNotValidError
+from datetime import datetime, timedelta
 
 smtp = Blueprint('smtp', __name__)
 
@@ -60,6 +61,14 @@ def record_sent():
 
     if not user_id:
         return 'Missing user_id', 400
+
+    # Check if this user had a pending verification
+    user = User.query.get(user_id)
+    if user and user.verify_requested_at and not user.scan_verified_at:
+        now = datetime.utcnow()
+        # Mark verified if first scan arrives within 1 hour of request
+        if now - user.verify_requested_at < timedelta(hours=1):
+            user.scan_verified_at = now
 
     stat = UsageStat(
         user_id=user_id,

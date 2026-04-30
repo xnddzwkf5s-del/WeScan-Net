@@ -4,6 +4,8 @@ from app.models import db, User, Recipient, UsageStat, BlockedEmail
 from datetime import datetime, timedelta
 import subprocess
 import os
+import smtplib
+from email.mime.text import MIMEText
 from werkzeug.security import generate_password_hash
 
 dashboard = Blueprint('dashboard', __name__)
@@ -56,6 +58,17 @@ def index():
         else:
             trial_expired = True
 
+    # Scan verification state
+    scan_verify_status = 'none'
+    if current_user.scan_verified_at:
+        scan_verify_status = 'verified'
+    elif current_user.verify_requested_at:
+        # Check if it's been more than 1 hour (expired)
+        if datetime.utcnow() - current_user.verify_requested_at > timedelta(hours=1):
+            scan_verify_status = 'expired'
+        else:
+            scan_verify_status = 'waiting'
+
     return render_template('dashboard/index.html',
         user=current_user,
         recipients=recipients,
@@ -64,7 +77,8 @@ def index():
         blocked_recent=blocked_recent,
         trial_days_left=trial_days_left,
         trial_expired=trial_expired,
-        cancelling=cancelling
+        cancelling=cancelling,
+        scan_verify_status=scan_verify_status
     )
 
 @dashboard.route('/dashboard/smtp/generate', methods=['POST'])
@@ -87,6 +101,47 @@ def generate_smtp_password():
         'smtp_username': current_user.smtp_username,
         'smtp_password': password
     })
+
+@dashboard.route('/dashboard/send-test-email', methods=['POST'])
+@login_required
+def send_test_email():
+    """Send a test email to the user to prove the SMTP server works."""
+    email = current_user.email
+    try:
+        msg = MIMEText(f"""Hi {current_user.name or 'there'},\n\nThis is a test email from WeScan.\n\nIf you received this, your WeScan SMTP server is working correctly.\nNow configure your scanner to send emails through us.\n\n---\nSMTP Server: smtp.wescan.net\nPort: 587\nEncryption: STARTTLS\nUsername: {current_user.smtp_username}\n\n— WeScan Team\nhttps://wescan.net""")
+        msg['Subject'] = 'Your WeScan test email — SMTP is working'
+        msg['From'] = 'noreply@wescan.net'
+        msg['To'] = email
+
+        with smtplib.SMTP('127.0.0.1', 25) as s:
+            s.send_message(msg)
+
+        return jsonify({'ok': True, 'message': 'Test email sent to ' + email}), 200
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@dashboard.route('/dashboard/verify-scan', methods=['GET', 'POST'])
+@login_required
+def verify_scan():
+    if request.method == 'POST':
+        # Initiate verification request
+        current_user.verify_requested_at = datetime.utcnow()
+        current_user.scan_verified_at = None
+        db.session.commit()
+        return jsonify({'ok': True, 'status': 'waiting'}), 200
+
+    # GET — return current status
+    if current_user.scan_verified_at:
+        return jsonify({'ok': True, 'status': 'verified'}), 200
+    elif current_user.verify_requested_at:
+        delta = datetime.utcnow() - current_user.verify_requested_at
+        if delta > timedelta(hours=1):
+            return jsonify({'ok': True, 'status': 'expired'}), 200
+        return jsonify({'ok': True, 'status': 'waiting', 'since_total_seconds': int(delta.total_seconds())}), 200
+    else:
+        return jsonify({'ok': True, 'status': 'not_requested'}), 200
+
 
 @dashboard.route('/dashboard/recipients', methods=['GET', 'POST'])
 @login_required
