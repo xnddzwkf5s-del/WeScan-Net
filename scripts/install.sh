@@ -137,6 +137,16 @@ www-data ALL=(ALL) NOPASSWD: /opt/wescan/scripts/manage-sasl.sh
 EOL
 chmod 440 /etc/sudoers.d/wescan
 
+# Initialize database
+cd /opt/wescan && . venv/bin/activate && python3 -c "
+from app import create_app, db
+from app.models import User, Recipient, UsageStat, Plan
+app = create_app()
+with app.app_context():
+    db.create_all()
+    print('Database initialized')
+"
+
 # Start services
 systemctl enable wescan
 systemctl start wescan

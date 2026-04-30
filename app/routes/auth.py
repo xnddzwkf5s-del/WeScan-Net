@@ -51,6 +51,26 @@ def oauth_callback(provider):
     login_user(user)
     return redirect(url_for('dashboard.index'))
 
+@auth.route('/api/auth/signup', methods=['POST'])
+def email_signup():
+    email = request.form.get('email', '').strip().lower()
+    if not email:
+        return 'Email is required', 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        user = User(
+            email=email,
+            name=email.split('@')[0],
+            smtp_username=f"s_{os.urandom(6).hex()}",
+            plan='free'
+        )
+        db.session.add(user)
+        db.session.commit()
+
+    login_user(user)
+    return redirect(url_for('dashboard.index'))
+
 @auth.route('/logout')
 @login_required
 def logout():
