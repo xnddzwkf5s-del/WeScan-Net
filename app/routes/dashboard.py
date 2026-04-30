@@ -25,7 +25,7 @@ def generate_smtp_password():
     password = os.urandom(12).hex()
 
     subprocess.run([
-        'sudo',
+        '/usr/bin/sudo',
         '/opt/wescan/scripts/manage-sasl.sh',
         'add',
         current_user.smtp_username,
