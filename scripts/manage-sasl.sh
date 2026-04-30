@@ -7,10 +7,10 @@ PASSWORD=$3
 
 case $ACTION in
     "add")
-        echo $PASSWORD | saslpasswd2 -p -c -u scanner2mail.com $USERNAME
+        echo $PASSWORD | saslpasswd2 -p -c -u wescan.net $USERNAME
         ;;
     "delete")
-        saslpasswd2 -d -u scanner2mail.com $USERNAME
+        saslpasswd2 -d -u wescan.net $USERNAME
         ;;
     *)
         echo "Usage: $0 {add|delete} username [password]"

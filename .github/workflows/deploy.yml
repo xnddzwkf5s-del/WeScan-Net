@@ -19,10 +19,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            cd /opt/scanner2email
+            cd /opt/wescan
             git pull origin main
             source venv/bin/activate
             pip install -q -r requirements.txt
-            systemctl restart scanner2email
+            systemctl restart wescan
             systemctl restart postfix nginx || true
             echo "Deployed $(date)"

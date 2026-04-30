@@ -1,4 +1,4 @@
-# Scanner2Mail.com
+# WeScan
 
 Cloud-based scanner-to-email SMTP relay. Run your own. $6/mo on DigitalOcean.
 

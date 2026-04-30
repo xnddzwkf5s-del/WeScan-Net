@@ -1,8 +1,8 @@
 # scanner2email - Postfix main.cf
 # Replace /etc/postfix/main.cf with this, then adjust domain/IP
 
-myhostname = smtp.scanner2mail.com
-mydomain = scanner2mail.com
+myhostname = smtp.wescan.net
+mydomain = wescan.net
 myorigin = $mydomain
 inet_interfaces = all
 inet_protocols = ipv4
@@ -19,8 +19,8 @@ smtpd_sasl_security_options = noanonymous
 broken_sasl_auth_clients = yes
 
 # TLS
-smtpd_tls_cert_file = /etc/letsencrypt/live/scanner2mail.com/fullchain.pem
-smtpd_tls_key_file = /etc/letsencrypt/live/scanner2mail.com/privkey.pem
+smtpd_tls_cert_file = /etc/letsencrypt/live/wescan.net/fullchain.pem
+smtpd_tls_key_file = /etc/letsencrypt/live/wescan.net/privkey.pem
 smtpd_use_tls = yes
 smtpd_tls_auth_only = yes
 smtpd_tls_security_level = may

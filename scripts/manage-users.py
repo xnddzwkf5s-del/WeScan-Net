@@ -9,7 +9,7 @@ import sqlite3
 import secrets
 from werkzeug.security import generate_password_hash
 
-DB_PATH = '/opt/scanner2email/instance/scanner2email.db'
+DB_PATH = '/opt/scanner2email/instance/wescan.db'
 
 
 def get_db():
@@ -51,7 +51,7 @@ def generate_smtp(user_id):
     # Build SMTP username
     prefix = user_id[:8]
     suffix = user_id[8:16]
-    username = f"scanner@{prefix}.{suffix}.scanner2mail.com"
+    username = f"scanner@{prefix}.{suffix}.wescan.net"
     conn.execute('UPDATE user SET smtp_password = ? WHERE id = ?', (hashed, user_id))
     conn.commit()
     print(f"SMTP Username: {username}")

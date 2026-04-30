@@ -2,7 +2,7 @@
 set -e
 
 # Accept parameters
-DOMAIN="scanner2mail.com"
+DOMAIN="wescan.net"
 CF_API_TOKEN=$1
 CF_ZONE_ID=$2
 GOOGLE_CLIENT_ID=$3
@@ -45,7 +45,7 @@ chmod 600 /opt/scanner2email/.env
 
 # Configure Postfix
 cat > /etc/postfix/main.cf << EOL
-smtpd_banner = \$myhostname ESMTP Scanner2Email
+smtpd_banner = \$myhostname ESMTP WeScan
 biff = no
 append_dot_mydomain = no
 readme_directory = no

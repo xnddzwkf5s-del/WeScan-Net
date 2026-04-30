@@ -23,8 +23,8 @@ class Config:
     STRIPE_PRICE_ID_ENTERPRISE = os.environ.get('STRIPE_PRICE_ID_ENTERPRISE', '')
 
     # SMTP relay (postfix integration)
-    SMTP_RELAY_DOMAIN = 'scanner2mail.com'
-    SMTP_SERVER = 'smtp.scanner2mail.com'
+    SMTP_RELAY_DOMAIN = 'wescan.net'
+    SMTP_SERVER = 'smtp.wescan.net'
     SMTP_PORT = 587
 
     # Limits
