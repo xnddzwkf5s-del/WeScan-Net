@@ -10,10 +10,14 @@ os.makedirs(data_dir, exist_ok=True)
 load_dotenv()
 
 from app import create_app
-from app.auth import init_oauth
 
 app = create_app()
-init_oauth(app)
+
+# Init OAuth if keys are configured
+google_id = os.getenv('GOOGLE_CLIENT_ID')
+if google_id:
+    from app.routes.auth import init_oauth
+    init_oauth(app)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
