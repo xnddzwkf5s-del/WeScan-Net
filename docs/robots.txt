@@ -4,5 +4,6 @@ Disallow: /dashboard/
 Disallow: /api/
 Disallow: /login/
 Disallow: /auth/
+Disallow: /admin/
 
 Sitemap: https://wescan.net/sitemap.xml
