@@ -139,11 +139,26 @@
         <div style="width:28px;height:28px;background:#999;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">3</div>
         <div style="flex:1;">
           <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:4px;">Configure your scanner</div>
-          <div style="font-size:13px;color:#666;">Enter the SMTP credentials above into your printer's scan-to-email settings.</div>
-          <a href="/setup-guide.html" target="_blank"
-            style="display:inline-block;margin-top:8px;font-size:13px;color:#111;font-weight:500;text-decoration:underline;">
-            View setup guide →
-          </a>
+          <div style="font-size:13px;color:#666;margin-bottom:10px;">Enter the SMTP credentials above into your printer's scan-to-email settings. Select your brand for step-by-step instructions.</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <select id="brand-select" onchange="updateBrandGuide()"
+              style="padding:8px 14px;border:1px solid #ddd;border-radius:8px;font-size:13px;background:#fff;cursor:pointer;min-width:200px;">
+              <option value="">— Select your brand —</option>
+              <option value="hp">HP LaserJet / OfficeJet</option>
+              <option value="brother">Brother MFC / DCP</option>
+              <option value="canon">Canon imageCLASS / MAXIFY</option>
+              <option value="epson">Epson EcoTank / WorkForce</option>
+              <option value="xerox">Xerox</option>
+              <option value="kyocera">Kyocera</option>
+              <option value="lexmark">Lexmark</option>
+              <option value="other">Other / Generic</option>
+            </select>
+            <a id="brand-guide-link" href="#" target="_blank"
+              style="display:none;font-size:13px;color:#000;font-weight:600;text-decoration:underline;">
+              Open setup guide ↗
+            </a>
+          </div>
+          <div id="brand-guide-hint" style="font-size:12px;color:#999;margin-top:8px;"></div>
         </div>
       </div>
 
@@ -420,6 +435,56 @@ async function requestVerify() {
     status.textContent = '❌ ' + e.message;
     btn.textContent = '🔗 Try Again';
     btn.disabled = false;
+  }
+}
+
+const brandGuides = {
+  hp: {
+    url: 'https://support.hp.com/us-en/document/ish_6518575-6518545-16',
+    hint: 'Use the HP Embedded Web Server (EWS) — enter your printer\'s IP in a browser, go to Networking > Email > SMTP.'
+  },
+  brother: {
+    url: 'https://help.brother-usa.com/app/answers/detail/a_id/179376/~/scan-to-e-mail-server',
+    hint: 'Go to Menu > Network > E-mail > SMTP Server on the printer control panel.'
+  },
+  canon: {
+    url: 'https://oip.manual.canon/USRMA-0144-zz-CS-enUV/contents/08040010.html',
+    hint: 'Use the Canon Remote UI — enter your printer\'s IP in a browser, go to Communication > Email/I-Fax > SMTP.'
+  },
+  epson: {
+    url: 'https://epson.com/Support/Printers/sh/s',
+    hint: 'Search for your model on Epson Support, then look for the Network Guide or Web Config section for Email Server settings.'
+  },
+  xerox: {
+    url: 'https://www.support.xerox.com/en-us/article/KB0426874',
+    hint: 'Use Xerox CentreWare Internet Services (CWIS) — go to Properties > Services > Email > SMTP.'
+  },
+  kyocera: {
+    url: 'https://www.kyoceradocumentsolutions.com/support/',
+    hint: 'Use Kyocera Command Center RX — login via browser, go to Advanced > Network > SMTP.'
+  },
+  lexmark: {
+    url: 'https://support.lexmark.com/',
+    hint: 'Use Lexmark Embedded Web Server — login via browser, go to Settings > Email > SMTP Server.'
+  },
+  other: {
+    url: '/setup-guide.html',
+    hint: 'Look for SMTP or Email Server settings under your printer\'s Network or Communication menu. Use the generic settings below.'
+  }
+};
+
+function updateBrandGuide() {
+  const sel = document.getElementById('brand-select');
+  const link = document.getElementById('brand-guide-link');
+  const hint = document.getElementById('brand-guide-hint');
+  const val = sel.value;
+  if (val && brandGuides[val]) {
+    link.href = brandGuides[val].url;
+    link.style.display = 'inline-block';
+    hint.textContent = brandGuides[val].hint;
+  } else {
+    link.style.display = 'none';
+    hint.textContent = '';
   }
 }
 
