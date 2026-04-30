@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, url_for, request, jsonify, render_template_string
+from flask import Blueprint, redirect, url_for, request, jsonify, render_template_string, session
 from flask_login import login_user, logout_user, login_required, current_user
 from authlib.integrations.flask_client import OAuth
 from app.models import db, User, OTPToken
@@ -84,14 +84,14 @@ def oauth_login(provider):
         return 'Invalid OAuth provider', 400
     if not os.getenv(f'{provider.upper()}_CLIENT_ID'):
         return redirect('/signup.html?error=oauth_not_configured')
-    plan = request.args.get('plan', 'free')
-    callback_url = url_for('auth.oauth_callback', provider=provider, plan=plan, _external=True)
+    session['signup_plan'] = request.args.get('plan', 'free')
+    callback_url = url_for('auth.oauth_callback', provider=provider, _external=True)
     return oauth.create_client(provider).authorize_redirect(redirect_uri=callback_url)
 
 
 @auth.route('/auth/callback/<provider>')
 def oauth_callback(provider):
-    plan = request.args.get('plan', 'free')
+    plan = session.pop('signup_plan', 'free')
     if provider == 'microsoft':
         # Manual Microsoft OAuth: exchange code for token, then call Graph API
         code = request.args.get('code')
