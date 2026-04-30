@@ -4,6 +4,20 @@ from authlib.integrations.flask_client import OAuth
 from app.models import db, User, OTPToken
 from app.email import send_otp_email
 import os
+import requests as http_requests
+
+
+def verify_turnstile(token):
+    """Verify Cloudflare Turnstile response token."""
+    secret = os.getenv('TURNSTILE_SECRET_KEY')
+    if not secret:
+        return True  # Skip if not configured
+    resp = http_requests.post(
+        'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+        data={'secret': secret, 'response': token},
+        timeout=5
+    )
+    return resp.json().get('success', False)
 
 auth = Blueprint('auth', __name__)
 oauth = OAuth()
@@ -85,6 +99,11 @@ def oauth_callback(provider):
 
 @auth.route('/api/auth/signup', methods=['POST'])
 def email_signup():
+    # Turnstile verification
+    turnstile_token = request.form.get('cf-turnstile-response', '')
+    if not verify_turnstile(turnstile_token):
+        return redirect('/signup.html?error=captcha_failed')
+
     email = request.form.get('email', '').strip().lower()
     if not email:
         return redirect('/signup.html?error=missing_email')
@@ -108,6 +127,11 @@ def email_signup():
 
 @auth.route('/api/auth/verify', methods=['POST'])
 def email_verify():
+    # Turnstile verification
+    turnstile_token = request.form.get('cf-turnstile-response', '')
+    if not verify_turnstile(turnstile_token):
+        return redirect(f'/verify.html?email={request.form.get("email","")}&error=captcha_failed')
+
     email = request.form.get('email', '').strip().lower()
     code = request.form.get('code', '').strip()
 

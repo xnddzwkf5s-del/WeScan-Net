@@ -32,7 +32,7 @@
         <div id="error-msg" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"></div>
 
         <!-- OTP form -->
-        <form action="/api/auth/verify" method="POST" class="space-y-4">
+        <form action="/api/auth/verify" method="POST" class="space-y-4" id="verify-form">
             <input type="hidden" name="email" id="email-field">
             <div>
                 <input type="text" name="code" id="code-input"
@@ -44,6 +44,9 @@
                        autofocus
                        required>
             </div>
+            <!-- Cloudflare Turnstile -->
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAADGQ3EGbYMfM5fgX" data-theme="light"></div>
+
             <button type="submit"
                     class="w-full bg-black text-white py-3 rounded-full font-medium hover:bg-gray-800 transition-colors">
                 Verify email
@@ -61,6 +64,7 @@
         </p>
     </div>
 
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <script>
         const params = new URLSearchParams(window.location.search);
         const email = params.get('email') || '';
@@ -69,13 +73,14 @@
         document.getElementById('email-display').textContent = email;
         document.getElementById('email-field').value = email;
 
-        if (error === 'invalid') {
+        const errorMsgs = {
+            'invalid': 'Invalid or expired code. Please check your email or request a new code.',
+            'missing': 'Please enter the 6-digit code from your email.',
+            'captcha_failed': 'Security check failed. Please try again.',
+        };
+        if (error && errorMsgs[error]) {
             const el = document.getElementById('error-msg');
-            el.textContent = 'Invalid or expired code. Please check your email or request a new code.';
-            el.classList.remove('hidden');
-        } else if (error === 'missing') {
-            const el = document.getElementById('error-msg');
-            el.textContent = 'Please enter the 6-digit code from your email.';
+            el.textContent = errorMsgs[error];
             el.classList.remove('hidden');
         }
 
