@@ -180,6 +180,53 @@
     </p>
   </div>
 
+  <!-- ── My Signatures (collapsible) ──────────────────────────── -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;margin-bottom:20px;">
+    <button onclick="toggleSigs()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:none;border:none;cursor:pointer;text-align:left;">
+      <div>
+        <span style="font-size:16px;font-weight:700;color:#111;">🖊️ My Signatures</span>
+        <span style="font-size:13px;color:#999;margin-left:10px;">{{ signatures|length }} saved</span>
+      </div>
+      <span id="sigs-chevron" style="font-size:18px;color:#999;transition:transform 0.2s;">▸</span>
+    </button>
+
+    <div id="sigs-body" style="display:none;padding:0 24px 24px;">
+
+    <!-- Signature list -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+      {% for sig in signatures %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid #f0f0f0;border-radius:8px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <img src="data:image/png;base64,{{ sig.data }}" alt="{{ sig.name }}"
+               style="max-width:100px;max-height:35px;border:1px solid #eee;border-radius:4px;padding:2px;">
+          <span style="font-size:14px;font-weight:500;color:#111;">{{ sig.name }}</span>
+          <span style="font-size:11px;color:#aaa;">{{ sig.created_at.strftime('%d %b %Y') if sig.created_at else '' }}</span>
+        </div>
+        <button onclick="deleteSignature({{ sig.id }})"
+                style="background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0;"
+                onmouseover="this.style.color='#e53e3e'" onmouseout="this.style.color='#ccc'">
+          Delete
+        </button>
+      </div>
+      {% else %}
+      <p style="text-align:center;color:#bbb;font-size:14px;padding:12px 0;margin:0;">
+        No signatures saved yet.
+      </p>
+      {% endfor %}
+    </div>
+
+    {% if signatures|length < 3 %}
+    <button onclick="openSignatureModal()"
+            style="background:#000;color:#fff;border:none;border-radius:6px;padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;">
+      + Add Signature
+    </button>
+    {% else %}
+    <p style="font-size:12px;color:#ccc;margin:0;">Maximum 3 signatures reached. Delete one to create another.</p>
+    {% endif %}
+
+    </div><!-- /sigs-body -->
+  </div>
+
   <!-- ── Setup Wizard ──────────────────────────────────────────── -->
   <div style="background:#fff;border:1px solid #eee;border-radius:12px;margin-bottom:20px;">
     <button onclick="toggleWizard()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:none;border:none;cursor:pointer;text-align:left;">
@@ -393,46 +440,6 @@
     </div>
   </div>
 
-  <!-- ── My Signatures ─────────────────────────────────────────── -->
-  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 style="margin:0;font-size:16px;font-weight:700;color:#111;">🖊️ My Signatures</h2>
-      <span style="font-size:13px;color:#999;">{{ signatures|length }} / 3</span>
-    </div>
-
-    <!-- Signature list -->
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
-      {% for sig in signatures %}
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid #f0f0f0;border-radius:8px;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <img src="data:image/png;base64,{{ sig.data }}" alt="{{ sig.name }}"
-               style="max-width:100px;max-height:35px;border:1px solid #eee;border-radius:4px;padding:2px;">
-          <span style="font-size:14px;font-weight:500;color:#111;">{{ sig.name }}</span>
-        </div>
-        <button onclick="deleteSignature({{ sig.id }})"
-                style="background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0;"
-                onmouseover="this.style.color='#e53e3e'" onmouseout="this.style.color='#ccc'">
-          Delete
-        </button>
-      </div>
-      {% else %}
-      <p style="text-align:center;color:#bbb;font-size:14px;padding:12px 0;margin:0;">
-        No signatures saved. Create one below.
-      </p>
-      {% endfor %}
-    </div>
-
-    {% if signatures|length < 3 %}
-    <!-- Add Signature button triggers signature creator modal -->
-    <button id="btn-add-signature" onclick="openSignatureModal()"
-            style="background:#000;color:#fff;border:none;border-radius:6px;padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;">
-      + Add Signature
-    </button>
-    {% else %}
-    <p style="font-size:12px;color:#ccc;margin:0;">Maximum 3 signatures reached. Delete one to create another.</p>
-    {% endif %}
-  </div>
-
   <!-- Signature Creator Modal -->
   <div id="signature-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeSignatureModal()">
     <div style="background:#fff;border-radius:12px;padding:28px;max-width:480px;width:90%;">
@@ -593,6 +600,14 @@
 function toggleWizard() {
   const body = document.getElementById('wizard-body');
   const chevron = document.getElementById('wizard-chevron');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  chevron.textContent = open ? '▸' : '▾';
+}
+
+function toggleSigs() {
+  const body = document.getElementById('sigs-body');
+  const chevron = document.getElementById('sigs-chevron');
   const open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';
   chevron.textContent = open ? '▸' : '▾';
