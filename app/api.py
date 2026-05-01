@@ -1,6 +1,6 @@
 import email
 import re
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, render_template
 from app import db
 from app.models import User, Recipient, UsageStat, Document
 from datetime import datetime, timedelta
@@ -254,3 +254,40 @@ def inbox_store_document():
         'count': len(stored_ids),
         'from': 'inbox'
     })
+
+
+# ── Public share link ─────────────────────────────────────────────────────
+
+@api_bp.route('/share/<token>')
+def shared_download(token):
+    from app.models import SharedLink
+    from flask import render_template
+    link = SharedLink.query.filter_by(token=token, is_active=True).first()
+    if not link or link.expires_at < datetime.utcnow():
+        return render_template('share_expired.html'), 410
+    return render_template(
+        'share.html',
+        filename=link.document.filename,
+        file_size=link.document.file_size,
+        download_count=link.download_count,
+        expires_at=link.expires_at,
+        token=token
+    )
+
+
+@api_bp.route('/share/<token>/download')
+def shared_download_file(token):
+    from app.models import SharedLink
+    from flask import send_file
+    import io
+    link = SharedLink.query.filter_by(token=token, is_active=True).first()
+    if not link or link.expires_at < datetime.utcnow():
+        return render_template('share_expired.html'), 410
+    link.download_count += 1
+    db.session.commit()
+    return send_file(
+        io.BytesIO(link.document.file_data),
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=link.document.filename
+    )

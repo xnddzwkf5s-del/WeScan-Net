@@ -495,6 +495,20 @@
                style="background:#000;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:500;text-decoration:none;display:inline-block;">
               Sign &amp; Send
             </a>
+            {% if user.plan == 'enterprise' %}
+            <button onclick="openProtectModal({{ doc.id }}, '{{ doc.filename|e }}')"
+                    style="background:#f0f0f0;color:#555;border:none;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Password protect">🔒</button>
+            <button onclick="openWatermarkModal({{ doc.id }}, '{{ doc.filename|e }}')"
+                    style="background:#f0f0f0;color:#555;border:none;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Watermark">💧</button>
+            <button onclick="openShareModal({{ doc.id }}, '{{ doc.filename|e }}')"
+                    style="background:#f0f0f0;color:#555;border:none;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Share link">🔗</button>
+            {% else %}
+            <span style="display:inline-flex;gap:2px;">
+              <button onclick="showUpgrade()" style="background:#fafafa;color:#ccc;border:1px solid #eee;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Enterprise only">🔒</button>
+              <button onclick="showUpgrade()" style="background:#fafafa;color:#ccc;border:1px solid #eee;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Enterprise only">💧</button>
+              <button onclick="showUpgrade()" style="background:#fafafa;color:#ccc;border:1px solid #eee;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Enterprise only">🔗</button>
+            </span>
+            {% endif %}
             <button onclick="deleteDocument({{ doc.id }}, this)"
                     style="background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0 4px;"
                     onmouseover="this.style.color='#e53e3e'" onmouseout="this.style.color='#ccc'"
@@ -587,6 +601,106 @@
     </div>
 
   </div><!-- /tab-docs -->
+
+  <!-- ── Enterprise Feature Modals ────────────────────────────── -->
+
+  <!-- Protect Modal -->
+  <div id="protect-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeModals()">
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;width:90%;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="margin:0;font-size:16px;font-weight:700;color:#111;">🔒 Password Protect PDF</h3>
+        <button onclick="closeModals()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
+      </div>
+      <p id="protect-filename" style="font-size:13px;color:#888;margin:0 0 16px;"></p>
+      <input type="password" id="protect-password" placeholder="Enter password (min 4 characters)"
+             style="width:100%;border:1px solid #e8e8e8;border-radius:6px;padding:10px 12px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:8px;">
+      <p id="protect-status" style="font-size:12px;color:#999;margin:0 0 12px;">The original document stays in your inbox.</p>
+      <button onclick="doProtect()" id="protect-btn"
+              style="width:100%;background:#000;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">
+        Download Protected PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Watermark Modal -->
+  <div id="watermark-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeModals()">
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;width:90%;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="margin:0;font-size:16px;font-weight:700;color:#111;">💧 Watermark PDF</h3>
+        <button onclick="closeModals()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
+      </div>
+      <p id="watermark-filename" style="font-size:13px;color:#888;margin:0 0 16px;"></p>
+      <select id="watermark-preset" onchange="watermarkPresetChanged()"
+              style="width:100%;border:1px solid #e8e8e8;border-radius:6px;padding:10px 12px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:8px;">
+        <option value="CONFIDENTIAL">CONFIDENTIAL</option>
+        <option value="DRAFT">DRAFT</option>
+        <option value="FOR REVIEW">FOR REVIEW</option>
+        <option value="INTERNAL ONLY">INTERNAL ONLY</option>
+        <option value="DO NOT COPY">DO NOT COPY</option>
+        <option value="custom">Custom...</option>
+      </select>
+      <input type="text" id="watermark-custom" placeholder="Custom watermark text" maxlength="50"
+             style="display:none;width:100%;border:1px solid #e8e8e8;border-radius:6px;padding:10px 12px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:8px;">
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Font size</label>
+        <input type="range" id="watermark-size" min="12" max="72" value="36"
+               style="width:100%;">
+        <span id="watermark-size-label" style="font-size:11px;color:#999;">36</span>
+      </div>
+      <p id="watermark-status" style="font-size:12px;color:#999;margin:0 0 12px;">Applies diagonal watermark across all pages.</p>
+      <button onclick="doWatermark()" id="watermark-btn"
+              style="width:100%;background:#000;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">
+        Download Watermarked PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Share Modal -->
+  <div id="share-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeModals()">
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;width:90%;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="margin:0;font-size:16px;font-weight:700;color:#111;">🔗 Share Document</h3>
+        <button onclick="closeModals()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
+      </div>
+      <p id="share-filename" style="font-size:13px;color:#888;margin:0 0 12px;"></p>
+      <p style="font-size:12px;color:#999;margin:0 0 12px;">Generates a link anyone can use to download this document. Expires in 7 days.</p>
+      <button onclick="doShare()" id="share-btn"
+              style="width:100%;background:#000;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px;">
+        Generate Share Link
+      </button>
+      <div id="share-result" style="display:none;">
+        <input type="text" id="share-url" readonly
+               style="width:100%;border:1px solid #e8e8e8;border-radius:6px;padding:10px 12px;font-size:13px;font-family:monospace;outline:none;box-sizing:border-box;margin-bottom:8px;">
+        <p style="font-size:11px;color:#999;margin:0 0 4px;">Expires in 7 days. Generating a new link invalidates the previous one.</p>
+        <button onclick="copyShareUrl()"
+                style="background:#000;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:12px;cursor:pointer;">Copy Link</button>
+        <span id="share-copy-status" style="font-size:12px;color:#38a169;margin-left:8px;"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upgrade Modal (for free users clicking enterprise features) -->
+  <div id="upgrade-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeModals()">
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;width:90%;text-align:center;">
+      <div class="w-14 h-14 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+        <span style="font-size:24px;">🔒</span>
+      </div>
+      <h3 style="margin:0 0 8px;font-size:18px;font-weight:700;color:#111;">Enterprise Feature</h3>
+      <p style="font-size:14px;color:#888;margin:0 0 20px;">
+        Password protection, watermarking, and sharing links are available on the Enterprise plan.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a href="/#pricing"
+           style="background:#000;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;text-decoration:none;display:block;">
+          Upgrade to Enterprise
+        </a>
+        <button onclick="closeModals()"
+                style="background:none;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;color:#888;cursor:pointer;">
+          Maybe later
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Signature Creator Modal -->
   <div id="signature-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeSignatureModal()">
@@ -1016,6 +1130,173 @@ async function saveSignature() {
     btn.textContent = 'Save Signature';
     btn.disabled = false;
   }
+}
+
+// ── Enterprise Feature Handlers ──────────────────────────────────
+let activeDocId = null;
+let activeDocName = '';
+
+function openProtectModal(id, name) {
+  activeDocId = id;
+  document.getElementById('protect-filename').textContent = name;
+  document.getElementById('protect-password').value = '';
+  document.getElementById('protect-status').textContent = 'The original document stays in your inbox.';
+  document.getElementById('protect-status').style.color = '#999';
+  document.getElementById('protect-btn').disabled = false;
+  document.getElementById('protect-btn').textContent = 'Download Protected PDF';
+  document.getElementById('protect-modal').style.display = 'flex';
+}
+
+function openWatermarkModal(id, name) {
+  activeDocId = id;
+  document.getElementById('watermark-filename').textContent = name;
+  document.getElementById('watermark-preset').value = 'CONFIDENTIAL';
+  document.getElementById('watermark-custom').style.display = 'none';
+  document.getElementById('watermark-custom').value = '';
+  document.getElementById('watermark-size').value = 36;
+  document.getElementById('watermark-size-label').textContent = '36';
+  document.getElementById('watermark-status').textContent = 'Applies diagonal watermark across all pages.';
+  document.getElementById('watermark-status').style.color = '#999';
+  document.getElementById('watermark-btn').disabled = false;
+  document.getElementById('watermark-btn').textContent = 'Download Watermarked PDF';
+  document.getElementById('watermark-modal').style.display = 'flex';
+}
+
+function openShareModal(id, name) {
+  activeDocId = id;
+  document.getElementById('share-filename').textContent = name;
+  document.getElementById('share-result').style.display = 'none';
+  document.getElementById('share-btn').disabled = false;
+  document.getElementById('share-btn').textContent = 'Generate Share Link';
+  document.getElementById('share-modal').style.display = 'flex';
+}
+
+function closeModals() {
+  ['protect-modal','watermark-modal','share-modal','upgrade-modal'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  activeDocId = null;
+}
+
+function showUpgrade() {
+  document.getElementById('upgrade-modal').style.display = 'flex';
+}
+
+async function doProtect() {
+  const password = document.getElementById('protect-password').value;
+  const btn = document.getElementById('protect-btn');
+  const status = document.getElementById('protect-status');
+  if (password.length < 4) {
+    status.textContent = 'Password must be at least 4 characters.';
+    status.style.color = '#e53e3e';
+    return;
+  }
+  btn.textContent = 'Downloading…';
+  btn.disabled = true;
+  try {
+    const resp = await fetch('/dashboard/documents/' + activeDocId + '/protect', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({password: password})
+    });
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error || 'Failed');
+    }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'protected-' + (activeDocName || 'document.pdf');
+    a.click();
+    URL.revokeObjectURL(url);
+    closeModals();
+  } catch(e) {
+    status.textContent = 'Error: ' + e.message;
+    status.style.color = '#e53e3e';
+  }
+  btn.textContent = 'Download Protected PDF';
+  btn.disabled = false;
+}
+
+function watermarkPresetChanged() {
+  const sel = document.getElementById('watermark-preset');
+  const custom = document.getElementById('watermark-custom');
+  custom.style.display = sel.value === 'custom' ? 'block' : 'none';
+}
+
+document.getElementById('watermark-size').addEventListener('input', function(){
+  document.getElementById('watermark-size-label').textContent = this.value;
+});
+
+async function doWatermark() {
+  const preset = document.getElementById('watermark-preset');
+  const custom = document.getElementById('watermark-custom');
+  const text = preset.value === 'custom' ? custom.value.trim() : preset.value;
+  const fontSize = parseInt(document.getElementById('watermark-size').value) || 36;
+  const btn = document.getElementById('watermark-btn');
+  const status = document.getElementById('watermark-status');
+
+  if (!text) {
+    status.textContent = 'Please enter watermark text.';
+    status.style.color = '#e53e3e';
+    return;
+  }
+
+  btn.textContent = 'Downloading…';
+  btn.disabled = true;
+  try {
+    const resp = await fetch('/dashboard/documents/' + activeDocId + '/watermark', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: text, font_size: fontSize})
+    });
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error || 'Failed');
+    }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'watermarked-document.pdf';
+    a.click();
+    URL.revokeObjectURL(url);
+    closeModals();
+  } catch(e) {
+    status.textContent = 'Error: ' + e.message;
+    status.style.color = '#e53e3e';
+  }
+  btn.textContent = 'Download Watermarked PDF';
+  btn.disabled = false;
+}
+
+async function doShare() {
+  const btn = document.getElementById('share-btn');
+  btn.textContent = 'Generating…';
+  btn.disabled = true;
+  try {
+    const resp = await fetch('/dashboard/documents/' + activeDocId + '/share', {
+      method: 'POST'
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Failed');
+    document.getElementById('share-url').value = data.url;
+    document.getElementById('share-result').style.display = 'block';
+    btn.style.display = 'none';
+  } catch(e) {
+    btn.textContent = 'Generate Share Link';
+    btn.disabled = false;
+    alert('Error: ' + e.message);
+  }
+}
+
+function copyShareUrl() {
+  const input = document.getElementById('share-url');
+  input.select();
+  document.execCommand('copy');
+  document.getElementById('share-copy-status').textContent = '✓ Copied!';
+  setTimeout(() => document.getElementById('share-copy-status').textContent = '', 2000);
 }
 
 async function deleteDocument(id, btn) {

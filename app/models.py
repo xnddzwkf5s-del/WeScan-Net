@@ -152,3 +152,16 @@ class SignaturePlacement(db.Model):
 
     signed_document = db.relationship('SignedDocument', backref=db.backref('placement_records', lazy='dynamic', cascade='all, delete-orphan'))
     signature = db.relationship('Signature', backref=db.backref('via_placements', lazy='dynamic'))
+
+
+class SharedLink(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    download_count = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    document = db.relationship('Document', backref=db.backref('shared_links', lazy='dynamic', cascade='all, delete-orphan'))

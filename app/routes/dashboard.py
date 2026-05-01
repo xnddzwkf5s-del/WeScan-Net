@@ -579,3 +579,123 @@ def delete_signature(sig_id):
     db.session.delete(sig)
     db.session.commit()
     return jsonify({'ok': True})
+
+
+# ── Enterprise Features: Protect, Watermark, Share ──────────────────────────
+
+@dashboard.route('/dashboard/documents/<int:doc_id>/protect', methods=['POST'])
+@login_required
+def protect_document(doc_id):
+    if current_user.plan != 'enterprise':
+        return jsonify({'error': 'Enterprise plan required'}), 403
+
+    doc = Document.query.get_or_404(doc_id)
+    if doc.user_id != current_user.id:
+        return jsonify({'error': 'Not found'}), 404
+
+    password = (request.get_json(silent=True) or {}).get('password', '')
+    if len(password) < 4:
+        return jsonify({'error': 'Password must be at least 4 characters'}), 400
+
+    from flask import send_file
+    import fitz
+    pdf = fitz.open(stream=doc.file_data, filetype='pdf')
+    output = io.BytesIO()
+    pdf.save(output, encryption=fitz.PDF_ENCRYPT_AES_256, user_pw=password, garbage=4, deflate=True)
+    pdf.close()
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f'protected-{doc.filename}'
+    )
+
+
+@dashboard.route('/dashboard/documents/<int:doc_id>/watermark', methods=['POST'])
+@login_required
+def watermark_document(doc_id):
+    if current_user.plan != 'enterprise':
+        return jsonify({'error': 'Enterprise plan required'}), 403
+
+    doc = Document.query.get_or_404(doc_id)
+    if doc.user_id != current_user.id:
+        return jsonify({'error': 'Not found'}), 404
+
+    data = request.get_json(silent=True) or {}
+    text = (data.get('text') or 'CONFIDENTIAL').strip()[:50]
+    try:
+        font_size = max(8, min(72, int(data.get('font_size', 36))))
+    except (ValueError, TypeError):
+        font_size = 36
+
+    if not text:
+        return jsonify({'error': 'Watermark text is required'}), 400
+
+    from flask import send_file
+    import fitz
+    pdf = fitz.open(stream=doc.file_data, filetype='pdf')
+
+    for page in pdf:
+        rect = page.rect
+        step_x = rect.width / 3
+        step_y = rect.height / 3
+
+        for row in range(4):
+            for col in range(4):
+                x = step_x * col - step_x * 0.3
+                y = step_y * row
+                if 0 <= x <= rect.width and 0 <= y <= rect.height:
+                    page.insert_text(
+                        fitz.Point(x, y + font_size),
+                        text,
+                        fontsize=font_size,
+                        color=(0.8, 0.8, 0.8),
+                        fontname='helv',
+                        rotate=45
+                    )
+
+    output = io.BytesIO()
+    pdf.save(output, garbage=4, deflate=True)
+    pdf.close()
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f'watermarked-{doc.filename}'
+    )
+
+
+@dashboard.route('/dashboard/documents/<int:doc_id>/share', methods=['POST'])
+@login_required
+def share_document(doc_id):
+    if current_user.plan != 'enterprise':
+        return jsonify({'error': 'Enterprise plan required'}), 403
+
+    doc = Document.query.get_or_404(doc_id)
+    if doc.user_id != current_user.id:
+        return jsonify({'error': 'Not found'}), 404
+
+    from app.models import SharedLink
+    # Deactivate any existing active links for this document
+    SharedLink.query.filter_by(document_id=doc.id, is_active=True).update({'is_active': False})
+
+    import secrets
+    token = secrets.token_urlsafe(24)
+    link = SharedLink(
+        token=token,
+        document_id=doc.id,
+        user_id=current_user.id,
+        expires_at=datetime.utcnow() + timedelta(days=7)
+    )
+    db.session.add(link)
+    db.session.commit()
+
+    return jsonify({
+        'ok': True,
+        'url': f'https://wescan.net/share/{token}',
+        'expires_at': link.expires_at.isoformat()
+    })
