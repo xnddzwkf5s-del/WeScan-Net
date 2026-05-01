@@ -34,8 +34,6 @@
         <!-- OTP form -->
         <form action="/api/auth/verify" method="POST" class="space-y-4" id="verify-form">
             <input type="hidden" name="email" id="email-field">
-            <!-- Cloudflare Turnstile (top of the box) -->
-            <div class="cf-turnstile flex justify-center" data-sitekey="0x4AAAAAADGQ3EGbYMfM5fgX" data-theme="light"></div>
             <div>
                 <input type="text" name="code" id="code-input"
                        class="otp-input w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-black transition-colors"
@@ -64,7 +62,6 @@
         </p>
     </div>
 
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <script>
         const params = new URLSearchParams(window.location.search);
         const email = params.get('email') || '';
@@ -76,7 +73,6 @@
         const errorMsgs = {
             'invalid': 'Invalid or expired code. Please check your email or request a new code.',
             'missing': 'Please enter the 6-digit code from your email.',
-            'captcha_failed': 'Security check failed. Please try again.',
         };
         if (error && errorMsgs[error]) {
             const el = document.getElementById('error-msg');
@@ -84,24 +80,11 @@
             el.classList.remove('hidden');
         }
 
-        // Auto-submit when 6 digits entered — but wait for Turnstile token first
+        // Auto-submit when 6 digits entered
         document.getElementById('code-input').addEventListener('input', function() {
             if (this.value.replace(/\D/g, '').length === 6) {
                 this.value = this.value.replace(/\D/g, '');
-                const form = this.closest('form');
-                const token = form.querySelector('[name="cf-turnstile-response"]');
-                if (token && token.value) {
-                    form.submit();
-                } else {
-                    // Turnstile not ready yet — poll until it is
-                    const interval = setInterval(() => {
-                        const t = form.querySelector('[name="cf-turnstile-response"]');
-                        if (t && t.value) {
-                            clearInterval(interval);
-                            form.submit();
-                        }
-                    }, 200);
-                }
+                this.closest('form').submit();
             }
         });
 

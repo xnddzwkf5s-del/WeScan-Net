@@ -174,11 +174,6 @@ def oauth_callback(provider):
 
 @auth.route('/api/auth/signup', methods=['POST'])
 def email_signup():
-    # Turnstile verification
-    turnstile_token = request.form.get('cf-turnstile-response', '')
-    if not verify_turnstile(turnstile_token):
-        return redirect('/signup.html?error=captcha_failed')
-
     email = request.form.get('email', '').strip().lower()
     plan = request.form.get('plan', 'free')
     if not email:
@@ -203,11 +198,6 @@ def email_signup():
 
 @auth.route('/api/auth/verify', methods=['POST'])
 def email_verify():
-    # Turnstile verification
-    turnstile_token = request.form.get('cf-turnstile-response', '')
-    if not verify_turnstile(turnstile_token):
-        return redirect(f'/verify.html?email={request.form.get("email","")}&error=captcha_failed')
-
     email = request.form.get('email', '').strip().lower()
     code = request.form.get('code', '').strip()
     plan = request.form.get('plan', 'free')
