@@ -33,6 +33,7 @@ def create_app():
     from app.routes.smtp import smtp
     from app.routes.admin import admin
     from app.routes.payments import payments
+    from app.routes.pdf_edit import pdf_edit
     from app.api import api_bp
 
     app.register_blueprint(auth)
@@ -40,6 +41,7 @@ def create_app():
     app.register_blueprint(smtp)
     app.register_blueprint(admin)
     app.register_blueprint(payments)
+    app.register_blueprint(pdf_edit)
     app.register_blueprint(api_bp)
 
     # User loader

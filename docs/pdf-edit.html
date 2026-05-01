@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Free PDF Editor - Merge, Split, Rotate, Delete Pages - WeScan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    #drop-zone.dragover { border-color: #000; background: #f9f9f9; }
+    #drop-zone.has-files { border-color: #16a34a; background: #f0fdf4; }
+    .spinner { border: 3px solid #e5e7eb; border-top: 3px solid #000; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .page-row:nth-child(even) { background: #fafafa; }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- Navigation -->
+  <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex justify-between h-20">
+        <div class="flex items-center">
+          <a href="index.html" class="text-2xl font-light tracking-tight">
+            We<span class="font-semibold">Scan</span>
+          </a>
+        </div>
+        <div class="flex items-center space-x-8">
+          <a href="index.html" class="text-sm text-gray-600 hover:text-black transition-colors">Home</a>
+          <a href="index.html#features" class="text-sm text-gray-600 hover:text-black transition-colors">Features</a>
+          <a href="index.html#pricing" class="text-sm text-gray-600 hover:text-black transition-colors">Pricing</a>
+          <a href="ocr.html" class="text-sm text-gray-600 hover:text-black transition-colors">OCR</a>
+          <a href="signup.html" class="text-sm px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
+            Sign Up Free
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="pt-32 pb-12 px-6">
+    <div class="max-w-3xl mx-auto text-center">
+      <span class="text-xs font-medium text-gray-400 uppercase tracking-widest">Free Tool</span>
+      <h1 class="text-4xl md:text-5xl font-light tracking-tight text-gray-900 mt-4 mb-6">
+        PDF <span class="font-semibold">Editor</span>
+      </h1>
+      <p class="text-lg text-gray-500 max-w-xl mx-auto mb-2">
+        Merge multiple PDFs, split pages, rotate, and delete — all free. No account needed.
+      </p>
+      <p class="text-sm text-gray-400">
+        Your files are processed on our server and deleted immediately after download.
+      </p>
+    </div>
+  </section>
+
+  <!-- Tool -->
+  <section class="pb-16 px-6">
+    <div class="max-w-2xl mx-auto">
+
+      <!-- Drop Zone -->
+      <div id="drop-zone"
+           class="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center transition-all duration-200 bg-white cursor-pointer"
+           onclick="document.getElementById('file-input').click()">
+
+        <div id="drop-default">
+          <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+          <p class="text-base font-medium">Drop PDF files here</p>
+          <p class="text-sm mt-1 text-gray-400">or click to browse</p>
+          <p class="text-xs mt-3 text-gray-300">Supports multiple PDFs &mdash; max 20 MB each</p>
+        </div>
+
+        <div id="drop-files" class="hidden">
+          <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <p id="files-summary" class="text-base font-medium text-gray-900"></p>
+          <button onclick="event.stopPropagation();resetAll()" class="mt-3 text-sm text-gray-500 hover:text-black underline">Choose different files</button>
+        </div>
+      </div>
+
+      <input type="file" id="file-input" accept=".pdf" multiple class="hidden" onchange="handleFiles(this.files)">
+
+      <!-- Upload status -->
+      <div id="upload-status" class="hidden text-center py-6">
+        <span class="spinner"></span>
+        <span class="ml-3 text-sm text-gray-500">Uploading and analysing PDFs...</span>
+      </div>
+
+      <!-- Editor Panel -->
+      <div id="editor-panel" class="hidden mt-6 space-y-6">
+
+        <!-- Actions bar -->
+        <div class="flex flex-wrap gap-3">
+          <button onclick="selectAllPages()" class="px-4 py-2 text-xs font-medium text-gray-600 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors">
+            Select All Pages
+          </button>
+          <button onclick="deselectAllPages()" class="px-4 py-2 text-xs font-medium text-gray-600 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors">
+            Deselect All
+          </button>
+        </div>
+
+        <!-- File panels -->
+        <div id="file-panels"></div>
+
+        <!-- Action buttons -->
+        <div class="flex flex-col sm:flex-row gap-3" id="action-buttons">
+          <button onclick="doMerge()"
+                  id="merge-btn"
+                  class="flex-1 px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-sm font-medium">
+            Merge All &amp; Download
+          </button>
+          <button onclick="doSplit()"
+                  id="split-btn"
+                  class="px-6 py-3 border border-black text-black rounded-full hover:bg-gray-100 transition-colors text-sm font-medium">
+            Split Selected Pages
+          </button>
+        </div>
+
+        <!-- Status -->
+        <div id="process-status" class="hidden text-center py-4">
+          <div class="flex items-center justify-center gap-3">
+            <span class="spinner"></span>
+            <span id="status-text" class="text-sm text-gray-500">Processing...</span>
+          </div>
+        </div>
+
+        <!-- Result -->
+        <div id="process-result" class="hidden text-center space-y-4 bg-white rounded-xl border border-gray-200 p-8">
+          <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+            <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-base font-semibold text-gray-900">Your PDF is ready</p>
+            <p id="result-text" class="text-sm text-gray-500 mt-1"></p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a id="download-link" href="#" download
+               class="px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-sm font-medium inline-block">
+              Download PDF
+            </a>
+            <button onclick="resetAll()"
+                    class="px-6 py-3 border border-black text-black rounded-full hover:bg-gray-100 transition-colors text-sm font-medium">
+              Edit Another PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div id="process-error" class="hidden bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+          <p id="error-text" class="text-sm text-red-700"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="py-16 bg-white">
+    <div class="max-w-5xl mx-auto px-6">
+      <h2 class="text-3xl font-light tracking-tight text-gray-900 text-center mb-12">
+        How It <span class="font-semibold">Works</span>
+      </h2>
+      <div class="grid md:grid-cols-4 gap-8">
+        <div class="text-center">
+          <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-white text-lg font-medium">1</span>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Upload</h3>
+          <p class="text-sm text-gray-500">Drop one or more PDFs. We'll count the pages instantly.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-white text-lg font-medium">2</span>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Edit</h3>
+          <p class="text-sm text-gray-500">Delete unwanted pages, rotate, or split them out.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-white text-lg font-medium">3</span>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Merge</h3>
+          <p class="text-sm text-gray-500">Combine everything into a single, clean PDF in one click.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-white text-lg font-medium">4</span>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Download</h3>
+          <p class="text-sm text-gray-500">Download your PDF. Files are deleted from our server immediately.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="py-16 bg-gray-50">
+    <div class="max-w-5xl mx-auto px-6">
+      <h2 class="text-3xl font-light tracking-tight text-gray-900 text-center mb-12">
+        What You <span class="font-semibold">Can Do</span>
+      </h2>
+      <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        <div class="bg-white rounded-xl p-6 border border-gray-100">
+          <h3 class="font-semibold text-gray-900 mb-1">Merge PDFs</h3>
+          <p class="text-sm text-gray-500">Combine multiple PDFs into one document. Reports, invoices, scanned pages — merge them all.</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 border border-gray-100">
+          <h3 class="font-semibold text-gray-900 mb-1">Split Pages</h3>
+          <p class="text-sm text-gray-500">Extract specific pages from a PDF into a new file. Select the pages you need and split them out.</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 border border-gray-100">
+          <h3 class="font-semibold text-gray-900 mb-1">Rotate Pages</h3>
+          <p class="text-sm text-gray-500">Fix sideways scans. Rotate any page 90°, 180°, or 270° before merging.</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 border border-gray-100">
+          <h3 class="font-semibold text-gray-900 mb-1">Delete Pages</h3>
+          <p class="text-sm text-gray-500">Remove blank pages, cover sheets, or anything you don't want in the final document.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-16 bg-black text-white text-center">
+    <div class="max-w-xl mx-auto px-6">
+      <h2 class="text-3xl font-light mb-4">
+        Need PDF tools for your <span class="font-semibold">entire workflow?</span>
+      </h2>
+      <p class="text-gray-400 mb-8">
+        WeScan subscribers get automatic scan-to-email, digital signatures, OCR, and recipient management. No manual uploads needed.
+      </p>
+      <a href="signup.html" class="inline-block px-8 py-4 bg-white text-black rounded-full hover:bg-gray-100 transition-colors text-sm font-medium">
+        Try WeScan Free
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-100 py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid md:grid-cols-4 gap-8">
+        <div>
+          <a href="index.html" class="text-2xl font-light tracking-tight">
+            We<span class="font-semibold">Scan</span>
+          </a>
+          <p class="mt-4 text-sm text-gray-500">
+            Professional scan-to-email solution for businesses and individuals.
+          </p>
+        </div>
+        <div>
+          <h4 class="font-medium mb-4">Product</h4>
+          <ul class="space-y-2 text-sm text-gray-500">
+            <li><a href="index.html#features" class="hover:text-black transition-colors">Features</a></li>
+            <li><a href="ocr.html" class="hover:text-black transition-colors">Free OCR Tool</a></li>
+            <li><a href="pdf-edit.html" class="hover:text-black transition-colors">Free PDF Editor</a></li>
+            <li><a href="index.html#pricing" class="hover:text-black transition-colors">Pricing</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium mb-4">Support</h4>
+          <ul class="space-y-2 text-sm text-gray-500">
+            <li><a href="setup-guide.html" class="hover:text-black transition-colors">Setup Guide</a></li>
+            <li><a href="troubleshooting.html" class="hover:text-black transition-colors">Troubleshooting</a></li>
+            <li><a href="compatibility.html" class="hover:text-black transition-colors">Compatibility</a></li>
+            <li><a href="mailto:support@strayaco.com.au" class="hover:text-black transition-colors">Email Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium mb-4">Company</h4>
+          <ul class="space-y-2 text-sm text-gray-500">
+            <li><a href="https://strayaco.com.au" target="_blank" class="hover:text-black transition-colors">Straya Co</a></li>
+            <li><a href="privacy.html" class="hover:text-black transition-colors">Privacy Policy</a></li>
+            <li><a href="terms.html" class="hover:text-black transition-colors">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center">
+        <div class="text-sm text-gray-500">
+          &copy; 2026 WeScan. All rights reserved.
+        </div>
+        <div class="text-sm text-gray-500">
+          Built for reliable scan-to-email
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Support widget -->
+  <div id="support-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.4);" onclick="if(event.target===this)toggleSupport()">
+    <div style="position:fixed;bottom:90px;right:24px;background:#fff;border-radius:16px;padding:28px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <span style="font-size:16px;font-weight:700;color:#111;">Need help?</span>
+        <button onclick="toggleSupport()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;line-height:1;">&times;</button>
+      </div>
+      <p style="font-size:13px;color:#666;margin:0 0 20px;">WeScan is a product by <a href="https://strayaco.com.au" target="_blank" style="color:#000;font-weight:500;">Straya Co</a>. We're happy to help.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <a href="mailto:support@strayaco.com.au" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #eee;border-radius:10px;text-decoration:none;color:#111;font-size:13px;font-weight:500;">
+          <span style="font-size:18px;">📧</span> Email us
+          <span style="font-size:11px;color:#999;margin-left:auto;">support@strayaco.com.au</span>
+        </a>
+        <a href="troubleshooting.html" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #eee;border-radius:10px;text-decoration:none;color:#111;font-size:13px;font-weight:500;">
+          <span style="font-size:18px;">🔧</span> Troubleshooting guide
+        </a>
+        <a href="setup-guide.html" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #eee;border-radius:10px;text-decoration:none;color:#111;font-size:13px;font-weight:500;">
+          <span style="font-size:18px;">📖</span> Setup guide
+        </a>
+      </div>
+    </div>
+  </div>
+  <button onclick="toggleSupport()" style="position:fixed;bottom:24px;right:24px;z-index:999;background:#000;color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px;">
+    <span style="font-size:16px;">💬</span> Help
+  </button>
+
+  <script>
+    // ── State ──
+    let sessionId = null;
+    let files = [];  // [{id, name, pages}]
+
+    // ── Drag & drop ──
+    const dropZone = document.getElementById('drop-zone');
+    const dropDefault = document.getElementById('drop-default');
+    const dropFiles = document.getElementById('drop-files');
+    const filesSummary = document.getElementById('files-summary');
+    const fileInput = document.getElementById('file-input');
+    const uploadStatus = document.getElementById('upload-status');
+    const editorPanel = document.getElementById('editor-panel');
+    const filePanels = document.getElementById('file-panels');
+
+    ['dragenter', 'dragover'].forEach(ev => {
+      dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(ev => {
+      dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+    });
+    dropZone.addEventListener('drop', e => {
+      const dt = e.dataTransfer;
+      if (dt && dt.files && dt.files.length) handleFiles(dt.files);
+    });
+
+    async function handleFiles(fileList) {
+      const pdfs = Array.from(fileList).filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+      if (!pdfs.length) {
+        alert('Please upload PDF files only.');
+        return;
+      }
+
+      // Show upload status
+      dropDefault.classList.add('hidden');
+      dropFiles.classList.remove('hidden');
+      filesSummary.textContent = `${pdfs.length} file(s) selected`;
+      dropZone.classList.add('has-files');
+      uploadStatus.classList.remove('hidden');
+      editorPanel.classList.add('hidden');
+      hideResult();
+
+      // Upload
+      const form = new FormData();
+      pdfs.forEach(f => form.append('files', f));
+
+      try {
+        const resp = await fetch('/api/pdf-edit/upload', { method: 'POST', body: form });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Upload failed');
+
+        sessionId = data.session_id;
+        files = data.files;
+
+        uploadStatus.classList.add('hidden');
+        renderEditor();
+        editorPanel.classList.remove('hidden');
+      } catch (err) {
+        uploadStatus.classList.add('hidden');
+        alert('Upload failed: ' + err.message);
+        resetAll();
+      }
+    }
+
+    // ── Render editor ──
+    function renderEditor() {
+      let totalPages = 0;
+      files.forEach(f => totalPages += f.pages);
+      filesSummary.textContent = `${files.length} file(s) · ${totalPages} pages total`;
+      dropZone.classList.add('has-files');
+
+      let html = '';
+      files.forEach((f, fi) => {
+        html += '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">';
+        html += '<div class="px-5 py-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">';
+        html += `<span class="text-sm font-semibold text-gray-700">📄 ${escapeHtml(f.name)}</span>`;
+        html += `<span class="text-xs text-gray-400">${f.pages} page(s)</span>`;
+        html += '</div>';
+        html += '<div class="divide-y divide-gray-50">';
+        for (let p = 1; p <= f.pages; p++) {
+          const globalPage = (() => {
+            let count = 0;
+            for (let i = 0; i < fi; i++) count += files[i].pages;
+            return count + p;
+          })();
+          html += '<div class="page-row flex items-center px-5 py-2 gap-3">';
+          html += `<span class="text-xs text-gray-400 w-16 tabular-nums">Page ${globalPage}</span>`;
+          html += '<label class="flex items-center gap-2 flex-1 cursor-pointer">';
+          html += `<input type="checkbox" class="delete-check w-4 h-4 rounded border-gray-300 text-black focus:ring-black" data-file="${f.id}" data-page="${p}">`;
+          html += '<span class="text-sm text-gray-700">Delete this page</span>';
+          html += '</label>';
+          html += '<select class="rotate-select text-xs border border-gray-200 rounded px-2 py-1 text-gray-600" data-file="' + f.id + '" data-page="' + p + '">';
+          html += '<option value="0">No rotation</option>';
+          html += '<option value="90">Rotate 90°</option>';
+          html += '<option value="180">Rotate 180°</option>';
+          html += '<option value="270">Rotate 270°</option>';
+          html += '</select>';
+          html += '</div>';
+        }
+        html += '</div></div>';
+      });
+      filePanels.innerHTML = html;
+    }
+
+    // ── Selection helpers ──
+    function selectAllPages() {
+      document.querySelectorAll('.delete-check').forEach(cb => cb.checked = true);
+    }
+    function deselectAllPages() {
+      document.querySelectorAll('.delete-check').forEach(cb => cb.checked = false);
+    }
+
+    function getDeletePages() {
+      const map = {};
+      document.querySelectorAll('.delete-check:checked').forEach(cb => {
+        const fid = cb.dataset.file;
+        const page = parseInt(cb.dataset.page);
+        if (!map[fid]) map[fid] = [];
+        map[fid].push(page);
+      });
+      return map;
+    }
+
+    function getRotatePages() {
+      const map = {};
+      document.querySelectorAll('.rotate-select').forEach(sel => {
+        const angle = parseInt(sel.value);
+        if (angle === 0) return;
+        const fid = sel.dataset.file;
+        const page = parseInt(sel.dataset.page);
+        if (!map[fid]) map[fid] = [];
+        map[fid].push({ page, angle });
+      });
+      return map;
+    }
+
+    function getCheckedPagesForFile(fileId) {
+      const pages = [];
+      document.querySelectorAll(`.delete-check[data-file="${fileId}"]:checked`).forEach(cb => {
+        pages.push(parseInt(cb.dataset.page));
+      });
+      return pages;
+    }
+
+    // ── Merge ──
+    async function doMerge() {
+      const deletePages = getDeletePages();
+      const rotatePages = getRotatePages();
+
+      // Count pages that would survive
+      let surviving = 0;
+      files.forEach(f => {
+        const deleted = new Set(deletePages[f.id] || []);
+        surviving += f.pages - deleted.size;
+      });
+
+      if (surviving === 0) {
+        alert('All pages are marked for deletion. Deselect some pages first.');
+        return;
+      }
+
+      const btn = document.getElementById('merge-btn');
+      btn.disabled = true;
+      btn.textContent = 'Merging...';
+      hideResult();
+
+      const processStatus = document.getElementById('process-status');
+      const statusText = document.getElementById('status-text');
+      processStatus.classList.remove('hidden');
+      statusText.textContent = 'Merging PDFs...';
+
+      try {
+        const resp = await fetch('/api/pdf-edit/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: sessionId,
+            action: 'merge',
+            params: {
+              file_ids: files.map(f => f.id),
+              delete_pages: deletePages,
+              rotate_pages: rotatePages
+            }
+          })
+        });
+
+        processStatus.classList.add('hidden');
+
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.error || 'Merge failed');
+        }
+
+        const blob = await resp.blob();
+        showResult(blob);
+      } catch (err) {
+        processStatus.classList.add('hidden');
+        showError(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Merge All & Download';
+      }
+    }
+
+    // ── Split ──
+    async function doSplit() {
+      // Find which file has checked pages
+      let targetFile = null;
+      let checkedPages = [];
+      for (const f of files) {
+        const pages = getCheckedPagesForFile(f.id);
+        if (pages.length) {
+          if (targetFile) {
+            alert('Select pages from only one file for splitting.');
+            return;
+          }
+          targetFile = f;
+          checkedPages = pages;
+        }
+      }
+
+      if (!targetFile) {
+        alert('Check the pages you want to extract, then click "Split Selected Pages".');
+        return;
+      }
+
+      const btn = document.getElementById('split-btn');
+      btn.disabled = true;
+      btn.textContent = 'Splitting...';
+      hideResult();
+
+      const processStatus = document.getElementById('process-status');
+      const statusText = document.getElementById('status-text');
+      processStatus.classList.remove('hidden');
+      statusText.textContent = 'Extracting pages...';
+
+      try {
+        const resp = await fetch('/api/pdf-edit/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: sessionId,
+            action: 'split',
+            params: {
+              file_ids: [targetFile.id],
+              pages: checkedPages.sort((a, b) => a - b)
+            }
+          })
+        });
+
+        processStatus.classList.add('hidden');
+
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.error || 'Split failed');
+        }
+
+        const blob = await resp.blob();
+        showResult(blob, `${checkedPages.length} page(s) extracted`);
+      } catch (err) {
+        processStatus.classList.add('hidden');
+        showError(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Split Selected Pages';
+      }
+    }
+
+    // ── Result ──
+    function showResult(blob, msg) {
+      const url = URL.createObjectURL(blob);
+      const link = document.getElementById('download-link');
+      link.href = url;
+
+      // Build filename
+      const now = new Date();
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mmm = months[now.getMonth()];
+      const yy = String(now.getFullYear()).slice(-2);
+      link.download = `wescan-net-${dd}${mmm}${yy}.pdf`;
+
+      document.getElementById('result-text').textContent =
+        msg || 'Your PDF has been merged and is ready to download.';
+
+      document.getElementById('process-result').classList.remove('hidden');
+      document.getElementById('process-error').classList.add('hidden');
+    }
+
+    function showError(msg) {
+      document.getElementById('error-text').textContent = msg;
+      document.getElementById('process-error').classList.remove('hidden');
+      document.getElementById('process-result').classList.add('hidden');
+    }
+
+    function hideResult() {
+      document.getElementById('process-result').classList.add('hidden');
+      document.getElementById('process-error').classList.add('hidden');
+    }
+
+    // ── Reset ──
+    function resetAll() {
+      sessionId = null;
+      files = [];
+      fileInput.value = '';
+      dropDefault.classList.remove('hidden');
+      dropFiles.classList.add('hidden');
+      dropZone.classList.remove('has-files');
+      uploadStatus.classList.add('hidden');
+      editorPanel.classList.add('hidden');
+      filePanels.innerHTML = '';
+      hideResult();
+      document.getElementById('merge-btn').disabled = false;
+      document.getElementById('merge-btn').textContent = 'Merge All & Download';
+      document.getElementById('split-btn').disabled = false;
+      document.getElementById('split-btn').textContent = 'Split Selected Pages';
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function toggleSupport() {
+      const m = document.getElementById('support-modal');
+      m.style.display = m.style.display === 'none' ? 'block' : 'none';
+    }
+  </script>
+</body>
+</html>
