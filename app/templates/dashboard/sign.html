@@ -153,6 +153,7 @@ let dragOffsetY = 0;
 let currentPage = 0;
 let totalPages = 1;
 let docId = {{ doc.id }};
+let signaturePage = null;  // which page the overlay was placed on (null = not yet placed)
 
 // Load preview on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -193,9 +194,17 @@ async function loadPreview(page) {
       loading.style.display = 'none';
       currentPage = data.current_page || 0;
       updatePageIndicator();
-      // Restore signature overlay on new page
-      if (selectedSignatureData && !isDragging) {
+      // Show overlay only on the page it was placed; hide on other pages
+      const overlay = document.getElementById('signature-overlay');
+      if (signaturePage === null && selectedSignatureData) {
+        // First load — show overlay and record page
         showSignatureOverlay();
+      } else if (signaturePage === currentPage) {
+        // Back on the page where signature was placed — show it
+        overlay.style.display = 'block';
+      } else {
+        // Different page — hide overlay
+        overlay.style.display = 'none';
       }
     } else {
       loading.textContent = 'Could not load preview.';
@@ -226,6 +235,7 @@ function showSignatureOverlay() {
   const img = document.getElementById('sig-overlay-img');
   img.src = 'data:image/png;base64,' + selectedSignatureData;
   overlay.style.display = 'block';
+  signaturePage = currentPage;  // record which page the overlay is on
 
   // Position at center bottom of the preview area
   const container = document.getElementById('pdf-preview-container');
@@ -241,6 +251,7 @@ function showSignatureOverlay() {
 function selectSignature(id, data) {
   selectedSignatureId = id;
   selectedSignatureData = data;
+  signaturePage = null;  // reset so showSignatureOverlay records the current page
 
   // Update card styles
   document.querySelectorAll('[id^="sig-card-"]').forEach(card => {
