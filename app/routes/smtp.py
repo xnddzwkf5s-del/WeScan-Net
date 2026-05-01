@@ -30,6 +30,24 @@ def validate():
         db.session.commit()
         return 'Invalid sender', 403
 
+    # Hourly rate limit for free plan
+    if user.plan == 'free':
+        hour_ago = datetime.utcnow() - timedelta(hours=1)
+        emails_this_hour = UsageStat.query.filter(
+            UsageStat.user_id == user.id,
+            UsageStat.sent_at >= hour_ago
+        ).count()
+        if emails_this_hour >= 5:
+            block = BlockedEmail(
+                user_id=user.id,
+                smtp_username=smtp_user,
+                attempted_recipient=recipient,
+                reason='rate_limit_exceeded'
+            )
+            db.session.add(block)
+            db.session.commit()
+            return 'Rate limit exceeded. Essential plan allows 5 emails per hour.', 429
+
     # Check recipient whitelist
     whitelist = Recipient.query.filter_by(
         user_id=user.id,
