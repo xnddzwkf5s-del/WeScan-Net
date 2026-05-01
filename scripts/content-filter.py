@@ -75,7 +75,12 @@ def process_inbox_email(recipient, raw_message):
         )
         if resp.status_code == 200:
             data = resp.json()
-            sys.stderr.write(f'Inbox doc stored: id={data.get("document_id")} filename={data.get("filename")}\n')
+            docs = data.get('documents')
+            if docs:
+                for d in docs:
+                    sys.stderr.write(f'Inbox doc stored: id={d.get("document_id")} filename={d.get("filename")}\n')
+            else:
+                sys.stderr.write(f'Inbox doc stored: id={data.get("document_id")} filename={data.get("filename")}\n')
             return True
         sys.stderr.write(f'Inbox store error {resp.status_code}: {resp.text[:200]}\n')
         return False

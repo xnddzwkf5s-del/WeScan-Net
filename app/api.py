@@ -185,60 +185,72 @@ def inbox_store_document():
     except Exception:
         return jsonify({'error': 'Could not parse email'}), 400
 
-    pdf_filename = None
-    pdf_data = None
+    storage_used = db.session.query(db.func.sum(Document.file_size)).filter(
+        Document.user_id == user.id
+    ).scalar() or 0
+    limit_mb = 200 if user.plan == 'enterprise' else 15
+    limit_bytes = limit_mb * 1024 * 1024
 
-    def _extract_pdf_part(part):
-        nonlocal pdf_filename, pdf_data
-        if pdf_data:
-            return
+    # Extract ALL PDF attachments, not just the first one
+    pdf_parts = []
+
+    def _extract_all_pdfs(part):
         ct = part.get_content_type()
         cd = str(part.get('Content-Disposition', ''))
         if ct == 'application/pdf' or 'filename' in cd.lower():
             payload = part.get_payload(decode=True)
             if payload:
                 if payload.startswith(b'%PDF-') or ct == 'application/pdf':
-                    pdf_filename = part.get_filename() or 'forwarded-document.pdf'
-                    pdf_data = payload
+                    fname = part.get_filename() or 'forwarded-document.pdf'
+                    pdf_parts.append((fname, payload))
 
     if msg.is_multipart():
         for part in msg.walk():
-            _extract_pdf_part(part)
-            if pdf_data:
-                break
+            _extract_all_pdfs(part)
     else:
-        _extract_pdf_part(msg)
+        _extract_all_pdfs(msg)
 
-    if not pdf_data:
+    # If no PDF via MIME, try raw payload
+    if not pdf_parts:
         payload = msg.get_payload(decode=True)
         if payload and payload.startswith(b'%PDF-'):
-            pdf_data = payload
-            pdf_filename = 'forwarded-document.pdf'
+            pdf_parts.append(('forwarded-document.pdf', payload))
 
-    if not pdf_data:
+    if not pdf_parts:
         return jsonify({'error': 'No PDF attachment found'}), 400
 
-    # Storage quota check
-    storage_used = db.session.query(db.func.sum(Document.file_size)).filter(
-        Document.user_id == user.id
-    ).scalar() or 0
-    limit_mb = 200 if user.plan == 'enterprise' else 15
-    limit_bytes = limit_mb * 1024 * 1024
-    if len(pdf_data) > limit_bytes:
-        return jsonify({'error': f'File exceeds {limit_mb}MB storage limit'}), 413
-    if storage_used + len(pdf_data) > limit_bytes:
+    # Check total quota across all PDFs
+    total_new_size = sum(len(p) for _, p in pdf_parts)
+    if total_new_size > limit_bytes:
+        return jsonify({'error': f'Total file size exceeds {limit_mb}MB storage limit'}), 413
+    if storage_used + total_new_size > limit_bytes:
         return jsonify({'error': 'Storage quota exceeded'}), 413
 
-    doc = Document(
-        user_id=user.id,
-        filename=pdf_filename or 'forwarded-document.pdf',
-        file_data=pdf_data,
-        file_size=len(pdf_data),
-        mime_type='application/pdf',
-        status='pending',
-        expires_at=datetime.utcnow() + timedelta(days=14)
-    )
-    db.session.add(doc)
+    # Store each PDF as a separate document
+    stored_ids = []
+    for fname, data in pdf_parts:
+        doc = Document(
+            user_id=user.id,
+            filename=fname,
+            file_data=data,
+            file_size=len(data),
+            mime_type='application/pdf',
+            status='pending',
+            expires_at=datetime.utcnow() + timedelta(days=14)
+        )
+        db.session.add(doc)
+        db.session.flush()  # flush to get doc.id assigned
+        stored_ids.append({'document_id': doc.id, 'filename': fname})
+
     db.session.commit()
 
-    return jsonify({'ok': True, 'document_id': doc.id, 'filename': doc.filename, 'from': 'inbox'})
+    # Return first one as primary, list of all in 'documents'
+    first = stored_ids[0]
+    return jsonify({
+        'ok': True,
+        'document_id': first['document_id'],
+        'filename': first['filename'],
+        'documents': stored_ids,
+        'count': len(stored_ids),
+        'from': 'inbox'
+    })
