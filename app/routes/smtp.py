@@ -2,11 +2,35 @@ from flask import Blueprint, request, jsonify
 from app.models import db, User, Recipient, UsageStat, BlockedEmail
 from email_validator import validate_email, EmailNotValidError
 from datetime import datetime, timedelta
+from collections import defaultdict, deque
 
 smtp = Blueprint('smtp', __name__)
 
+# ── In-memory rate limiter (per IP, 30 req/min) ────────────────────────────
+_rate_limits = defaultdict(lambda: deque(maxlen=30))
+RATE_LIMIT_WINDOW = 60   # seconds
+RATE_LIMIT_MAX = 30      # requests per window
+
+def _check_rate_limit():
+    now = datetime.utcnow()
+    ip = request.remote_addr or 'unknown'
+    window = _rate_limits[ip]
+    while window and (now - window[0]).total_seconds() > RATE_LIMIT_WINDOW:
+        window.popleft()
+    if len(window) >= RATE_LIMIT_MAX:
+        retry_after = int(RATE_LIMIT_WINDOW - (now - window[0]).total_seconds())
+        return False, retry_after
+    window.append(now)
+    return True, None
+
+
 @smtp.route('/api/smtp/validate', methods=['POST'])
 def validate():
+    # Request-level rate limit (anti-abuse, before any DB work)
+    allowed, retry = _check_rate_limit()
+    if not allowed:
+        return f'Too many requests. Retry in {retry}s.', 429
+
     data = request.json
     sender = data['sender']
     recipient = data['recipient']
