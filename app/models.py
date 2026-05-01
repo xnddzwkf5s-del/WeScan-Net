@@ -122,7 +122,7 @@ class SignedDocument(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False)
-    signature_id = db.Column(db.Integer, db.ForeignKey('signature.id'), nullable=False)
+    signature_id = db.Column(db.Integer, db.ForeignKey('signature.id', ondelete='SET NULL'), nullable=True)
     signature_x = db.Column(db.Float, default=0.5)
     signature_y = db.Column(db.Float, default=0.85)
     signature_page = db.Column(db.Integer, default=0)
@@ -144,7 +144,7 @@ class SignaturePlacement(db.Model):
     __tablename__ = 'signature_placement'
     id = db.Column(db.Integer, primary_key=True)
     signed_document_id = db.Column(db.Integer, db.ForeignKey('signed_document.id'), nullable=False)
-    signature_id = db.Column(db.Integer, db.ForeignKey('signature.id'), nullable=False)
+    signature_id = db.Column(db.Integer, db.ForeignKey('signature.id', ondelete='SET NULL'), nullable=True)
     page_num = db.Column(db.Integer, default=0)
     x = db.Column(db.Float, default=0.5)
     y = db.Column(db.Float, default=0.85)

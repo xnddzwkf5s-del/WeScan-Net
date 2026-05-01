@@ -995,10 +995,19 @@ async function deleteDocument(id, btn) {
 async function deleteSignature(id) {
   if (!confirm('Delete this signature?')) return;
   try {
-    const resp = await fetch('/dashboard/signatures/' + id, { method: 'DELETE' });
+    const resp = await fetch('/dashboard/signatures/' + id, {
+      method: 'DELETE',
+      headers: {'X-Requested-With': 'XMLHttpRequest'}
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error('Server returned ' + resp.status);
+    }
     const data = await resp.json();
     if (data.ok) {
       window.location.reload();
+    } else {
+      alert('Failed to delete signature: ' + (data.error || 'Unknown error'));
     }
   } catch(e) {
     alert('Failed to delete signature: ' + e.message);
