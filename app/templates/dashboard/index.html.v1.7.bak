@@ -1,0 +1,1038 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="font-family:'Inter',sans-serif;background:#f8f8f8;min-height:100vh;padding:32px 0;">
+<div style="max-width:960px;margin:0 auto;padding:0 24px;">
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+    <div style="margin-bottom:16px;padding:12px 16px;border-radius:8px;font-size:14px;
+      {% if category == 'error' %}background:#fff5f5;color:#c53030;border:1px solid #fed7d7;
+      {% else %}background:#f0fff4;color:#276749;border:1px solid #c6f6d5;{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+  <!-- ── Trial banner ───────────────────────────────────────────── -->
+  {% if trial_days_left is not none %}
+  {% if cancelling %}
+  <div style="margin-bottom:20px;padding:16px 20px;background:#fff8f0;border:1px solid #f6ad55;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <span style="font-size:14px;font-weight:700;color:#c05621;">⚠️ Subscription cancelled — Enterprise access ends in {{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }}</span>
+      <span style="font-size:13px;color:#dd6b20;margin-left:8px;">You can reactivate anytime before then.</span>
+    </div>
+    <button onclick="openBillingPortal()"
+      style="background:#c05621;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;margin-left:16px;">
+      Reactivate
+    </button>
+  </div>
+  {% else %}
+  <div style="margin-bottom:20px;padding:16px 20px;background:#f0fff4;border:1px solid #9ae6b4;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <span style="font-size:14px;font-weight:700;color:#276749;">🎉 Enterprise Trial — {{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }} remaining</span>
+      <span style="font-size:13px;color:#48bb78;margin-left:8px;">You have full Enterprise access until your trial ends.</span>
+    </div>
+    <button onclick="document.getElementById('upgrade-section').scrollIntoView({behavior:'smooth'})"
+      style="background:#276749;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;margin-left:16px;">
+      Upgrade now
+    </button>
+  </div>
+  {% endif %}
+  {% elif trial_expired %}
+  <div style="margin-bottom:20px;padding:16px 20px;background:#fffbeb;border:1px solid #f6e05e;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <span style="font-size:14px;font-weight:700;color:#7b6002;">⚠️ Your trial has ended</span>
+      <span style="font-size:13px;color:#975a16;margin-left:8px;">You've been moved to the free plan. Upgrade to regain Enterprise access.</span>
+    </div>
+    <button onclick="document.getElementById('upgrade-section').scrollIntoView({behavior:'smooth'})"
+      style="background:#d69e2e;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;margin-left:16px;">
+      Upgrade
+    </button>
+  </div>
+  {% endif %}
+
+  <!-- Page header -->
+  <div style="margin-bottom:28px;">
+    <h1 style="margin:0 0 4px;font-size:22px;font-weight:700;color:#111;">Dashboard</h1>
+    <p style="margin:0;font-size:14px;color:#888;">
+      {{ user.email }} &nbsp;·&nbsp;
+      <span style="text-transform:capitalize;{% if user.plan == 'enterprise' %}font-weight:600;color:#111;{% endif %}">
+        {{ user.plan }} plan
+      </span>
+    </p>
+  </div>
+
+  <!-- ── Stats row ─────────────────────────────────────────────────── -->
+  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:28px;">
+
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;">
+      <div style="font-size:20px;font-weight:700;color:#111;">{{ stats.emails_today }}</div>
+      <div style="font-size:11px;color:#999;margin-top:3px;">Emails today</div>
+    </div>
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;">
+      <div style="font-size:20px;font-weight:700;color:#111;">{{ stats.emails_7d }}</div>
+      <div style="font-size:11px;color:#999;margin-top:3px;">Emails (7d)</div>
+    </div>
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;">
+      <div style="font-size:20px;font-weight:700;color:#111;">{{ stats.emails_30d }}</div>
+      <div style="font-size:11px;color:#999;margin-top:3px;">Emails (30d)</div>
+    </div>
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;">
+      <div style="font-size:20px;font-weight:700;color:#111;">{{ stats.emails_total }}</div>
+      <div style="font-size:11px;color:#999;margin-top:3px;">All time</div>
+    </div>
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;">
+      <div style="font-size:20px;font-weight:700;{% if stats.blocked_today > 0 %}color:#e53e3e;{% else %}color:#ccc;{% endif %}">
+        {{ stats.blocked_today }}
+      </div>
+      <div style="font-size:11px;color:#999;margin-top:3px;">Blocked today</div>
+    </div>
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;">
+      <div style="font-size:20px;font-weight:700;{% if stats.blocked_30d > 0 %}color:#dd6b20;{% else %}color:#ccc;{% endif %}">
+        {{ stats.blocked_30d }}
+      </div>
+      <div style="font-size:11px;color:#999;margin-top:3px;">Blocked (30d)</div>
+    </div>
+
+  </div>
+
+  <!-- ── Inbox Address Card ──────────────────────────────────────────── -->
+  {% if inbox_full %}
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px;">📬 Your Inbox Address</div>
+      <p style="font-size:12px;color:#999;margin:0;">Forward any PDF here and it appears in your Document Inbox for signing.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <input readonly value="{{ inbox_full }}"
+        id="inbox-addr"
+        style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:6px;padding:6px 10px;font-size:13px;font-family:monospace;color:#333;width:220px;text-align:center;">
+      <button onclick="navigator.clipboard.writeText(this.previousElementSibling.value).then(()=>{this.textContent='✓ Copied';setTimeout(()=>{this.textContent='Copy'},2000)})"
+        style="background:#000;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">Copy</button>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Document Inbox ─────────────────────────────────────────────── -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="margin:0;font-size:16px;font-weight:700;color:#111;">📄 Document Inbox</h2>
+      <span style="font-size:13px;color:#999;">
+        {{ storage_used_mb }} / {{ storage_limit_mb }} MB used
+      </span>
+      {% if signed_send_limit is not none %}
+      <span style="font-size:13px;color:#999;margin-left:20px;padding-left:20px;border-left:1px solid #ddd;">
+        {{ signed_sends_this_month }} / {{ signed_send_limit }} sends
+      </span>
+      {% endif %}
+    </div>
+
+    {% if signed_send_limit is not none and signed_sends_this_month is not none %}
+    {% set sends_left = signed_send_limit - signed_sends_this_month %}
+    {% if sends_left <= 3 %}
+    <div style="margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;
+      {% if sends_left <= 0 %}background:#fff5f5;border:1px solid #fed7d7;color:#c53030;
+      {% else %}background:#fff8f0;border:1px solid #fbd38d;color:#9c4221;{% endif %}">
+      {% if sends_left <= 0 %}
+      ⚠️ You've used all {{ signed_send_limit }} signed sends this month.
+      <a href="#upgrade-section" style="color:#c53030;font-weight:600;margin-left:6px;">Upgrade to Enterprise</a>
+      {% else %}
+      ⚡ {{ sends_left }} of {{ signed_send_limit }} signed sends remaining this month.
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <div style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;padding-right:4px;">
+      {% for doc in documents %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid #f0f0f0;border-radius:8px;">
+        <div>
+          <span style="font-size:14px;font-weight:500;color:#111;">{{ doc.filename }}</span>
+          <span style="font-size:12px;color:#999;margin-left:8px;">
+            {% if doc.file_size < 1024 %}
+              {{ doc.file_size }} B
+            {% elif doc.file_size < 1048576 %}
+              {{ (doc.file_size / 1024)|round(1) }} KB
+            {% else %}
+              {{ (doc.file_size / 1048576)|round(1) }} MB
+            {% endif %}
+          </span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:11px;color:#aaa;">{{ doc.created_at.strftime('%d %b %Y') }}</span>
+          <a href="/dashboard/documents/{{ doc.id }}/sign"
+             style="background:#000;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:500;text-decoration:none;display:inline-block;">
+            Sign & Send
+          </a>
+          <button onclick="deleteDocument({{ doc.id }}, this)"
+                  style="background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0 4px;"
+                  onmouseover="this.style.color='#e53e3e'" onmouseout="this.style.color='#ccc'"
+                  title="Delete">🗑</button>
+        </div>
+      </div>
+      {% else %}
+      <p style="text-align:center;color:#bbb;font-size:14px;padding:24px 0;margin:0;">
+        No documents yet.{% if inbox_full %} Forward a PDF to <strong>{{ inbox_full }}</strong> to see it here.{% else %} Scan a document to your WeScan email to see it here.{% endif %}
+      </p>
+      {% endfor %}
+    </div>
+    <p style="margin:12px 0 0;font-size:12px;color:#ccc;">
+      Documents auto-expire after 14 days.
+    </p>
+  </div>
+
+  <!-- ── My Signatures (collapsible) ──────────────────────────── -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;margin-bottom:20px;">
+    <button onclick="toggleSigs()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:none;border:none;cursor:pointer;text-align:left;">
+      <div>
+        <span style="font-size:16px;font-weight:700;color:#111;">🖊️ My Signatures</span>
+        <span style="font-size:13px;color:#999;margin-left:10px;">{{ signatures|length }} saved</span>
+      </div>
+      <span id="sigs-chevron" style="font-size:18px;color:#999;transition:transform 0.2s;">▸</span>
+    </button>
+
+    <div id="sigs-body" style="display:none;padding:0 24px 24px;">
+
+    <!-- Signature list -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+      {% for sig in signatures %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid #f0f0f0;border-radius:8px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <img src="data:image/png;base64,{{ sig.data }}" alt="{{ sig.name }}"
+               style="max-width:100px;max-height:35px;border:1px solid #eee;border-radius:4px;padding:2px;">
+          <span style="font-size:14px;font-weight:500;color:#111;">{{ sig.name }}</span>
+          <span style="font-size:11px;color:#aaa;">{{ sig.created_at.strftime('%d %b %Y') if sig.created_at else '' }}</span>
+        </div>
+        <button onclick="deleteSignature({{ sig.id }})"
+                style="background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0;"
+                onmouseover="this.style.color='#e53e3e'" onmouseout="this.style.color='#ccc'">
+          Delete
+        </button>
+      </div>
+      {% else %}
+      <p style="text-align:center;color:#bbb;font-size:14px;padding:12px 0;margin:0;">
+        No signatures saved yet.
+      </p>
+      {% endfor %}
+    </div>
+
+    {% if signatures|length < 3 %}
+    <button onclick="openSignatureModal()"
+            style="background:#000;color:#fff;border:none;border-radius:6px;padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;">
+      + Add Signature
+    </button>
+    {% else %}
+    <p style="font-size:12px;color:#ccc;margin:0;">Maximum 3 signatures reached. Delete one to create another.</p>
+    {% endif %}
+
+    </div><!-- /sigs-body -->
+  </div>
+
+  <!-- ── Setup Wizard ──────────────────────────────────────────── -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;margin-bottom:20px;">
+    <button onclick="toggleWizard()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:none;border:none;cursor:pointer;text-align:left;">
+      <div>
+        <span style="font-size:16px;font-weight:700;color:#111;">📋 Setup Wizard</span>
+        <span style="font-size:13px;color:#999;margin-left:10px;">Follow these steps to connect your scanner to WeScan.</span>
+      </div>
+      <span id="wizard-chevron" style="font-size:18px;color:#999;transition:transform 0.2s;">▸</span>
+    </button>
+
+    <div id="wizard-body" style="display:none;padding:0 24px 24px;">
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- Step 1: SMTP Credentials -->
+      <div style="display:flex;align-items:flex-start;gap:16px;padding:16px 20px;background:#f9f9fb;border-radius:10px;">
+        <div style="width:28px;height:28px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">1</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:4px;">Get your SMTP credentials</div>
+          <div style="font-size:13px;color:#666;">Use these details to configure your scanner. Copy the fields below.</div>
+          <div style="font-size:11px;color:#999;margin-top:4px;">
+            <span style="display:inline-flex;align-items:center;gap:4px;">✅ Server: <strong>smtp.wescan.net</strong> | Port: <strong>587</strong> | Encryption: <strong>STARTTLS</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Test Email -->
+      <div style="display:flex;align-items:flex-start;gap:16px;padding:16px 20px;background:#f9f9fb;border-radius:10px;">
+        <div style="width:28px;height:28px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">2</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:4px;">Test your SMTP server</div>
+          <div style="font-size:13px;color:#666;margin-bottom:10px;">We'll send a test email to <strong>{{ user.email }}</strong> to confirm the server is working.</div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button id="btn-test-email" onclick="sendTestEmail()"
+              style="background:#000;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;">
+              📨 Send Test Email
+            </button>
+            <span id="test-email-status" style="font-size:13px;color:#999;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Configure Printer -->
+      <div style="display:flex;align-items:flex-start;gap:16px;padding:16px 20px;background:#f9f9fb;border-radius:10px;">
+        <div style="width:28px;height:28px;background:#999;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">3</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:4px;">Configure your scanner</div>
+          <div style="font-size:13px;color:#666;margin-bottom:10px;">Enter the SMTP credentials above into your printer's scan-to-email settings. Select your brand for step-by-step instructions.</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <select id="brand-select" onchange="updateBrandGuide()"
+              style="padding:8px 14px;border:1px solid #ddd;border-radius:8px;font-size:13px;background:#fff;cursor:pointer;min-width:200px;">
+              <option value="">— Select your brand —</option>
+              <option value="hp">HP LaserJet / OfficeJet</option>
+              <option value="brother">Brother MFC / DCP</option>
+              <option value="canon">Canon imageCLASS / MAXIFY</option>
+              <option value="epson">Epson EcoTank / WorkForce</option>
+              <option value="xerox">Xerox</option>
+              <option value="kyocera">Kyocera</option>
+              <option value="lexmark">Lexmark</option>
+              <option value="other">Other / Generic</option>
+            </select>
+            <a id="brand-guide-link" href="#" target="_blank"
+              style="display:none;font-size:13px;color:#000;font-weight:600;text-decoration:underline;">
+              Open setup guide ↗
+            </a>
+          </div>
+          <div id="brand-guide-hint" style="font-size:12px;color:#999;margin-top:8px;"></div>
+        </div>
+      </div>
+
+      <!-- Step 4: Verify Connection -->
+      <div style="display:flex;align-items:flex-start;gap:16px;padding:16px 20px;background:#f9f9fb;border-radius:10px;">
+        <div style="width:28px;height:28px;
+          {% if scan_verify_status == 'verified' %}background:#38a169;{% else %}background:#999;{% endif %}
+          color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">
+          {% if scan_verify_status == 'verified' %}✓{% else %}4{% endif %}
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:4px;">
+            {% if scan_verify_status == 'verified' %}✅ Scanner connected{% else %}Verify your connection{% endif %}
+          </div>
+          {% if scan_verify_status == 'verified' %}
+          <div style="font-size:13px;color:#38a169;font-weight:500;">
+            Your scanner is live! We detected an incoming scan on {{ user.scan_verified_at.strftime('%d %b %Y at %H:%M') }}.
+          </div>
+          {% elif scan_verify_status == 'waiting' %}
+          <div style="font-size:13px;color:#dd6b20;">
+            ⏳ Waiting for your first scan — scan a document to any printer scan recipient.
+          </div>
+          {% elif scan_verify_status == 'expired' %}
+          <div style="font-size:13px;color:#dd6b20;margin-bottom:8px;">
+            ⏰ Verification request expired (no scan received within 1 hour). Try again.
+          </div>
+          <button id="btn-verify" onclick="requestVerify()"
+            style="background:#000;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;">
+            🔄 Try Again
+          </button>
+          {% else %}
+          <div style="font-size:13px;color:#666;margin-bottom:10px;">
+            After configuring your scanner, click this button and scan a document. We'll detect it and confirm everything works.
+          </div>
+          <button id="btn-verify" onclick="requestVerify()"
+            style="background:#000;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;">
+            🔗 Verify My Scanner
+          </button>
+          {% endif %}
+          <span id="verify-status" style="font-size:13px;color:#999;margin-left:10px;"></span>
+        </div>
+      </div>
+
+    </div>
+    </div><!-- /wizard-body -->
+  </div>
+
+  <!-- ── SMTP Settings ──────────────────────────────────────────────── -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <h2 style="margin:0 0 20px;font-size:16px;font-weight:700;color:#111;">SMTP Settings</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:#888;margin-bottom:6px;">SMTP Server</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" value="smtp.wescan.net" readonly
+                 style="flex:1;background:#f9f9f9;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;font-family:monospace;color:#111;">
+          <button onclick="copyField(this)" style="background:#000;color:#fff;border:none;border-radius:6px;padding:9px 14px;font-size:12px;cursor:pointer;">Copy</button>
+        </div>
+      </div>
+
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:#888;margin-bottom:6px;">Port / Security</label>
+        <input type="text" value="587  ·  STARTTLS" readonly
+               style="width:100%;background:#f9f9f9;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;font-family:monospace;color:#111;box-sizing:border-box;">
+      </div>
+
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:#888;margin-bottom:6px;">Username</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" value="{{ user.smtp_username }}" readonly id="smtp_username"
+                 style="flex:1;background:#f9f9f9;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;font-family:monospace;color:#111;">
+          <button onclick="copyField(this)" style="background:#000;color:#fff;border:none;border-radius:6px;padding:9px 14px;font-size:12px;cursor:pointer;">Copy</button>
+        </div>
+      </div>
+
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:#888;margin-bottom:6px;">Password</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="smtp_password" placeholder="Click Generate to create a password" readonly
+                 style="flex:1;background:#f9f9f9;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;font-family:monospace;color:#111;">
+          <button onclick="copyField(this)" id="copy_pwd_btn" style="background:#111;color:#fff;border:none;border-radius:6px;padding:9px 14px;font-size:12px;cursor:pointer;display:none;">Copy</button>
+        </div>
+        <button onclick="generatePassword()" id="gen_btn"
+                style="margin-top:8px;background:#000;color:#fff;border:none;border-radius:6px;padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;">
+          Generate Password
+        </button>
+        <p style="margin:6px 0 0;font-size:11px;color:#aaa;">Generating a new password invalidates the previous one.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Recipients ────────────────────────────────────────────────── -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="margin:0;font-size:16px;font-weight:700;color:#111;">🖨️ Printer Scan Recipients</h2>
+      <p style="margin:6px 0 0;font-size:12px;color:#999;">These are the email addresses your printer is allowed to scan to. <strong style="color:#555;">Signing and sending signed documents has no restrictions.</strong></p>
+      <span style="font-size:13px;color:#999;">
+        {{ recipients|length }} / {{ stats.recipient_limit }} used
+      </span>
+    </div>
+
+    {% if recipients|length < stats.recipient_limit %}
+    <form method="POST" action="{{ url_for('dashboard.manage_recipients') }}"
+          style="display:flex;gap:8px;margin-bottom:20px;">
+      <input type="email" name="email" placeholder="e.g. boss@company.com" required
+             style="flex:1;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;outline:none;">
+      <input type="text" name="name" placeholder="Display name (optional)"
+             style="width:180px;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;outline:none;">
+      <button type="submit"
+              style="background:#000;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer;">
+        Add
+      </button>
+    </form>
+    {% else %}
+    <div style="margin-bottom:20px;padding:12px 16px;background:#fffbeb;border:1px solid #f5e27a;border-radius:6px;font-size:13px;color:#7a5c00;">
+      Recipient limit reached.
+      {% if user.plan == 'free' %}
+      <a href="/#pricing" style="color:#7a5c00;font-weight:600;">Upgrade to Enterprise</a> for up to 100 recipients.
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;padding-right:4px;">
+      {% for r in recipients %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #f0f0f0;border-radius:8px;">
+        <div>
+          <span style="font-size:14px;font-weight:500;color:#111;">{{ r.email }}</span>
+          {% if r.display_name %}
+          <span style="font-size:13px;color:#aaa;margin-left:8px;">— {{ r.display_name }}</span>
+          {% endif %}
+        </div>
+        <form method="POST" action="{{ url_for('dashboard.delete_recipient', id=r.id) }}" style="display:inline;">
+          <button type="submit" style="background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0;"
+                  onmouseover="this.style.color='#e53e3e'" onmouseout="this.style.color='#ccc'">
+            Remove
+          </button>
+        </form>
+      </div>
+      {% else %}
+      <p style="text-align:center;color:#bbb;font-size:14px;padding:24px 0;margin:0;">
+        No printer scan recipients added yet.
+      </p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Signature Creator Modal -->
+  <div id="signature-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeSignatureModal()">
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:480px;width:90%;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="margin:0;font-size:16px;font-weight:700;color:#111;">Create Signature</h3>
+        <button onclick="closeSignatureModal()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;color:#888;margin-bottom:4px;">Signature Name</label>
+        <input type="text" id="sig-name" placeholder="e.g. My Signature" maxlength="50"
+               style="width:100%;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;color:#888;margin-bottom:8px;">Draw Your Signature</label>
+        <canvas id="sig-canvas" width="400" height="120"
+                style="width:100%;height:auto;border:1px solid #e8e8e8;border-radius:6px;background:transparent;cursor:crosshair;touch-action:none;"></canvas>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button onclick="clearCanvas()"
+                  style="background:#f5f5f5;color:#666;border:1px solid #eee;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;">
+            Clear
+          </button>
+          <button onclick="undoStroke()"
+                  style="background:#f5f5f5;color:#666;border:1px solid #eee;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;">
+            Undo
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;display:none;" id="sig-preview-area">
+        <label style="display:block;font-size:12px;color:#888;margin-bottom:8px;">Preview</label>
+        <img id="sig-preview-img" src="" alt="Signature Preview"
+             style="max-width:200px;max-height:50px;border:1px solid #eee;border-radius:4px;padding:4px;">
+      </div>
+
+      <button id="btn-save-signature" onclick="saveSignature()"
+              style="width:100%;background:#000;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">
+        Save Signature
+      </button>
+      <div id="sig-save-status" style="margin-top:8px;font-size:13px;color:#999;text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- ── Signed Documents History ──────────────────────────────── -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <h2 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#111;">📬 Sent Documents</h2>
+    {% if sent_documents %}
+    <div style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;padding-right:4px;">
+      {% for sd in sent_documents %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #f0f0f0;border-radius:8px;">
+        <div>
+          <span style="font-size:14px;font-weight:500;color:#111;">{{ sd.document.filename }}</span>
+          <span style="font-size:12px;color:#999;margin-left:8px;">
+            Sent to {{ sd.sent_to_primary }}
+            {% if sd.sent_to_additional %}+ {{ sd.sent_to_additional.split(',')|length }} more{% endif %}
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;padding:2px 8px;border-radius:4px;{% if sd.status == 'sent' %}background:#f0fff4;color:#38a169;{% else %}background:#fff5f5;color:#e53e3e;{% endif %}">
+            {{ sd.status }}
+          </span>
+          <span style="font-size:11px;color:#aaa;">
+            {% if sd.sent_at %}{{ sd.sent_at.strftime('%d %b %Y') }}{% endif %}
+          </span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="text-align:center;color:#bbb;font-size:14px;padding:24px 0;margin:0;">
+      No documents sent yet. Sign and send one to see it here.
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- ── Blocked attempts (last 30 days) ───────────────────────────── -->
+  {% if blocked_recent %}
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <h2 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#111;">
+      Blocked Delivery Attempts
+      <span style="font-size:13px;font-weight:400;color:#aaa;margin-left:8px;">last 30 days</span>
+    </h2>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      {% for b in blocked_recent %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff8f8;border:1px solid #fee;border-radius:8px;">
+        <div style="font-size:13px;">
+          <span style="color:#111;">{{ b.attempted_recipient }}</span>
+          <span style="margin-left:8px;padding:2px 8px;border-radius:4px;font-size:11px;
+            {% if b.reason == 'not_whitelisted' %}background:#fff0f0;color:#e53e3e;
+            {% else %}background:#fff8f0;color:#dd6b20;{% endif %}">
+            {{ b.reason | replace('not_whitelisted', 'not in scan recipients') | replace('_', ' ') }}
+          </span>
+        </div>
+        <span style="font-size:12px;color:#ccc;">{{ b.blocked_at.strftime('%d %b %H:%M') }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <p style="margin:12px 0 0;font-size:12px;color:#ccc;">
+      Email content is never stored. Only the attempt is logged.
+    </p>
+  </div>
+  {% endif %}
+
+  <!-- ── Upgrade section ──────────────────────────────────────── -->
+  {% if user.plan != 'enterprise' or trial_days_left is not none or trial_expired %}
+  <div id="upgrade-section" style="background:#000;color:#fff;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <h2 style="margin:0 0 6px;font-size:16px;font-weight:700;">Upgrade to Enterprise</h2>
+    <p style="margin:0 0 20px;font-size:13px;color:#aaa;">100 recipients &middot; 25 MB files &middot; Unlimited emails &middot; Priority support</p>
+
+    <div style="margin-bottom:16px;">
+      <p style="font-size:12px;font-weight:500;color:#aaa;margin:0 0 10px;">SELECT CURRENCY</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <label style="cursor:pointer;">
+          <input type="radio" name="currency" value="aud" checked style="display:none;" onchange="updatePrice(this)">
+          <span class="currency-btn" data-val="aud" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#fff;color:#000;">AUD $30</span>
+        </label>
+        <label style="cursor:pointer;">
+          <input type="radio" name="currency" value="usd" style="display:none;" onchange="updatePrice(this)">
+          <span class="currency-btn" data-val="usd" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#333;color:#fff;">USD $22</span>
+        </label>
+        <label style="cursor:pointer;">
+          <input type="radio" name="currency" value="eur" style="display:none;" onchange="updatePrice(this)">
+          <span class="currency-btn" data-val="eur" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#333;color:#fff;">EUR €19</span>
+        </label>
+        <label style="cursor:pointer;">
+          <input type="radio" name="currency" value="gbp" style="display:none;" onchange="updatePrice(this)">
+          <span class="currency-btn" data-val="gbp" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#333;color:#fff;">GBP £16</span>
+        </label>
+      </div>
+    </div>
+
+    <button onclick="startCheckout()" id="checkout-btn"
+      style="background:#fff;color:#000;border:none;border-radius:8px;padding:12px 28px;font-size:14px;font-weight:600;cursor:pointer;">
+      Upgrade — AUD $30/month
+    </button>
+    <p style="margin:10px 0 0;font-size:12px;color:#666;">Secure checkout via Stripe. Cancel anytime.</p>
+  </div>
+  {% endif %}
+
+  {% if user.stripe_customer_id and user.plan == 'enterprise' and not trial_days_left %}
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px 28px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <span style="font-size:14px;font-weight:600;color:#111;">Billing</span>
+      <span style="font-size:13px;color:#999;margin-left:8px;">Manage your subscription, invoices, and payment method</span>
+    </div>
+    <button onclick="openBillingPortal()"
+      style="background:#000;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer;">
+      Manage billing
+    </button>
+  </div>
+  {% endif %}
+
+</div>
+</div>
+
+<script>
+function toggleWizard() {
+  const body = document.getElementById('wizard-body');
+  const chevron = document.getElementById('wizard-chevron');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  chevron.textContent = open ? '▸' : '▾';
+}
+
+function toggleSigs() {
+  const body = document.getElementById('sigs-body');
+  const chevron = document.getElementById('sigs-chevron');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  chevron.textContent = open ? '▸' : '▾';
+}
+
+
+async function sendTestEmail() {
+  const btn = document.getElementById('btn-test-email');
+  const status = document.getElementById('test-email-status');
+  const userEmail = '{{ user.email }}';
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
+  status.textContent = '';
+  try {
+    const resp = await fetch('/dashboard/send-test-email', { method: 'POST' });
+    const data = await resp.json();
+    if (data.ok) {
+      status.style.color = '#38a169';
+      status.textContent = '✅ Sent! Check ' + userEmail;
+      btn.textContent = '📨 Send Again';
+    } else {
+      throw new Error(data.error);
+    }
+  } catch(e) {
+    status.style.color = '#e53e3e';
+    status.textContent = '❌ Failed: ' + e.message;
+    btn.textContent = '📨 Send Test Email';
+  }
+  btn.disabled = false;
+}
+
+async function requestVerify() {
+  const btn = document.getElementById('btn-verify');
+  const status = document.getElementById('verify-status');
+  btn.textContent = 'Waiting…';
+  btn.disabled = true;
+  status.textContent = '';
+  try {
+    const resp = await fetch('/dashboard/verify-scan', { method: 'POST' });
+    const data = await resp.json();
+    if (data.ok) {
+      status.style.color = '#38a169';
+      status.textContent = '✅ Now scan a document to any printer scan recipient!';
+      btn.textContent = '🔗 Waiting for Scan…';
+      // Poll every 10 seconds for 2 minutes
+      pollVerifyStatus(0);
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch(e) {
+    status.style.color = '#e53e3e';
+    status.textContent = '❌ ' + e.message;
+    btn.textContent = '🔗 Try Again';
+    btn.disabled = false;
+  }
+}
+
+const brandGuides = {
+  hp: {
+    url: 'https://support.hp.com/us-en/document/ish_6518575-6518545-16',
+    hint: 'Use the HP Embedded Web Server (EWS) — enter your printer\'s IP in a browser, go to Networking > Email > SMTP.'
+  },
+  brother: {
+    url: 'https://help.brother-usa.com/app/answers/detail/a_id/179376/~/scan-to-e-mail-server',
+    hint: 'Go to Menu > Network > E-mail > SMTP Server on the printer control panel.'
+  },
+  canon: {
+    url: 'https://oip.manual.canon/USRMA-0144-zz-CS-enUV/contents/08040010.html',
+    hint: 'Use the Canon Remote UI — enter your printer\'s IP in a browser, go to Communication > Email/I-Fax > SMTP.'
+  },
+  epson: {
+    url: 'https://epson.com/Support/Printers/sh/s',
+    hint: 'Search for your model on Epson Support, then look for the Network Guide or Web Config section for Email Server settings.'
+  },
+  xerox: {
+    url: 'https://www.support.xerox.com/en-us/article/KB0426874',
+    hint: 'Use Xerox CentreWare Internet Services (CWIS) — go to Properties > Services > Email > SMTP.'
+  },
+  kyocera: {
+    url: 'https://kyoceradocumentsolutions.com.au/knowledge/scan-to-email',
+    hint: 'Use Kyocera Command Center RX — login via browser, go to Advanced > Network > SMTP.'
+  },
+  lexmark: {
+    url: 'https://support.lexmark.com/cs_cz/manuals-guides/online/XC9445/configuring-the-email-smtp-settings-v56792110.html?toc=1.2.5',
+    hint: 'Use Lexmark Embedded Web Server — login via browser, go to Settings > Email > SMTP Server.'
+  },
+  other: {
+    url: '/setup-guide.html',
+    hint: 'Look for SMTP or Email Server settings under your printer\'s Network or Communication menu. Use the generic settings below.'
+  }
+};
+
+function updateBrandGuide() {
+  const sel = document.getElementById('brand-select');
+  const link = document.getElementById('brand-guide-link');
+  const hint = document.getElementById('brand-guide-hint');
+  const val = sel.value;
+  if (val && brandGuides[val]) {
+    link.href = brandGuides[val].url;
+    link.style.display = 'inline-block';
+    hint.textContent = brandGuides[val].hint;
+  } else {
+    link.style.display = 'none';
+    hint.textContent = '';
+  }
+}
+
+function pollVerifyStatus(attempt) {
+  if (attempt > 12) {  // 12 * 10s = 2 minutes max
+    document.getElementById('verify-status').textContent = '⏰ Timed out — try again if your scanner is configured.';
+    const btn = document.getElementById('btn-verify');
+    btn.textContent = '🔗 Try Again';
+    btn.disabled = false;
+    return;
+  }
+  setTimeout(async () => {
+    try {
+      const resp = await fetch('/dashboard/verify-scan');
+      const data = await resp.json();
+      if (data.status === 'verified') {
+        document.getElementById('verify-status').textContent = '✅ Scanner detected! Connection verified.';
+        document.getElementById('verify-status').style.color = '#38a169';
+        // Refresh page after 2 seconds to show the verified badge
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        pollVerifyStatus(attempt + 1);
+      }
+    } catch(e) {
+      pollVerifyStatus(attempt + 1);
+    }
+  }, 10000);
+}
+
+async function generatePassword() {
+  const btn = document.getElementById('gen_btn');
+  btn.textContent = 'Generating…';
+  btn.disabled = true;
+  try {
+    const resp = await fetch('/dashboard/smtp/generate', { method: 'POST' });
+    const data = await resp.json();
+    const field = document.getElementById('smtp_password');
+    field.value = data.smtp_password;
+    document.getElementById('copy_pwd_btn').style.display = 'inline-block';
+    btn.textContent = 'Regenerate Password';
+  } catch(e) {
+    alert('Failed to generate password. Please try again.');
+    btn.textContent = 'Generate Password';
+  }
+  btn.disabled = false;
+}
+
+function copyField(btn) {
+  const input = btn.previousElementSibling;
+  input.select();
+  input.setSelectionRange(0, 99999);
+  document.execCommand('copy');
+  const orig = btn.textContent;
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+const priceLabels = { aud: 'AUD $30', usd: 'USD $22', eur: 'EUR €19', gbp: 'GBP £16' };
+
+function updatePrice(radio) {
+  document.querySelectorAll('.currency-btn').forEach(btn => {
+    const active = btn.dataset.val === radio.value;
+    btn.style.background = active ? '#fff' : '#333';
+    btn.style.color = active ? '#000' : '#fff';
+  });
+  const btn = document.getElementById('checkout-btn');
+  if (btn) btn.textContent = `Upgrade — ${priceLabels[radio.value]}/month`;
+}
+
+async function openBillingPortal() {
+  try {
+    const resp = await fetch('/billing-portal', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    });
+    const data = await resp.json();
+    if (data.url) window.location.href = data.url;
+    else throw new Error(data.error || 'Unknown error');
+  } catch(e) {
+    alert('Could not open billing portal: ' + e.message);
+  }
+}
+
+// ── Signature Creator ──
+
+let canvas, ctx, isDrawing = false;
+let strokes = [];
+let currentStroke = [];
+
+function openSignatureModal() {
+  document.getElementById('signature-modal').style.display = 'flex';
+  document.getElementById('sig-name').value = '';
+  document.getElementById('sig-preview-area').style.display = 'none';
+  document.getElementById('sig-save-status').textContent = '';
+  document.getElementById('btn-save-signature').disabled = false;
+  document.getElementById('btn-save-signature').textContent = 'Save Signature';
+  initCanvas();
+}
+
+function closeSignatureModal() {
+  document.getElementById('signature-modal').style.display = 'none';
+}
+
+function initCanvas() {
+  canvas = document.getElementById('sig-canvas');
+  ctx = canvas.getContext('2d');
+  strokes = [];
+  currentStroke = [];
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  canvas.onmousedown = function(e) {
+    isDrawing = true;
+    currentStroke = [];
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    currentStroke.push({x, y});
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  canvas.onmousemove = function(e) {
+    if (!isDrawing) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    currentStroke.push({x, y});
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  canvas.onmouseup = function() {
+    if (isDrawing && currentStroke.length > 0) {
+      strokes.push([...currentStroke]);
+    }
+    isDrawing = false;
+  };
+
+  canvas.onmouseleave = function() {
+    if (isDrawing && currentStroke.length > 0) {
+      strokes.push([...currentStroke]);
+    }
+    isDrawing = false;
+  };
+
+  // Touch support
+  canvas.ontouchstart = function(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    isDrawing = true;
+    currentStroke = [];
+    const rect = canvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+    currentStroke.push({x, y});
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  canvas.ontouchmove = function(e) {
+    e.preventDefault();
+    if (!isDrawing) return;
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+    currentStroke.push({x, y});
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  canvas.ontouchend = function(e) {
+    e.preventDefault();
+    if (isDrawing && currentStroke.length > 0) {
+      strokes.push([...currentStroke]);
+    }
+    isDrawing = false;
+  };
+}
+
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  strokes = [];
+  currentStroke = [];
+  document.getElementById('sig-preview-area').style.display = 'none';
+}
+
+function undoStroke() {
+  if (strokes.length === 0) return;
+  strokes.pop();
+  // Redraw all strokes
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (const stroke of strokes) {
+    if (stroke.length === 0) continue;
+    ctx.beginPath();
+    ctx.moveTo(stroke[0].x, stroke[0].y);
+    for (let i = 1; i < stroke.length; i++) {
+      ctx.lineTo(stroke[i].x, stroke[i].y);
+    }
+    ctx.stroke();
+  }
+  document.getElementById('sig-preview-area').style.display = 'none';
+}
+
+async function saveSignature() {
+  const name = document.getElementById('sig-name').value.trim();
+  if (!name) {
+    document.getElementById('sig-save-status').textContent = 'Please enter a signature name.';
+    document.getElementById('sig-save-status').style.color = '#e53e3e';
+    return;
+  }
+  if (strokes.length === 0) {
+    document.getElementById('sig-save-status').textContent = 'Please draw your signature.';
+    document.getElementById('sig-save-status').style.color = '#e53e3e';
+    return;
+  }
+
+  // Convert canvas to base64 PNG
+  const dataUrl = canvas.toDataURL('image/png');
+  const base64 = dataUrl.split(',')[1];
+
+  const btn = document.getElementById('btn-save-signature');
+  const status = document.getElementById('sig-save-status');
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
+  status.textContent = '';
+
+  try {
+    const resp = await fetch('/dashboard/signatures', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name, data: base64})
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      status.textContent = '✅ Signature saved! Reloading…';
+      status.style.color = '#38a169';
+      setTimeout(() => window.location.reload(), 1200);
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch(e) {
+    status.textContent = '❌ ' + e.message;
+    status.style.color = '#e53e3e';
+    btn.textContent = 'Save Signature';
+    btn.disabled = false;
+  }
+}
+
+async function deleteDocument(id, btn) {
+  if (!confirm('Delete this document? This cannot be undone.')) return;
+  btn.disabled = true;
+  try {
+    const resp = await fetch('/dashboard/documents/' + id, { method: 'DELETE' });
+    const data = await resp.json();
+    if (data.ok) {
+      btn.closest('[style*="border:1px solid #f0f0f0"]').remove();
+    } else {
+      alert('Delete failed: ' + (data.error || 'Unknown error'));
+      btn.disabled = false;
+    }
+  } catch(e) {
+    alert('Delete failed: ' + e.message);
+    btn.disabled = false;
+  }
+}
+
+async function deleteSignature(id) {
+  if (!confirm('Delete this signature?')) return;
+  try {
+    const resp = await fetch('/dashboard/signatures/' + id, {
+      method: 'DELETE',
+      headers: {'X-Requested-With': 'XMLHttpRequest'}
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error('Server returned ' + resp.status);
+    }
+    const data = await resp.json();
+    if (data.ok) {
+      window.location.reload();
+    } else {
+      alert('Failed to delete signature: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Failed to delete signature: ' + e.message);
+  }
+}
+
+async function startCheckout() {
+  const btn = document.getElementById('checkout-btn');
+  const currency = document.querySelector('input[name="currency"]:checked')?.value || 'aud';
+  btn.textContent = 'Redirecting…';
+  btn.disabled = true;
+  try {
+    const resp = await fetch('/create-checkout-session', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: `currency=${currency}`
+    });
+    const data = await resp.json();
+    if (data.url) window.location.href = data.url;
+    else throw new Error(data.error || 'Unknown error');
+  } catch(e) {
+    alert('Checkout failed: ' + e.message);
+    btn.textContent = `Upgrade — ${priceLabels[currency]}/month`;
+    btn.disabled = false;
+  }
+}
+</script>
+{% endblock %}

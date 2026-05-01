@@ -250,53 +250,6 @@ def list_documents():
     } for d in docs])
 
 
-@dashboard.route('/dashboard/documents/upload', methods=['POST'])
-@login_required
-def upload_document():
-    """Upload a PDF directly to the Document Inbox."""
-    f = request.files.get('file')
-    if not f or not f.filename:
-        return jsonify({'error': 'No file uploaded'}), 400
-
-    raw = f.read()
-    if not raw:
-        return jsonify({'error': 'Empty file'}), 400
-
-    # Validate it's a PDF
-    from app.pdf_utils import pdf_page_count
-    page_count = pdf_page_count(raw)
-    if page_count == 0:
-        return jsonify({'error': 'Not a valid PDF or file has no pages'}), 400
-
-    # Check storage limit
-    storage_limit_bytes = (200 if current_user.plan == 'enterprise' else 15) * 1024 * 1024
-    storage_used = db.session.query(db.func.sum(Document.file_size)).filter(
-        Document.user_id == current_user.id
-    ).scalar() or 0
-    if storage_used + len(raw) > storage_limit_bytes:
-        limit_mb = 200 if current_user.plan == 'enterprise' else 15
-        return jsonify({'error': f'Storage limit reached ({limit_mb} MB). Delete some documents or upgrade.'}), 413
-
-    # Clean filename
-    filename = f.filename.rsplit('.', 1)[0][:80]
-    if not filename.lower().endswith('.pdf'):
-        filename += '.pdf'
-
-    doc = Document(
-        user_id=current_user.id,
-        filename=filename,
-        file_data=raw,
-        file_size=len(raw),
-        mime_type='application/pdf',
-        status='pending',
-        expires_at=datetime.utcnow() + timedelta(days=14)
-    )
-    db.session.add(doc)
-    db.session.commit()
-
-    return jsonify({'ok': True, 'id': doc.id, 'filename': doc.filename}), 201
-
-
 @dashboard.route('/dashboard/documents/<int:doc_id>/download', methods=['GET'])
 @login_required
 def download_document(doc_id):
