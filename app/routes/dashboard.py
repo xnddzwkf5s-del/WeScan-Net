@@ -345,8 +345,7 @@ def sign_and_send(doc_id):
         return jsonify({'error': 'Not found'}), 404
     if doc.expires_at < datetime.utcnow():
         return jsonify({'error': 'Document expired'}), 410
-    if doc.status != 'pending':
-        return jsonify({'error': 'Document already processed'}), 400
+    # Allow re-signing — status check removed, user confirms in UI
 
     data = request.get_json(silent=True) or {}
     signature_id = data.get('signature_id')

@@ -483,6 +483,10 @@ async function signAndSend(docId) {
     return;
   }
 
+  {% if doc.status == 'signed' %}
+  if (!confirm('This document has already been signed and sent. Sign and send again?')) return;
+  {% endif %}
+
   const btn = document.getElementById('btn-sign-send');
   const status = document.getElementById('send-status');
   btn.textContent = 'Signing & Sending…';
