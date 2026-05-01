@@ -150,7 +150,8 @@ def oauth_callback(provider):
                 oauth_provider=provider,
                 oauth_id=oauth_id,
                 smtp_username=f"s_{os.urandom(6).hex()}",
-                plan='free'
+                plan='free',
+                inbox_address=User.generate_inbox_slug()
             )
             db.session.add(user)
             db.session.flush()
@@ -229,7 +230,8 @@ def email_verify():
             email=email,
             name=email.split('@')[0],
             smtp_username=f"s_{os.urandom(6).hex()}",
-            plan='free'
+            plan='free',
+            inbox_address=User.generate_inbox_slug()
         )
         db.session.add(user)
         db.session.flush()
