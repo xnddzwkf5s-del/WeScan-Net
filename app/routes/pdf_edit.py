@@ -39,8 +39,7 @@ def upload():
     savedir = _session_dir(session_id)
 
     files_info = []
-    for key in sorted(request.files.keys()):
-        f = request.files[key]
+    for f in request.files.getlist('files'):
         if not f.filename:
             continue
         raw = f.read()
