@@ -52,10 +52,10 @@
           <img id="pdf-preview-img" src="" alt="PDF Preview"
                style="display:none;width:100%;height:auto;border-radius:6px;cursor:crosshair;">
           <!-- Active signature overlay (draggable) -->
-          <div id="signature-overlay" style="display:none;position:absolute;cursor:move;z-index:10;opacity:0.85;"
+          <div id="signature-overlay" style="display:none;position:absolute;cursor:move;z-index:10;opacity:0.9;border:2px solid #e53e3e;border-radius:6px;padding:4px;background:rgba(229,62,62,0.06);box-sizing:border-box;"
                onmousedown="startDrag(event)">
             <img id="sig-overlay-img" src="" alt="Signature"
-                 style="pointer-events:none;max-width:150px;max-height:50px;">
+                 style="pointer-events:none;max-width:150px;max-height:50px;display:block;">
           </div>
           <!-- Frozen placement overlays (one per placed signature across pages) -->
           <div id="frozen-overlays-container"></div>
@@ -119,14 +119,14 @@
       <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;margin-bottom:16px;">
         <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:12px;">Date / Time Stamp</div>
 
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:12px;">
+        <div onclick="toggleTimestamp()" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:12px;">
           <div style="position:relative;width:40px;height:22px;flex-shrink:0;">
-            <input type="checkbox" id="ts-toggle" style="opacity:0;width:0;height:0;position:absolute;">
-            <span id="ts-track" onclick="toggleTimestamp()" style="position:absolute;inset:0;background:#ddd;border-radius:11px;cursor:pointer;transition:background 0.2s;"></span>
-            <span id="ts-thumb" onclick="toggleTimestamp()" style="position:absolute;left:3px;top:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+            <input type="checkbox" id="ts-toggle" style="opacity:0;width:0;height:0;position:absolute;" onclick="event.stopPropagation();">
+            <span id="ts-track" style="position:absolute;inset:0;background:#ddd;border-radius:11px;cursor:pointer;transition:background 0.2s;"></span>
+            <span id="ts-thumb" style="position:absolute;left:3px;top:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
           </div>
           <span style="font-size:13px;color:#555;">Add date/time stamp</span>
-        </label>
+        </div>
 
         <div id="ts-options" style="display:none;">
           <label style="display:block;font-size:12px;color:#888;margin-bottom:4px;">Timezone</label>
@@ -469,7 +469,7 @@ function renderFrozenOverlays() {
   pagePlacements.forEach((pl, idx) => {
     const frozen = document.createElement('div');
     frozen.dataset.placementPage = pl.page;
-    frozen.style.cssText = 'position:absolute;z-index:9;opacity:0.7;pointer-events:none;';
+    frozen.style.cssText = 'position:absolute;z-index:9;opacity:0.85;pointer-events:none;border:2px dashed #718096;border-radius:6px;padding:4px;background:rgba(0,0,0,0.04);box-sizing:border-box;';
 
     const img = document.createElement('img');
     img.src = 'data:image/png;base64,' + pl.sigData;
