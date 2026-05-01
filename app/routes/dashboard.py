@@ -9,7 +9,7 @@ import base64
 import smtplib
 from email.mime.text import MIMEText
 from werkzeug.security import generate_password_hash
-from app.pdf_utils import pdf_page_as_png, pdf_page_count, overlay_signature_on_pdf, overlay_signature_on_pdf_multi
+from app.pdf_utils import pdf_page_as_png, pdf_page_count, overlay_signature_on_pdf
 from app.email import send_with_attachment
 
 dashboard = Blueprint('dashboard', __name__)
@@ -373,25 +373,14 @@ def sign_and_send(doc_id):
         if count >= 10:
             return jsonify({'error': 'Monthly limit reached. Upgrade to Enterprise for unlimited signed sends.'}), 403
 
-    # ── Multi-placement support ──
-    placements = data.get('placements')  # list of {page, x, y}
-    # Backward compat: if no placements list, build one from old single fields
-    if not placements:
-        placements = [{'page': sig_page, 'x': sig_x, 'y': sig_y}]
-
     # ── Overlay signature on PDF ──
     try:
-        signed_pdf_bytes = overlay_signature_on_pdf_multi(
-            doc.file_data, signature.data, placements
+        signed_pdf_bytes = overlay_signature_on_pdf(
+            doc.file_data, signature.data,
+            sig_x, sig_y, sig_page
         )
     except Exception as e:
         return jsonify({'error': f'Failed to sign PDF: {str(e)}'}), 500
-
-    # For the DB record, use first placement
-    first = placements[0]
-    sig_page = int(first.get('page', 0))
-    sig_x = float(first.get('x', 0.5))
-    sig_y = float(first.get('y', 0.85))
 
     # ── Parse additional recipients ──
     extra_recipients = []

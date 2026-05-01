@@ -77,14 +77,6 @@
           </div>
         </div>
         <div style="margin-top:4px;font-size:11px;color:#bbb;text-align:right;">Drag the signature to position it on the document.</div>
-        <div style="margin-top:12px;display:flex;align-items:center;gap:10px;">
-          <button onclick="addPlacement()"
-            style="background:#f0f0f0;color:#111;border:1px solid #ddd;border-radius:6px;padding:7px 16px;font-size:13px;font-weight:500;cursor:pointer;">
-            📌 Pin Placement
-          </button>
-          <span id="placement-hint" style="font-size:12px;color:#aaa;">Position your signature then pin it.</span>
-        </div>
-        <div id="placements-list" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
       </div>
     </div>
 
@@ -153,7 +145,6 @@
 </div>
 
 <script>
-let placements = [];  // list of {page, x, y} built up by user
 let selectedSignatureId = {% if signatures %}{{ signatures[0].id }}{% else %}null{% endif %};
 let selectedSignatureData = {% if signatures %}'{{ signatures[0].data }}'{% else %}''{% endif %};
 let isDragging = false;
@@ -167,7 +158,6 @@ let signaturePage = null;  // which page the overlay was placed on (null = not y
 // Load preview on page load
 document.addEventListener('DOMContentLoaded', function() {
   loadPreview(currentPage);
-  renderPlacements();
 });
 
 function jumpToPage(inputEl) {
@@ -275,7 +265,6 @@ function selectSignature(id, data) {
   }
 
   showSignatureOverlay();
-  renderPlacements();
 }
 
 function updatePositionDisplay() {
@@ -331,50 +320,9 @@ document.addEventListener('mouseup', function(e) {
   }
 });
 
-function addPlacement() {
-  const x = parseFloat(document.getElementById('pos-x').textContent);
-  const y = parseFloat(document.getElementById('pos-y').textContent);
-  const page = currentPage;
-  if (!selectedSignatureId) {
-    document.getElementById('placement-hint').textContent = 'Select a signature first.';
-    return;
-  }
-  placements.push({page, x, y});
-  renderPlacements();
-  document.getElementById('placement-hint').textContent = `${placements.length} placement(s) pinned.`;
-}
-
-function removePlacement(index) {
-  placements.splice(index, 1);
-  renderPlacements();
-  document.getElementById('placement-hint').textContent =
-    placements.length > 0 ? `${placements.length} placement(s) pinned.` : 'Position your signature then pin it.';
-}
-
-function renderPlacements() {
-  const container = document.getElementById('placements-list');
-  container.innerHTML = '';
-  placements.forEach((p, i) => {
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#f9f9f9;border:1px solid #eee;border-radius:6px;font-size:12px;color:#555;';
-    div.innerHTML = `<span>📄 Page ${p.page + 1} &nbsp; X:${p.x.toFixed(2)} Y:${p.y.toFixed(2)}</span>
-      <button onclick="removePlacement(${i})" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:13px;padding:0 2px;"
-        onmouseover="this.style.color='#e53e3e'" onmouseout="this.style.color='#ccc'">✕</button>`;
-    container.appendChild(div);
-  });
-  // Enable/disable Sign & Send based on placements
-  const btn = document.getElementById('btn-sign-send');
-  if (btn) btn.disabled = placements.length === 0 || !selectedSignatureId;
-}
-
 async function signAndSend(docId) {
   if (!selectedSignatureId) {
     document.getElementById('send-status').textContent = 'Please select a signature first.';
-    document.getElementById('send-status').style.color = '#e53e3e';
-    return;
-  }
-  if (placements.length === 0) {
-    document.getElementById('send-status').textContent = 'Pin at least one placement first.';
     document.getElementById('send-status').style.color = '#e53e3e';
     return;
   }
@@ -396,10 +344,9 @@ async function signAndSend(docId) {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         signature_id: selectedSignatureId,
-        placements: placements,
-        position_x: placements[0]?.x ?? posX,
-        position_y: placements[0]?.y ?? posY,
-        page_number: placements[0]?.page ?? currentPage,
+        position_x: posX,
+        position_y: posY,
+        page_number: currentPage,
         additional_recipients: additional
       })
     });
@@ -408,8 +355,6 @@ async function signAndSend(docId) {
       status.textContent = '✅ Signed and sent! Redirecting…';
       status.style.color = '#38a169';
       btn.textContent = '✅ Done';
-      placements = [];
-      renderPlacements();
       setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
     } else {
       throw new Error(data.error || 'Unknown error');
