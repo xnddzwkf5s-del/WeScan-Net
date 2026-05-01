@@ -75,3 +75,39 @@ def overlay_signature_on_pdf(pdf_bytes: bytes, signature_png_base64: str,
     doc.close()
     output.seek(0)
     return output.read()
+
+
+def overlay_signature_on_pdf_multi(pdf_bytes: bytes, signature_png_base64: str,
+                                    placements: list) -> bytes:
+    """Overlay a signature on multiple positions across pages.
+    placements: list of dicts with keys: page (int, 0-indexed), x (float 0-1), y (float 0-1)
+    """
+    try:
+        sig_bytes = base64.b64decode(signature_png_base64)
+    except Exception:
+        raise ValueError("Invalid base64 signature data")
+
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    for placement in placements:
+        page_num = int(placement.get('page', 0))
+        x_rel = max(0.0, min(1.0, float(placement.get('x', 0.5))))
+        y_rel = max(0.0, min(1.0, float(placement.get('y', 0.85))))
+        if page_num >= doc.page_count:
+            page_num = doc.page_count - 1
+        page = doc[page_num]
+        rect = page.rect
+        sig_w = min(150, rect.width * 0.4)
+        sig_h = sig_w * 0.35
+        sig_rect = fitz.Rect(
+            rect.width * x_rel - sig_w / 2,
+            rect.height * y_rel - sig_h / 2,
+            rect.width * x_rel + sig_w / 2,
+            rect.height * y_rel + sig_h / 2
+        )
+        page.insert_image(sig_rect, stream=sig_bytes)
+
+    output = io.BytesIO()
+    doc.save(output, garbage=4, deflate=True)
+    doc.close()
+    output.seek(0)
+    return output.read()
