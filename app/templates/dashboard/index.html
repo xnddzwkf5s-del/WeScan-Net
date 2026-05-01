@@ -123,7 +123,29 @@
       <span style="font-size:13px;color:#999;">
         {{ storage_used_mb }} / {{ storage_limit_mb }} MB used
       </span>
+      {% if signed_send_limit is not none %}
+      <span style="font-size:13px;color:#999;margin-left:20px;padding-left:20px;border-left:1px solid #ddd;">
+        {{ signed_sends_this_month }} / {{ signed_send_limit }} sends
+      </span>
+      {% endif %}
     </div>
+
+    {% if signed_send_limit is not none and signed_sends_this_month is not none %}
+    {% set sends_left = signed_send_limit - signed_sends_this_month %}
+    {% if sends_left <= 3 %}
+    <div style="margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;
+      {% if sends_left <= 0 %}background:#fff5f5;border:1px solid #fed7d7;color:#c53030;
+      {% else %}background:#fff8f0;border:1px solid #fbd38d;color:#9c4221;{% endif %}">
+      {% if sends_left <= 0 %}
+      ⚠️ You've used all {{ signed_send_limit }} signed sends this month.
+      <a href="#upgrade-section" style="color:#c53030;font-weight:600;margin-left:6px;">Upgrade to Enterprise</a>
+      {% else %}
+      ⚡ {{ sends_left }} of {{ signed_send_limit }} signed sends remaining this month.
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+
     <div style="display:flex;flex-direction:column;gap:8px;">
       {% for doc in documents %}
       <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid #f0f0f0;border-radius:8px;">
@@ -456,9 +478,9 @@
   </div>
 
   <!-- ── Signed Documents History ──────────────────────────────── -->
-  {% if sent_documents %}
   <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
     <h2 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#111;">📬 Sent Documents</h2>
+    {% if sent_documents %}
     <div style="display:flex;flex-direction:column;gap:8px;">
       {% for sd in sent_documents %}
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #f0f0f0;border-radius:8px;">
@@ -480,8 +502,12 @@
       </div>
       {% endfor %}
     </div>
+    {% else %}
+    <p style="text-align:center;color:#bbb;font-size:14px;padding:24px 0;margin:0;">
+      No documents sent yet. Sign and send one to see it here.
+    </p>
+    {% endif %}
   </div>
-  {% endif %}
 
   <!-- ── Blocked attempts (last 30 days) ───────────────────────────── -->
   {% if blocked_recent %}
