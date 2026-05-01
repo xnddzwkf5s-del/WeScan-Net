@@ -121,7 +121,7 @@ class SignedDocument(db.Model):
     __tablename__ = 'signed_document'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False)
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id', ondelete='SET NULL'), nullable=True)
     signature_id = db.Column(db.Integer, db.ForeignKey('signature.id', ondelete='SET NULL'), nullable=True)
     signature_x = db.Column(db.Float, default=0.5)
     signature_y = db.Column(db.Float, default=0.85)
