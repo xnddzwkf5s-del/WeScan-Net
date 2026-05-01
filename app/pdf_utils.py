@@ -2,6 +2,8 @@
 import fitz
 import io
 import base64
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 
 def pdf_page_as_png(pdf_bytes: bytes, page_num: int = 0) -> str:
@@ -38,7 +40,8 @@ def pdf_page_count(pdf_bytes: bytes) -> int:
 
 
 def overlay_signature_on_pdf(pdf_bytes: bytes, signature_png_base64: str,
-                              x_rel: float, y_rel: float, page_num: int = 0) -> bytes:
+                              x_rel: float, y_rel: float, page_num: int = 0,
+                              timestamp_enabled: bool = False, timestamp_tz: str = 'UTC') -> bytes:
     """Overlay a signature image on a PDF page at relative position.
     x_rel, y_rel are 0-1 coordinates (0,0 = top-left, 1,1 = bottom-right)."""
     x_rel = max(0.0, min(1.0, x_rel))
@@ -70,6 +73,21 @@ def overlay_signature_on_pdf(pdf_bytes: bytes, signature_png_base64: str,
     )
     page.insert_image(sig_rect, stream=sig_bytes)
 
+    if timestamp_enabled:
+        try:
+            tz_obj = ZoneInfo(timestamp_tz)
+        except Exception:
+            tz_obj = timezone.utc
+        now = datetime.now(tz_obj)
+        stamp_text = now.strftime(f'Signed: %d %b %Y %H:%M {now.strftime("%Z")}')
+        page.insert_text(
+            fitz.Point(sig_rect.x0, sig_rect.y1 + 8),
+            stamp_text,
+            fontsize=7,
+            color=(0.3, 0.3, 0.3),
+            fontname='helv'
+        )
+
     output = io.BytesIO()
     doc.save(output, garbage=4, deflate=True)
     doc.close()
@@ -77,7 +95,8 @@ def overlay_signature_on_pdf(pdf_bytes: bytes, signature_png_base64: str,
     return output.read()
 
 
-def overlay_signature_on_pdf_multi(pdf_bytes: bytes, placements: list) -> bytes:
+def overlay_signature_on_pdf_multi(pdf_bytes: bytes, placements: list,
+                                    timestamp_enabled: bool = False, timestamp_tz: str = 'UTC') -> bytes:
     """Overlay signatures on multiple PDF pages.
     placements is a list of dicts: {page, x, y, sigData} where
     page is 0-indexed, x/y are 0-1 relative coords, sigData is base64 PNG.
@@ -113,6 +132,21 @@ def overlay_signature_on_pdf_multi(pdf_bytes: bytes, placements: list) -> bytes:
             rect.height * y_rel + sig_h / 2
         )
         page.insert_image(sig_rect, stream=sig_bytes)
+
+        if timestamp_enabled:
+            try:
+                tz_obj = ZoneInfo(timestamp_tz)
+            except Exception:
+                tz_obj = timezone.utc
+            now = datetime.now(tz_obj)
+            stamp_text = now.strftime(f'Signed: %d %b %Y %H:%M {now.strftime("%Z")}')
+            page.insert_text(
+                fitz.Point(sig_rect.x0, sig_rect.y1 + 8),
+                stamp_text,
+                fontsize=7,
+                color=(0.3, 0.3, 0.3),
+                fontname='helv'
+            )
 
     output = io.BytesIO()
     doc.save(output, garbage=4, deflate=True)

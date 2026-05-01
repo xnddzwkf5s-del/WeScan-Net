@@ -115,6 +115,45 @@
         {% endif %}
       </div>
 
+      <!-- Date / Time Stamp -->
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:12px;">Date / Time Stamp</div>
+
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:12px;">
+          <div style="position:relative;width:40px;height:22px;flex-shrink:0;">
+            <input type="checkbox" id="ts-toggle" style="opacity:0;width:0;height:0;position:absolute;">
+            <span id="ts-track" onclick="toggleTimestamp()" style="position:absolute;inset:0;background:#ddd;border-radius:11px;cursor:pointer;transition:background 0.2s;"></span>
+            <span id="ts-thumb" onclick="toggleTimestamp()" style="position:absolute;left:3px;top:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+          </div>
+          <span style="font-size:13px;color:#555;">Add date/time stamp</span>
+        </label>
+
+        <div id="ts-options" style="display:none;">
+          <label style="display:block;font-size:12px;color:#888;margin-bottom:4px;">Timezone</label>
+          <select id="tz-select" onchange="updateTsPreview()"
+                  style="width:100%;border:1px solid #e8e8e8;border-radius:6px;padding:8px 10px;font-size:13px;outline:none;background:#fff;">
+            <option value="UTC" selected>UTC</option>
+            <option value="Australia/Sydney">Australia/Sydney</option>
+            <option value="Australia/Melbourne">Australia/Melbourne</option>
+            <option value="Australia/Brisbane">Australia/Brisbane</option>
+            <option value="Australia/Perth">Australia/Perth</option>
+            <option value="America/New_York">America/New_York</option>
+            <option value="America/Chicago">America/Chicago</option>
+            <option value="America/Denver">America/Denver</option>
+            <option value="America/Los_Angeles">America/Los_Angeles</option>
+            <option value="Europe/London">Europe/London</option>
+            <option value="Europe/Paris">Europe/Paris</option>
+            <option value="Europe/Berlin">Europe/Berlin</option>
+            <option value="Asia/Tokyo">Asia/Tokyo</option>
+            <option value="Asia/Shanghai">Asia/Shanghai</option>
+            <option value="Asia/Singapore">Asia/Singapore</option>
+            <option value="Asia/Dubai">Asia/Dubai</option>
+            <option value="Asia/Kolkata">Asia/Kolkata</option>
+          </select>
+          <div id="ts-preview" style="margin-top:6px;font-size:11px;color:#aaa;font-family:monospace;"></div>
+        </div>
+      </div>
+
       <!-- Placement Controls -->
       <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;margin-bottom:16px;">
         <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:12px;">
@@ -185,7 +224,46 @@ let placements = [];       // {page, x, y} — frozen placements
 document.addEventListener('DOMContentLoaded', function() {
   loadPreview(currentPage);
   updatePlacementCount();
+  updateTsPreview();
 });
+
+function toggleTimestamp() {
+  const cb = document.getElementById('ts-toggle');
+  const track = document.getElementById('ts-track');
+  const thumb = document.getElementById('ts-thumb');
+  const opts = document.getElementById('ts-options');
+  cb.checked = !cb.checked;
+  if (cb.checked) {
+    track.style.background = '#000';
+    thumb.style.left = '21px';
+    opts.style.display = 'block';
+  } else {
+    track.style.background = '#ddd';
+    thumb.style.left = '3px';
+    opts.style.display = 'none';
+  }
+  updateTsPreview();
+}
+
+function updateTsPreview() {
+  const sel = document.getElementById('tz-select');
+  const preview = document.getElementById('ts-preview');
+  if (!sel || !preview) return;
+  const tz = sel.value || 'UTC';
+  try {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+      timeZone: tz, timeZoneName: 'short'
+    }).formatToParts(now);
+    const get = type => (parts.find(p => p.type === type) || {}).value || '';
+    const stamp = `Signed: ${get('day')} ${get('month')} ${get('year')} ${get('hour')}:${get('minute')} ${get('timeZoneName')}`;
+    preview.textContent = stamp;
+  } catch(e) {
+    preview.textContent = 'Signed: (invalid timezone)';
+  }
+}
 
 function jumpToPage(inputEl) {
   const val = parseInt(inputEl.value, 10);
@@ -507,7 +585,9 @@ async function signAndSend(docId) {
           y: p.y,
           sig_id: p.sigId
         })),
-        additional_recipients: additional
+        additional_recipients: additional,
+        timestamp_enabled: document.getElementById('ts-toggle').checked,
+        timestamp_tz: document.getElementById('tz-select') ? document.getElementById('tz-select').value : 'UTC'
       })
     });
     const data = await resp.json();

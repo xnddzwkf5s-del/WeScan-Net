@@ -354,6 +354,8 @@ def sign_and_send(doc_id):
     sig_page = int(data.get('page_number', 0)) if 'page_number' in data else None
     placements = data.get('placements')
     additional_recipients = data.get('additional_recipients', '').strip()
+    timestamp_enabled = bool(data.get('timestamp_enabled', False))
+    timestamp_tz = str(data.get('timestamp_tz', 'UTC')).strip() or 'UTC'
 
     # signature_id is optional when placements carry per-placement sig_id
     signature = None
@@ -397,7 +399,7 @@ def sign_and_send(doc_id):
                     'y': float(p.get('y', 0.85)),
                     'sigData': sig_obj.data
                 })
-            signed_pdf_bytes = overlay_signature_on_pdf_multi(doc.file_data, placement_list)
+            signed_pdf_bytes = overlay_signature_on_pdf_multi(doc.file_data, placement_list, timestamp_enabled=timestamp_enabled, timestamp_tz=timestamp_tz)
             # Use the first placement for the signed document record
             sig_x = float(placements[0].get('x', 0.5))
             sig_y = float(placements[0].get('y', 0.85))
@@ -412,7 +414,8 @@ def sign_and_send(doc_id):
                 sig_page = 0
             signed_pdf_bytes = overlay_signature_on_pdf(
                 doc.file_data, signature.data,
-                sig_x, sig_y, sig_page
+                sig_x, sig_y, sig_page,
+                timestamp_enabled=timestamp_enabled, timestamp_tz=timestamp_tz
             )
     except Exception as e:
         return jsonify({'error': f'Failed to sign PDF: {str(e)}'}), 500
