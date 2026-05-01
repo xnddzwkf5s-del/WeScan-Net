@@ -79,7 +79,8 @@
             </svg>
           </div>
           <p id="files-summary" class="text-base font-medium text-gray-900"></p>
-          <button onclick="event.stopPropagation();resetAll()" class="mt-3 text-sm text-gray-500 hover:text-black underline">Choose different files</button>
+          <button id="add-more-btn" onclick="event.stopPropagation();document.getElementById('file-input').click()" class="mt-3 text-sm text-gray-500 hover:text-black underline">Add more PDFs</button>
+          <button onclick="event.stopPropagation();resetAll()" class="mt-3 ml-4 text-sm text-gray-400 hover:text-black underline">Start over</button>
         </div>
       </div>
 
@@ -350,10 +351,12 @@
         return;
       }
 
+      const isAppend = !!sessionId;
+
       // Show upload status
       dropDefault.classList.add('hidden');
       dropFiles.classList.remove('hidden');
-      filesSummary.textContent = `${pdfs.length} file(s) selected`;
+      filesSummary.textContent = isAppend ? `Adding ${pdfs.length} file(s)...` : `${pdfs.length} file(s) selected`;
       dropZone.classList.add('has-files');
       uploadStatus.classList.remove('hidden');
       editorPanel.classList.add('hidden');
@@ -362,6 +365,7 @@
       // Upload
       const form = new FormData();
       pdfs.forEach(f => form.append('files', f));
+      if (isAppend) form.append('session_id', sessionId);
 
       try {
         const resp = await fetch('/api/pdf-edit/upload', { method: 'POST', body: form });
@@ -369,15 +373,16 @@
         if (!resp.ok) throw new Error(data.error || 'Upload failed');
 
         sessionId = data.session_id;
-        files = data.files;
+        files = isAppend ? files.concat(data.files) : data.files;
 
         uploadStatus.classList.add('hidden');
         renderEditor();
         editorPanel.classList.remove('hidden');
+        fileInput.value = '';
       } catch (err) {
         uploadStatus.classList.add('hidden');
         alert('Upload failed: ' + err.message);
-        resetAll();
+        if (!isAppend) resetAll();
       }
     }
 

@@ -34,7 +34,8 @@ def _cleanup_session(session_id):
 @pdf_edit.route('/api/pdf-edit/upload', methods=['POST'])
 def upload():
     _ensure_temp()
-    session_id = uuid.uuid4().hex
+    # Reuse existing session if passed (adding files to an active session)
+    session_id = request.form.get('session_id') or uuid.uuid4().hex
     savedir = _session_dir(session_id)
 
     files_info = []
