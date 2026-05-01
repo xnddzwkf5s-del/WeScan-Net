@@ -167,7 +167,7 @@ if __name__ == '__main__':
     raw_message = sys.stdin.buffer.read()
 
     # INBOX FLOW: unauthenticated mail arriving for i-xxxx@inbox.wescan.net
-    if sasl_user == '-':
+    if sasl_user == "-" or sasl_user == "":
         result = process_inbox_email(recipient, raw_message)
         sys.exit(0 if result else 1)
 
