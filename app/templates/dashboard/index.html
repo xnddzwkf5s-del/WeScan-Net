@@ -461,7 +461,7 @@
       <div style="margin-bottom:16px;">
         <label style="display:block;font-size:12px;color:#888;margin-bottom:8px;">Draw Your Signature</label>
         <canvas id="sig-canvas" width="400" height="120"
-                style="width:100%;height:auto;border:1px solid #e8e8e8;border-radius:6px;background:#fff;cursor:crosshair;touch-action:none;"></canvas>
+                style="width:100%;height:auto;border:1px solid #e8e8e8;border-radius:6px;background:transparent;cursor:crosshair;touch-action:none;"></canvas>
         <div style="display:flex;gap:8px;margin-top:8px;">
           <button onclick="clearCanvas()"
                   style="background:#f5f5f5;color:#666;border:1px solid #eee;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;">
@@ -824,8 +824,7 @@ function initCanvas() {
   ctx = canvas.getContext('2d');
   strokes = [];
   currentStroke = [];
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.strokeStyle = '#000';
   ctx.lineWidth = 2;
   ctx.lineCap = 'round';
@@ -902,8 +901,7 @@ function initCanvas() {
 }
 
 function clearCanvas() {
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   strokes = [];
   currentStroke = [];
   document.getElementById('sig-preview-area').style.display = 'none';
@@ -913,8 +911,7 @@ function undoStroke() {
   if (strokes.length === 0) return;
   strokes.pop();
   // Redraw all strokes
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.strokeStyle = '#000';
   ctx.lineWidth = 2;
   ctx.lineCap = 'round';
