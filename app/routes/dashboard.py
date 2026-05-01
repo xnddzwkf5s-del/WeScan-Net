@@ -356,10 +356,15 @@ def sign_and_send(doc_id):
     placements = data.get('placements')
     additional_recipients = data.get('additional_recipients', '').strip()
 
-    if not signature_id:
-        return jsonify({'error': 'Signature ID required'}), 400
-
-    signature = Signature.query.filter_by(id=signature_id, user_id=current_user.id).first()
+    # signature_id is optional when placements carry per-placement sig_id
+    signature = None
+    if signature_id:
+        signature = Signature.query.filter_by(id=signature_id, user_id=current_user.id).first()
+    if not signature and placements:
+        # Use the first placement's sig_id as the fallback signature
+        first_sig_id = placements[0].get('sig_id') if placements else None
+        if first_sig_id:
+            signature = Signature.query.filter_by(id=first_sig_id, user_id=current_user.id).first()
     if not signature:
         return jsonify({'error': 'Signature not found'}), 404
 
@@ -377,14 +382,21 @@ def sign_and_send(doc_id):
     # ── Overlay signature(s) on PDF ──
     try:
         if placements:
-            # Multi-page placements
+            # Multi-page placements — each may use a different signature
             placement_list = []
+            sig_cache = {signature.id: signature}
             for p in placements:
+                sig_id = p.get('sig_id') or signature_id
+                if sig_id not in sig_cache:
+                    s = Signature.query.filter_by(id=sig_id, user_id=current_user.id).first()
+                    if s:
+                        sig_cache[sig_id] = s
+                sig_obj = sig_cache.get(sig_id, signature)
                 placement_list.append({
                     'page': int(p.get('page', 0)),
                     'x': float(p.get('x', 0.5)),
                     'y': float(p.get('y', 0.85)),
-                    'sigData': signature.data
+                    'sigData': sig_obj.data
                 })
             signed_pdf_bytes = overlay_signature_on_pdf_multi(doc.file_data, placement_list)
             # Use the first placement for the signed document record
