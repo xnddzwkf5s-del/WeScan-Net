@@ -22,8 +22,9 @@
  }
 
  /* ── Slide-in mobile nav (Straya Co style) ──────────────────── */
- .nav-icon{display:flex;flex-direction:column;justify-content:space-between;width:26px;height:20px;cursor:pointer;z-index:1100;flex-shrink:0;}
- .nav-icon span{display:block;height:2.5px;width:100%;background:#111;border-radius:9px;transition:all 0.25s ease-in-out;transform-origin:left center;}
+ .nav-icon{display:flex;flex-direction:column;justify-content:space-between;width:34px;height:26px;cursor:pointer;z-index:1100;flex-shrink:0;}
+ .nav-icon span{display:block;height:3px;width:100%;background:#111;border-radius:9px;transition:all 0.25s ease-in-out;transform-origin:left center;}
+ 
  .nav-icon.open span:nth-child(1){transform:rotate(45deg);top:-3px;left:3px;position:relative;}
  .nav-icon.open span:nth-child(2){width:0;opacity:0;}
  .nav-icon.open span:nth-child(3){transform:rotate(-45deg);top:18px;left:3px;position:relative;}
@@ -64,7 +65,7 @@
  </a>
  </div>
  <!-- Animated hamburger icon (Straya Co style) -->
- <div class="nav-icon md:hidden" id="navIcon"><span></span><span></span><span></span></div>
+ <div class="nav-icon" id="navIcon"><span></span><span></span><span></span></div>
  </div>
  </div>
  </nav>
