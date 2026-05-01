@@ -9,17 +9,37 @@ payments = Blueprint('payments', __name__)
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 PRICE_MAP = {
-    'aud': 'STRIPE_PRICE_AUD',
-    'usd': 'STRIPE_PRICE_USD',
-    'eur': 'STRIPE_PRICE_EUR',
-    'gbp': 'STRIPE_PRICE_GBP',
+    'pro': {
+        'aud': 'STRIPE_PRICE_PRO_AUD',
+        'usd': 'STRIPE_PRICE_PRO_USD',
+        'eur': 'STRIPE_PRICE_PRO_EUR',
+        'gbp': 'STRIPE_PRICE_PRO_GBP',
+    },
+    'business': {
+        'aud': 'STRIPE_PRICE_BUS_AUD',
+        'usd': 'STRIPE_PRICE_BUS_USD',
+        'eur': 'STRIPE_PRICE_BUS_EUR',
+        'gbp': 'STRIPE_PRICE_BUS_GBP',
+    },
+    'enterprise': {
+        'aud': 'STRIPE_PRICE_ENT_AUD',
+        'usd': 'STRIPE_PRICE_ENT_USD',
+        'eur': 'STRIPE_PRICE_ENT_EUR',
+        'gbp': 'STRIPE_PRICE_ENT_GBP',
+    },
 }
 
 @payments.route('/create-checkout-session', methods=['POST'])
 @login_required
 def create_checkout():
     currency = request.form.get('currency', 'aud').lower()
-    price_env = PRICE_MAP.get(currency, 'STRIPE_PRICE_AUD')
+    plan = request.form.get('plan', 'enterprise').lower()
+
+    plan_prices = PRICE_MAP.get(plan)
+    if not plan_prices:
+        return jsonify({'error': 'Invalid plan'}), 400
+
+    price_env = plan_prices.get(currency, plan_prices.get('aud'))
     price_id = os.getenv(price_env)
     if not price_id:
         return jsonify({'error': 'Price not configured for this currency'}), 400
@@ -78,10 +98,29 @@ def webhook():
             user = User.query.filter_by(email=customer.get('email')).first()
         return user
 
+    def plan_from_price_id(price_id):
+        """Map a Stripe price ID to a plan name."""
+        # Check which env var matches this price ID
+        price_env_map = {
+            'STRIPE_PRICE_PRO_AUD': 'pro', 'STRIPE_PRICE_PRO_USD': 'pro',
+            'STRIPE_PRICE_PRO_EUR': 'pro', 'STRIPE_PRICE_PRO_GBP': 'pro',
+            'STRIPE_PRICE_BUS_AUD': 'business', 'STRIPE_PRICE_BUS_USD': 'business',
+            'STRIPE_PRICE_BUS_EUR': 'business', 'STRIPE_PRICE_BUS_GBP': 'business',
+            'STRIPE_PRICE_ENT_AUD': 'enterprise', 'STRIPE_PRICE_ENT_USD': 'enterprise',
+            'STRIPE_PRICE_ENT_EUR': 'enterprise', 'STRIPE_PRICE_ENT_GBP': 'enterprise',
+        }
+        for env_var, plan_name in price_env_map.items():
+            if os.getenv(env_var) == price_id:
+                return plan_name
+        return 'enterprise'  # fallback
+
     if event_type == 'customer.subscription.created':
         user = find_user(subscription)
         if user:
-            user.plan = 'enterprise'
+            items = subscription.get('items', {}).get('data', [])
+            price_id = items[0]['price']['id'] if items else None
+            plan = plan_from_price_id(price_id) if price_id else 'enterprise'
+            user.plan = plan
             user.trial_end = None
             user.stripe_subscription_id = subscription['id']
             user.stripe_customer_id = subscription['customer']
@@ -104,8 +143,10 @@ def webhook():
             cancel_at = subscription.get('cancel_at')
 
             if status == 'active' and not cancel_at_period_end:
-                # Reactivated or renewed — ensure enterprise
-                user.plan = 'enterprise'
+                # Reactivated, renewed, or plan changed — detect the plan
+                items = subscription.get('items', {}).get('data', [])
+                price_id = items[0]['price']['id'] if items else None
+                user.plan = plan_from_price_id(price_id) if price_id else 'enterprise'
                 user.trial_end = None
             elif cancel_at_period_end and cancel_at:
                 # Scheduled to cancel — set trial_end to period end so banner shows

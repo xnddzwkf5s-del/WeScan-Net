@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.models import db, User, Recipient, UsageStat, BlockedEmail
+from app.routes.dashboard import PLAN_LIMITS
 from email_validator import validate_email, EmailNotValidError
 from datetime import datetime, timedelta
 from collections import defaultdict, deque
@@ -54,14 +55,16 @@ def validate():
         db.session.commit()
         return 'Invalid sender', 403
 
-    # Hourly rate limit for free plan
-    if user.plan == 'free':
+    # Hourly rate limit check per plan
+    plan_limits = PLAN_LIMITS.get(user.plan, PLAN_LIMITS['free'])
+    hourly_limit = plan_limits['emails_per_hour']
+    if hourly_limit is not None:
         hour_ago = datetime.utcnow() - timedelta(hours=1)
         emails_this_hour = UsageStat.query.filter(
             UsageStat.user_id == user.id,
             UsageStat.sent_at >= hour_ago
         ).count()
-        if emails_this_hour >= 5:
+        if emails_this_hour >= hourly_limit:
             block = BlockedEmail(
                 user_id=user.id,
                 smtp_username=smtp_user,
@@ -70,7 +73,8 @@ def validate():
             )
             db.session.add(block)
             db.session.commit()
-            return 'Rate limit exceeded. Essential plan allows 5 emails per hour.', 429
+            plan_name = user.plan.capitalize() if user.plan in ('free', 'pro', 'business', 'enterprise') else user.plan.capitalize()
+            return f'Rate limit exceeded. {plan_name} plan allows {hourly_limit} emails per hour.', 429
 
     # Check recipient whitelist
     whitelist = Recipient.query.filter_by(

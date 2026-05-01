@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+  @media (max-width: 640px) {
+    .dash-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .dash-upgrade-plans { grid-template-columns: 1fr !important; }
+    .dash-doc-actions { flex-direction: column !important; gap: 4px !important; }
+  }
+</style>
 <div style="font-family:'Inter',sans-serif;background:#f8f8f8;min-height:100vh;padding:32px 0;">
 <div style="max-width:960px;margin:0 auto;padding:0 24px;">
 
@@ -59,8 +66,8 @@
     <h1 style="margin:0 0 4px;font-size:22px;font-weight:700;color:#111;">Dashboard</h1>
     <p style="margin:0;font-size:14px;color:#888;">
       {{ user.email }} &nbsp;·&nbsp;
-      <span style="text-transform:capitalize;{% if user.plan == 'enterprise' %}font-weight:600;color:#111;{% endif %}">
-        {{ user.plan }} plan
+      <span style="{% if user.plan != 'free' %}font-weight:600;color:#111;{% endif %}">
+        {{ PLAN_NAMES[user.plan] if user.plan in PLAN_NAMES else user.plan|capitalize }} plan
       </span>
     </p>
   </div>
@@ -87,7 +94,7 @@
   <div id="tab-overview" class="dash-tab-content">
 
     <!-- Stats grid: 3 rows × 4 columns -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;">
+    <div class="dash-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;">
       <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.emails_today }}</div>
         <div style="font-size:12px;color:#999;margin-top:3px;">📨 Emails today</div>
@@ -165,40 +172,108 @@
     {% endif %}
 
     <!-- Upgrade section -->
-    {% if user.plan != 'enterprise' or trial_days_left is not none or trial_expired %}
-    <div id="upgrade-section" style="background:#000;color:#fff;border-radius:12px;padding:28px;margin-bottom:20px;">
-      <h2 style="margin:0 0 6px;font-size:16px;font-weight:700;">Upgrade to Enterprise</h2>
-      <p style="margin:0 0 20px;font-size:13px;color:#aaa;">100 recipients &middot; 25 MB files &middot; Unlimited emails &middot; Priority support</p>
+    {% set upgrade_plans = get_upgrade_options(user.plan) %}
+    {% if upgrade_plans or trial_days_left is not none or trial_expired %}
+    <div id="upgrade-section" style="margin-bottom:20px;">
       <div style="margin-bottom:16px;">
-        <p style="font-size:12px;font-weight:500;color:#aaa;margin:0 0 10px;">SELECT CURRENCY</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <p style="font-size:12px;font-weight:500;color:#aaa;margin:0 0 10px;text-align:center;">SELECT CURRENCY</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
           <label style="cursor:pointer;">
-            <input type="radio" name="currency" value="aud" checked style="display:none;" onchange="updatePrice(this)">
-            <span class="currency-btn" data-val="aud" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#fff;color:#000;">AUD $30</span>
+            <input type="radio" name="currency" value="aud" checked style="display:none;" onchange="updatePrices(this)">
+            <span class="currency-btn" data-val="aud" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#fff;color:#000;">AUD $</span>
           </label>
           <label style="cursor:pointer;">
-            <input type="radio" name="currency" value="usd" style="display:none;" onchange="updatePrice(this)">
-            <span class="currency-btn" data-val="usd" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#333;color:#fff;">USD $22</span>
+            <input type="radio" name="currency" value="usd" style="display:none;" onchange="updatePrices(this)">
+            <span class="currency-btn" data-val="usd" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#333;color:#fff;">USD $</span>
           </label>
           <label style="cursor:pointer;">
-            <input type="radio" name="currency" value="eur" style="display:none;" onchange="updatePrice(this)">
-            <span class="currency-btn" data-val="eur" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#333;color:#fff;">EUR €19</span>
+            <input type="radio" name="currency" value="eur" style="display:none;" onchange="updatePrices(this)">
+            <span class="currency-btn" data-val="eur" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#333;color:#fff;">EUR €</span>
           </label>
           <label style="cursor:pointer;">
-            <input type="radio" name="currency" value="gbp" style="display:none;" onchange="updatePrice(this)">
-            <span class="currency-btn" data-val="gbp" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#333;color:#fff;">GBP £16</span>
+            <input type="radio" name="currency" value="gbp" style="display:none;" onchange="updatePrices(this)">
+            <span class="currency-btn" data-val="gbp" style="display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;background:#333;color:#fff;">GBP £</span>
           </label>
         </div>
       </div>
-      <button onclick="startCheckout()" id="checkout-btn"
-        style="background:#fff;color:#000;border:none;border-radius:8px;padding:12px 28px;font-size:14px;font-weight:600;cursor:pointer;">
-        Upgrade — AUD $30/month
-      </button>
-      <p style="margin:10px 0 0;font-size:12px;color:#666;">Secure checkout via Stripe. Cancel anytime.</p>
+
+      <div class="dash-upgrade-plans" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        <!-- Pro card -->
+        <div style="background:#000;color:#fff;border-radius:12px;padding:24px;display:flex;flex-direction:column;{% if user.plan == 'pro' %}opacity:0.5;{% endif %}">
+          <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Pro</div>
+          <div style="font-size:28px;font-weight:700;margin:12px 0 16px;">
+            <span class="plan-price" data-plan="pro" data-aud="$10" data-usd="$8" data-eur="€7" data-gbp="£6">$10</span><span style="font-size:14px;font-weight:400;color:#aaa;">/mo</span>
+          </div>
+          <ul style="list-style:none;padding:0;margin:0 0 20px;flex:1;font-size:13px;color:#ccc;display:flex;flex-direction:column;gap:8px;">
+            <li>✓ 15 scan recipients</li>
+            <li>✓ 50 MB storage</li>
+            <li>✓ 25 MB files</li>
+            <li>✓ 50 signed sends/mo</li>
+            <li>✓ 50 emails/hour</li>
+          </ul>
+          {% if 'pro' in upgrade_plans %}
+          <button onclick="startCheckout('pro')" class="checkout-btn" data-plan="pro"
+            style="background:#fff;color:#000;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;">
+            Upgrade — $10/mo
+          </button>
+          {% else %}
+          <div style="text-align:center;font-size:12px;color:#666;padding:12px 0;">Current plan</div>
+          {% endif %}
+        </div>
+
+        <!-- Business card -->
+        <div style="background:#000;color:#fff;border-radius:12px;padding:24px;display:flex;flex-direction:column;{% if user.plan == 'business' %}opacity:0.5;{% endif %}">
+          <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Business</div>
+          <div style="font-size:28px;font-weight:700;margin:12px 0 16px;">
+            <span class="plan-price" data-plan="business" data-aud="$20" data-usd="$15" data-eur="€14" data-gbp="£12">$20</span><span style="font-size:14px;font-weight:400;color:#aaa;">/mo</span>
+          </div>
+          <ul style="list-style:none;padding:0;margin:0 0 20px;flex:1;font-size:13px;color:#ccc;display:flex;flex-direction:column;gap:8px;">
+            <li>✓ 50 scan recipients</li>
+            <li>✓ 200 MB storage</li>
+            <li>✓ 25 MB files</li>
+            <li>✓ Unlimited signed sends</li>
+            <li>✓ Protect / Watermark / Share</li>
+            <li>✓ Priority support</li>
+          </ul>
+          {% if 'business' in upgrade_plans %}
+          <button onclick="startCheckout('business')" class="checkout-btn" data-plan="business"
+            style="background:#fff;color:#000;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;">
+            Upgrade — $20/mo
+          </button>
+          {% else %}
+          <div style="text-align:center;font-size:12px;color:#666;padding:12px 0;">Current plan</div>
+          {% endif %}
+        </div>
+
+        <!-- Enterprise card -->
+        <div style="background:#000;color:#fff;border-radius:12px;padding:24px;display:flex;flex-direction:column;{% if user.plan == 'enterprise' %}opacity:0.5;{% endif %}">
+          <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Enterprise</div>
+          <div style="font-size:28px;font-weight:700;margin:12px 0 16px;">
+            <span class="plan-price" data-plan="enterprise" data-aud="$30" data-usd="$22" data-eur="€19" data-gbp="£16">$30</span><span style="font-size:14px;font-weight:400;color:#aaa;">/mo</span>
+          </div>
+          <ul style="list-style:none;padding:0;margin:0 0 20px;flex:1;font-size:13px;color:#ccc;display:flex;flex-direction:column;gap:8px;">
+            <li>✓ 100 scan recipients</li>
+            <li>✓ 200 MB storage</li>
+            <li>✓ 25 MB files</li>
+            <li>✓ Unlimited signed sends</li>
+            <li>✓ Protect / Watermark / Share</li>
+            <li>✓ Priority support</li>
+          </ul>
+          {% if 'enterprise' in upgrade_plans %}
+          <button onclick="startCheckout('enterprise')" class="checkout-btn" data-plan="enterprise"
+            style="background:#fff;color:#000;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;">
+            Upgrade — $30/mo
+          </button>
+          {% else %}
+          <div style="text-align:center;font-size:12px;color:#666;padding:12px 0;">Current plan</div>
+          {% endif %}
+        </div>
+      </div>
+      <p style="margin:10px 0 0;font-size:12px;color:#666;text-align:center;">Secure checkout via Stripe. Cancel anytime.</p>
     </div>
     {% endif %}
 
-    {% if user.stripe_customer_id and user.plan == 'enterprise' and not trial_days_left %}
+    {% if user.stripe_customer_id and user.plan != 'free' and not trial_days_left %}
     <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px 28px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
       <div>
         <span style="font-size:14px;font-weight:600;color:#111;">Billing</span>
@@ -393,7 +468,11 @@
       <div style="margin-bottom:20px;padding:12px 16px;background:#fffbeb;border:1px solid #f5e27a;border-radius:6px;font-size:13px;color:#7a5c00;">
         Recipient limit reached.
         {% if user.plan == 'free' %}
-        <a href="/#pricing" style="color:#7a5c00;font-weight:600;">Upgrade to Enterprise</a> for up to 100 recipients.
+        <a href="#upgrade-section" style="color:#7a5c00;font-weight:600;">Upgrade</a> to Pro (15), Business (50), or Enterprise (100) for more recipients.
+        {% elif user.plan == 'pro' %}
+        <a href="#upgrade-section" style="color:#7a5c00;font-weight:600;">Upgrade to Business or Enterprise</a> for more recipients.
+        {% elif user.plan == 'business' %}
+        <a href="#upgrade-section" style="color:#7a5c00;font-weight:600;">Upgrade to Enterprise</a> for 100 recipients.
         {% endif %}
       </div>
       {% endif %}
@@ -530,7 +609,7 @@
         {% else %}background:#fff8f0;border:1px solid #fbd38d;color:#9c4221;{% endif %}">
         {% if sends_left <= 0 %}
         ⚠️ You've used all {{ signed_send_limit }} signed sends this month.
-        <a href="#upgrade-section" style="color:#c53030;font-weight:600;margin-left:6px;">Upgrade to Enterprise</a>
+        <a href="#upgrade-section" style="color:#c53030;font-weight:600;margin-left:6px;">Upgrade to Business or Enterprise</a>
         {% else %}
         ⚡ {{ sends_left }} of {{ signed_send_limit }} signed sends remaining this month.
         {% endif %}
@@ -553,13 +632,13 @@
               {% endif %}
             </span>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;">
+          <div class="dash-doc-actions" style="display:flex;gap:8px;align-items:center;">
             <span style="font-size:11px;color:#aaa;">{{ doc.created_at.strftime('%d %b %Y') }}</span>
             <a href="/dashboard/documents/{{ doc.id }}/sign"
                style="background:#000;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:500;text-decoration:none;display:inline-block;">
               Sign &amp; Send
             </a>
-            {% if user.plan == 'enterprise' %}
+            {% if user.plan in ('business', 'enterprise') %}
             <button onclick="openProtectModal({{ doc.id }}, '{{ doc.filename|e }}')"
                     style="background:#f0f0f0;color:#555;border:none;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Password protect">🔒</button>
             <button onclick="openWatermarkModal({{ doc.id }}, '{{ doc.filename|e }}')"
@@ -568,9 +647,9 @@
                     style="background:#f0f0f0;color:#555;border:none;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Share link">🔗</button>
             {% else %}
             <span style="display:inline-flex;gap:2px;">
-              <button onclick="showUpgrade()" style="background:#fafafa;color:#ccc;border:1px solid #eee;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Enterprise only">🔒</button>
-              <button onclick="showUpgrade()" style="background:#fafafa;color:#ccc;border:1px solid #eee;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Enterprise only">💧</button>
-              <button onclick="showUpgrade()" style="background:#fafafa;color:#ccc;border:1px solid #eee;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Enterprise only">🔗</button>
+              <button onclick="showUpgrade()" style="background:#fafafa;color:#ccc;border:1px solid #eee;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Upgrade required">🔒</button>
+              <button onclick="showUpgrade()" style="background:#fafafa;color:#ccc;border:1px solid #eee;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Upgrade required">💧</button>
+              <button onclick="showUpgrade()" style="background:#fafafa;color:#ccc;border:1px solid #eee;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;" title="Upgrade required">🔗</button>
             </span>
             {% endif %}
             <button onclick="deleteDocument({{ doc.id }}, this)"
@@ -670,7 +749,7 @@
 
   <!-- Protect Modal -->
   <div id="protect-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeModals()">
-    <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;width:90%;">
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;width:90%;max-height:90vh;overflow-y:auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <h3 style="margin:0;font-size:16px;font-weight:700;color:#111;">🔒 Password Protect PDF</h3>
         <button onclick="closeModals()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
@@ -688,7 +767,7 @@
 
   <!-- Watermark Modal -->
   <div id="watermark-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeModals()">
-    <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;width:90%;">
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;width:90%;max-height:90vh;overflow-y:auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <h3 style="margin:0;font-size:16px;font-weight:700;color:#111;">💧 Watermark PDF</h3>
         <button onclick="closeModals()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
@@ -721,7 +800,7 @@
 
   <!-- Share Modal -->
   <div id="share-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeModals()">
-    <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;width:90%;">
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;width:90%;max-height:90vh;overflow-y:auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <h3 style="margin:0;font-size:16px;font-weight:700;color:#111;">🔗 Share Document</h3>
         <button onclick="closeModals()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
@@ -745,19 +824,19 @@
 
   <!-- Upgrade Modal (for free users clicking enterprise features) -->
   <div id="upgrade-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeModals()">
-    <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;width:90%;text-align:center;">
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;width:90%;max-height:90vh;overflow-y:auto;text-align:center;">
       <div class="w-14 h-14 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
         <span style="font-size:24px;">🔒</span>
       </div>
-      <h3 style="margin:0 0 8px;font-size:18px;font-weight:700;color:#111;">Enterprise Feature</h3>
+      <h3 style="margin:0 0 8px;font-size:18px;font-weight:700;color:#111;">Plan Upgrade Required</h3>
       <p style="font-size:14px;color:#888;margin:0 0 20px;">
-        Password protection, watermarking, and sharing links are available on the Enterprise plan.
+        Password protection, watermarking, and sharing links are available on Business and Enterprise plans.
       </p>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <a href="/#pricing"
-           style="background:#000;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;text-decoration:none;display:block;">
-          Upgrade to Enterprise
-        </a>
+        <button onclick="closeModals();document.getElementById('upgrade-section').scrollIntoView({behavior:'smooth'})"
+           style="background:#000;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;display:block;">
+          View upgrade options
+        </button>
         <button onclick="closeModals()"
                 style="background:none;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;color:#888;cursor:pointer;">
           Maybe later
@@ -768,7 +847,7 @@
 
   <!-- Signature Creator Modal -->
   <div id="signature-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeSignatureModal()">
-    <div style="background:#fff;border-radius:12px;padding:28px;max-width:480px;width:90%;">
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <h3 style="margin:0;font-size:16px;font-weight:700;color:#111;">Create Signature</h3>
         <button onclick="closeSignatureModal()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
@@ -1009,18 +1088,6 @@ function copyField(btn) {
   const orig = btn.textContent;
   btn.textContent = 'Copied!';
   setTimeout(() => btn.textContent = orig, 1500);
-}
-
-const priceLabels = { aud: 'AUD $30', usd: 'USD $22', eur: 'EUR €19', gbp: 'GBP £16' };
-
-function updatePrice(radio) {
-  document.querySelectorAll('.currency-btn').forEach(btn => {
-    const active = btn.dataset.val === radio.value;
-    btn.style.background = active ? '#fff' : '#333';
-    btn.style.color = active ? '#000' : '#fff';
-  });
-  const btn = document.getElementById('checkout-btn');
-  if (btn) btn.textContent = `Upgrade — ${priceLabels[radio.value]}/month`;
 }
 
 async function openBillingPortal() {
@@ -1403,24 +1470,46 @@ async function deleteSignature(id) {
   }
 }
 
-async function startCheckout() {
-  const btn = document.getElementById('checkout-btn');
+const planPrices = {
+  pro: { aud: '$10', usd: '$8', eur: '€7', gbp: '£6' },
+  business: { aud: '$20', usd: '$15', eur: '€14', gbp: '£12' },
+  enterprise: { aud: '$30', usd: '$22', eur: '€19', gbp: '£16' },
+};
+
+function updatePrices(radio) {
+  const currency = radio.value;
+  document.querySelectorAll('.currency-btn').forEach(btn => {
+    const active = btn.dataset.val === currency;
+    btn.style.background = active ? '#fff' : '#333';
+    btn.style.color = active ? '#000' : '#fff';
+  });
+  document.querySelectorAll('.plan-price').forEach(el => {
+    const plan = el.dataset.plan;
+    el.textContent = planPrices[plan]?.[currency] || planPrices[plan]?.aud || '$0';
+  });
+  document.querySelectorAll('.checkout-btn').forEach(btn => {
+    const plan = btn.dataset.plan;
+    const price = planPrices[plan]?.[currency] || planPrices[plan]?.aud || '$0';
+    btn.textContent = `Upgrade — ${price}/mo`;
+  });
+}
+
+async function startCheckout(plan) {
   const currency = document.querySelector('input[name="currency"]:checked')?.value || 'aud';
-  btn.textContent = 'Redirecting…';
-  btn.disabled = true;
+  const btns = document.querySelectorAll('.checkout-btn');
+  btns.forEach(b => { b.textContent = 'Redirecting…'; b.disabled = true; });
   try {
     const resp = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: `currency=${currency}`
+      body: `currency=${currency}&plan=${plan}`
     });
     const data = await resp.json();
     if (data.url) window.location.href = data.url;
     else throw new Error(data.error || 'Unknown error');
   } catch(e) {
     alert('Checkout failed: ' + e.message);
-    btn.textContent = `Upgrade — ${priceLabels[currency]}/month`;
-    btn.disabled = false;
+    btns.forEach(b => { b.textContent = 'Upgrade — ' + (planPrices[b.dataset.plan]?.[currency] || ''); b.disabled = false; });
   }
 }
 </script>

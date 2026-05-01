@@ -14,6 +14,39 @@ from app.email import send_with_attachment
 
 dashboard = Blueprint('dashboard', __name__)
 
+# ── Plan limits (shared, importable by smtp.py) ─────────────────────
+PLAN_LIMITS = {
+    'free':      {'recipients': 3, 'storage_mb': 15,  'file_size_mb': 10, 'sends_per_month': 10,    'emails_per_hour': 5,  'enterprise_features': False},
+    'pro':       {'recipients': 15,'storage_mb': 50,  'file_size_mb': 25, 'sends_per_month': 50,    'emails_per_hour': 50, 'enterprise_features': False},
+    'business':  {'recipients': 50,'storage_mb': 200, 'file_size_mb': 25, 'sends_per_month': None,   'emails_per_hour': None, 'enterprise_features': True},
+    'enterprise':{'recipients': 100,'storage_mb': 200,'file_size_mb': 25, 'sends_per_month': None,   'emails_per_hour': None, 'enterprise_features': True},
+}
+
+PLAN_NAMES = {
+    'free': 'Free',
+    'pro': 'Pro',
+    'business': 'Business',
+    'enterprise': 'Enterprise',
+}
+
+
+def get_plan_limits(user):
+    """Get the limit dict for a user's plan, defaulting to free."""
+    return PLAN_LIMITS.get(user.plan, PLAN_LIMITS['free'])
+
+
+def plan_display_name(plan):
+    """Return a human-readable plan name."""
+    return PLAN_NAMES.get(plan, plan.capitalize())
+
+
+def get_upgrade_options(current_plan):
+    """Return list of plans the user can upgrade to (plans above their current tier)."""
+    order = ['free', 'pro', 'business', 'enterprise']
+    current_idx = order.index(current_plan) if current_plan in order else 0
+    return [p for p in order if order.index(p) > current_idx]
+
+
 @dashboard.route('/dashboard')
 @login_required
 def index():
@@ -68,7 +101,8 @@ def index():
     storage_used = db.session.query(db.func.sum(Document.file_size)).filter(
         Document.user_id == current_user.id
     ).scalar() or 0
-    storage_limit_mb = 200 if current_user.plan == 'enterprise' else 15
+    limits = get_plan_limits(current_user)
+    storage_limit_mb = limits['storage_mb']
     storage_used_mb = round(storage_used / (1024 * 1024), 1)
 
     # Signatures
@@ -85,7 +119,7 @@ def index():
         SignedDocument.created_at >= month_start
     ).count()
 
-    signed_send_limit = 10 if current_user.plan == 'free' else None  # None = unlimited
+    signed_send_limit = limits['sends_per_month']  # None = unlimited
 
     # Inbox address
     inbox_slug = current_user.inbox_address
@@ -106,7 +140,7 @@ def index():
         'blocked_30d':     BlockedEmail.query.filter_by(user_id=current_user.id)
                             .filter(BlockedEmail.blocked_at > cutoff_30d).count(),
         'blocked_total':   total_blocked,
-        'recipient_limit': 100 if current_user.plan == 'enterprise' else 5,
+        'recipient_limit': limits['recipients'],
         'doc_count':       len(documents_list),
         'sig_count':       len(signatures_list),
         'send_count':      signed_sends_this_month,
@@ -130,7 +164,10 @@ def index():
         storage_limit_mb=storage_limit_mb,
         signed_sends_this_month=signed_sends_this_month,
         signed_send_limit=signed_send_limit,
-        inbox_full=inbox_full
+        inbox_full=inbox_full,
+        PLAN_NAMES=PLAN_NAMES,
+        limits=limits,
+        get_upgrade_options=get_upgrade_options
     )
 
 @dashboard.route('/dashboard/smtp/generate', methods=['POST'])
@@ -207,7 +244,8 @@ def manage_recipients():
             is_active=True
         ).count()
 
-        limit = 100 if current_user.plan == 'enterprise' else 15
+        limits = get_plan_limits(current_user)
+        limit = limits['recipients']
         if current_count >= limit:
             return 'Recipient limit reached', 400
 
@@ -276,13 +314,13 @@ def upload_document():
         return jsonify({'error': 'Not a valid PDF or file has no pages'}), 400
 
     # Check storage limit
-    storage_limit_bytes = (200 if current_user.plan == 'enterprise' else 15) * 1024 * 1024
+    limits = get_plan_limits(current_user)
+    storage_limit_bytes = limits['storage_mb'] * 1024 * 1024
     storage_used = db.session.query(db.func.sum(Document.file_size)).filter(
         Document.user_id == current_user.id
     ).scalar() or 0
     if storage_used + len(raw) > storage_limit_bytes:
-        limit_mb = 200 if current_user.plan == 'enterprise' else 15
-        return jsonify({'error': f'Storage limit reached ({limit_mb} MB). Delete some documents or upgrade.'}), 413
+        return jsonify({'error': f'Storage limit reached ({limits["storage_mb"]} MB). Delete some documents or upgrade.'}), 413
 
     # Clean filename
     filename = f.filename.rsplit('.', 1)[0][:80]
@@ -380,7 +418,8 @@ def sign_document_page(doc_id):
         SignedDocument.user_id == current_user.id,
         SignedDocument.created_at >= month_start
     ).count()
-    signed_send_limit = 10 if current_user.plan == 'free' else None
+    limits = get_plan_limits(current_user)
+    signed_send_limit = limits['sends_per_month']
 
     return render_template('dashboard/sign.html',
         user=current_user,
@@ -426,13 +465,15 @@ def sign_and_send(doc_id):
     # ── Quota check ──
     now_utc = datetime.utcnow()
     month_start = now_utc.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    if current_user.plan == 'free':
+    limits = get_plan_limits(current_user)
+    send_limit = limits['sends_per_month']
+    if send_limit is not None:
         count = SignedDocument.query.filter(
             SignedDocument.user_id == current_user.id,
             SignedDocument.sent_at >= month_start
         ).count()
-        if count >= 10:
-            return jsonify({'error': 'Monthly limit reached. Upgrade to Enterprise for unlimited signed sends.'}), 403
+        if count >= send_limit:
+            return jsonify({'error': 'Monthly signed-send limit reached. Upgrade to Business or Enterprise for unlimited sends.'}), 403
 
     # ── Overlay signature(s) on PDF ──
     try:
@@ -593,8 +634,9 @@ def delete_signature(sig_id):
 @dashboard.route('/dashboard/documents/<int:doc_id>/protect', methods=['POST'])
 @login_required
 def protect_document(doc_id):
-    if current_user.plan != 'enterprise':
-        return jsonify({'error': 'Enterprise plan required'}), 403
+    limits = get_plan_limits(current_user)
+    if not limits['enterprise_features']:
+        return jsonify({'error': 'Upgrade to Business or Enterprise for this feature.'}), 403
 
     doc = Document.query.get_or_404(doc_id)
     if doc.user_id != current_user.id:
@@ -623,8 +665,9 @@ def protect_document(doc_id):
 @dashboard.route('/dashboard/documents/<int:doc_id>/watermark', methods=['POST'])
 @login_required
 def watermark_document(doc_id):
-    if current_user.plan != 'enterprise':
-        return jsonify({'error': 'Enterprise plan required'}), 403
+    limits = get_plan_limits(current_user)
+    if not limits['enterprise_features']:
+        return jsonify({'error': 'Upgrade to Business or Enterprise for this feature.'}), 403
 
     doc = Document.query.get_or_404(doc_id)
     if doc.user_id != current_user.id:
@@ -679,8 +722,9 @@ def watermark_document(doc_id):
 @dashboard.route('/dashboard/documents/<int:doc_id>/share', methods=['POST'])
 @login_required
 def share_document(doc_id):
-    if current_user.plan != 'enterprise':
-        return jsonify({'error': 'Enterprise plan required'}), 403
+    limits = get_plan_limits(current_user)
+    if not limits['enterprise_features']:
+        return jsonify({'error': 'Upgrade to Business or Enterprise for this feature.'}), 403
 
     doc = Document.query.get_or_404(doc_id)
     if doc.user_id != current_user.id:

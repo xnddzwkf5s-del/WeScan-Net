@@ -32,7 +32,7 @@
  We<span class="font-semibold">Scan</span>
  </a>
  </div>
- <div class="flex items-center space-x-8">
+ <div class="hidden md:flex items-center space-x-8">
  <a href="#features" class="text-sm text-gray-600 hover:text-black transition-colors">Features</a>
           <a href="ocr.html" class="text-sm text-gray-600 hover:text-black transition-colors">Free OCR</a>
           <a href="pdf-edit.html" class="text-sm text-gray-600 hover:text-black transition-colors">PDF Editor</a>
@@ -43,6 +43,12 @@
  Start Free
  </a>
  </div>
+ <!-- Hamburger toggle button -->
+ <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="md:hidden flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-expanded="false" aria-label="Toggle navigation menu">
+ <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+ </svg>
+ </button>
  </div>
  </div>
  </nav>
@@ -384,6 +390,35 @@
  </section>
 
  <!-- Footer -->
+ <!-- Mobile Menu -->
+ <div id="mobile-menu" class="hidden md:hidden fixed top-20 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-lg">
+ <div class="px-6 py-6 flex flex-col space-y-4">
+ <a href="#features" onclick="closeMobileMenu()" class="text-sm text-gray-600 hover:text-black transition-colors py-2">Features</a>
+ <a href="ocr.html" onclick="closeMobileMenu()" class="text-sm text-gray-600 hover:text-black transition-colors py-2">Free OCR</a>
+ <a href="pdf-edit.html" onclick="closeMobileMenu()" class="text-sm text-gray-600 hover:text-black transition-colors py-2">PDF Editor</a>
+ <a href="#pricing" onclick="closeMobileMenu()" class="text-sm text-gray-600 hover:text-black transition-colors py-2">Pricing</a>
+ <a href="setup-guide.html" onclick="closeMobileMenu()" class="text-sm text-gray-600 hover:text-black transition-colors py-2">Setup Guide</a>
+ <a href="signup.html" onclick="closeMobileMenu()" class="text-sm text-gray-600 hover:text-black transition-colors py-2">Sign In</a>
+ <a href="signup.html" onclick="closeMobileMenu()" class="text-sm px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-center mt-2">
+ Start Free
+ </a>
+ </div>
+ </div>
+
+ <script>
+ function toggleMobileMenu() {
+ const menu = document.getElementById('mobile-menu');
+ const btn = document.getElementById('mobile-menu-btn');
+ const isOpen = !menu.classList.contains('hidden');
+ menu.classList.toggle('hidden');
+ btn.setAttribute('aria-expanded', !isOpen);
+ }
+ function closeMobileMenu() {
+ document.getElementById('mobile-menu').classList.add('hidden');
+ document.getElementById('mobile-menu-btn').setAttribute('aria-expanded', 'false');
+ }
+ </script>
+
  <footer class="border-t border-gray-100 py-12">
  <div class="max-w-7xl mx-auto px-6">
  <div class="grid md:grid-cols-4 gap-8">
@@ -443,7 +478,7 @@
  </script>
 <!-- Support widget -->
 <div id="support-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.4);" onclick="if(event.target===this)toggleSupport()">
-  <div style="position:fixed;bottom:90px;right:24px;background:#fff;border-radius:16px;padding:28px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+  <div style="position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));right:24px;background:#fff;border-radius:16px;padding:28px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <span style="font-size:16px;font-weight:700;color:#111;">Need help?</span>
       <button onclick="toggleSupport()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;line-height:1;">&times;</button>
@@ -463,7 +498,7 @@
     </div>
   </div>
 </div>
-<button onclick="toggleSupport()" style="position:fixed;bottom:24px;right:24px;z-index:999;background:#000;color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px;">
+<button onclick="toggleSupport()" style="position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0px));right:24px;z-index:999;background:#000;color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px;">
   <span style="font-size:16px;">💬</span> Support
 </button>
 <script>

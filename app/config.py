@@ -20,7 +20,23 @@ class Config:
     STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
     STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
     STRIPE_PRICE_ID_FREE = os.environ.get('STRIPE_PRICE_ID_FREE', '')
+    STRIPE_PRICE_ID_PRO = os.environ.get('STRIPE_PRICE_ID_PRO', '')
+    STRIPE_PRICE_ID_BUSINESS = os.environ.get('STRIPE_PRICE_ID_BUSINESS', '')
     STRIPE_PRICE_ID_ENTERPRISE = os.environ.get('STRIPE_PRICE_ID_ENTERPRISE', '')
+
+    # Per-currency price IDs (set per plan in production)
+    STRIPE_PRICE_PRO_AUD = os.environ.get('STRIPE_PRICE_PRO_AUD', '')
+    STRIPE_PRICE_PRO_USD = os.environ.get('STRIPE_PRICE_PRO_USD', '')
+    STRIPE_PRICE_PRO_EUR = os.environ.get('STRIPE_PRICE_PRO_EUR', '')
+    STRIPE_PRICE_PRO_GBP = os.environ.get('STRIPE_PRICE_PRO_GBP', '')
+    STRIPE_PRICE_BUS_AUD = os.environ.get('STRIPE_PRICE_BUS_AUD', '')
+    STRIPE_PRICE_BUS_USD = os.environ.get('STRIPE_PRICE_BUS_USD', '')
+    STRIPE_PRICE_BUS_EUR = os.environ.get('STRIPE_PRICE_BUS_EUR', '')
+    STRIPE_PRICE_BUS_GBP = os.environ.get('STRIPE_PRICE_BUS_GBP', '')
+    STRIPE_PRICE_ENT_AUD = os.environ.get('STRIPE_PRICE_ENT_AUD', '')
+    STRIPE_PRICE_ENT_USD = os.environ.get('STRIPE_PRICE_ENT_USD', '')
+    STRIPE_PRICE_ENT_EUR = os.environ.get('STRIPE_PRICE_ENT_EUR', '')
+    STRIPE_PRICE_ENT_GBP = os.environ.get('STRIPE_PRICE_ENT_GBP', '')
 
     # SMTP relay (postfix integration)
     SMTP_RELAY_DOMAIN = 'wescan.net'

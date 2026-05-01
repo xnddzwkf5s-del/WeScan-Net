@@ -18,7 +18,7 @@
             </a>
             {% if current_user.is_authenticated %}
             <div class="flex items-center gap-4 text-sm">
-                <span class="text-gray-400">{{ current_user.email }}</span>
+                <span class="hidden sm:inline text-gray-400">{{ current_user.email }}</span>
                 <a href="/logout"
                    class="px-3 py-1.5 border border-gray-200 rounded-full text-gray-600 hover:bg-gray-50 transition-colors">
                     Sign out
@@ -49,7 +49,7 @@
 
 <!-- Support widget -->
 <div id="support-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.4);" onclick="if(event.target===this)toggleSupport()">
-  <div style="position:fixed;bottom:90px;right:24px;background:#fff;border-radius:16px;padding:28px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+  <div style="position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));right:24px;background:#fff;border-radius:16px;padding:28px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <span style="font-size:16px;font-weight:700;color:#111;">Need help?</span>
       <button onclick="toggleSupport()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;line-height:1;">&times;</button>
@@ -69,7 +69,7 @@
     </div>
   </div>
 </div>
-<button onclick="toggleSupport()" style="position:fixed;bottom:24px;right:24px;z-index:999;background:#000;color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px;">
+<button onclick="toggleSupport()" style="position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0px));right:24px;z-index:999;background:#000;color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px;">
   <span style="font-size:16px;">💬</span> Support
 </button>
 <script>
