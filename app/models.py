@@ -136,3 +136,19 @@ class SignedDocument(db.Model):
     user = db.relationship('User', backref=db.backref('sent_documents', lazy='dynamic'))
     document = db.relationship('Document', backref=db.backref('signed_versions', lazy='dynamic'))
     signature = db.relationship('Signature', backref=db.backref('used_in', lazy='dynamic'))
+
+
+class SignaturePlacement(db.Model):
+    """A single signature placement on a page within a signed document.
+    One SignedDocument can have multiple placements (multi-signature, multi-page)."""
+    __tablename__ = 'signature_placement'
+    id = db.Column(db.Integer, primary_key=True)
+    signed_document_id = db.Column(db.Integer, db.ForeignKey('signed_document.id'), nullable=False)
+    signature_id = db.Column(db.Integer, db.ForeignKey('signature.id'), nullable=False)
+    page_num = db.Column(db.Integer, default=0)
+    x = db.Column(db.Float, default=0.5)
+    y = db.Column(db.Float, default=0.85)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    signed_document = db.relationship('SignedDocument', backref=db.backref('placement_records', lazy='dynamic', cascade='all, delete-orphan'))
+    signature = db.relationship('Signature', backref=db.backref('via_placements', lazy='dynamic'))
