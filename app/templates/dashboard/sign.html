@@ -51,12 +51,14 @@
           </div>
           <img id="pdf-preview-img" src="" alt="PDF Preview"
                style="display:none;width:100%;height:auto;border-radius:6px;cursor:crosshair;">
-          <!-- Signature overlay -->
+          <!-- Active signature overlay (draggable) -->
           <div id="signature-overlay" style="display:none;position:absolute;cursor:move;z-index:10;opacity:0.85;"
                onmousedown="startDrag(event)">
             <img id="sig-overlay-img" src="" alt="Signature"
                  style="pointer-events:none;max-width:150px;max-height:50px;">
           </div>
+          <!-- Frozen placement overlays (one per placed signature across pages) -->
+          <div id="frozen-overlays-container"></div>
         </div>
 
         <!-- Page navigation -->
@@ -76,7 +78,9 @@
               style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#555;">▶</button>
           </div>
         </div>
-        <div style="margin-top:4px;font-size:11px;color:#bbb;text-align:right;">Drag the signature to position it on the document.</div>
+        <div style="margin-top:4px;font-size:11px;color:#bbb;text-align:right;">
+          Navigate to each page, position the signature, and click <strong>Place on This Page</strong> to lock it in.
+        </div>
       </div>
     </div>
 
@@ -111,6 +115,27 @@
         {% endif %}
       </div>
 
+      <!-- Placement Controls -->
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:12px;">
+          Placements
+          <span id="placement-count" style="font-weight:400;color:#888;font-size:12px;margin-left:4px;">0</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button id="btn-place" onclick="placeSignature()"
+                  style="flex:1;background:#000;color:#fff;border:none;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:500;cursor:pointer;">
+            📌 Place on This Page
+          </button>
+          <button id="btn-start-over" onclick="startOver()"
+                  style="background:transparent;color:#999;border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:500;cursor:pointer;">
+            ↺ Start Over
+          </button>
+        </div>
+        <div id="placement-list" style="margin-top:12px;font-size:12px;color:#888;max-height:120px;overflow-y:auto;">
+          <!-- Placement summary items rendered here -->
+        </div>
+      </div>
+
       <!-- Send Form -->
       <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;">
         <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:12px;">Send To</div>
@@ -131,9 +156,9 @@
         </div>
 
         <button id="btn-sign-send" onclick="signAndSend({{ doc.id }})"
-                style="width:100%;background:#000;color:#fff;border:none;border-radius:8px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;"
-                {% if not signatures %}disabled style="opacity:0.5;cursor:not-allowed;"{% endif %}>
-          ✍️ Sign & Send
+                style="width:100%;background:#000;color:#fff;border:none;border-radius:8px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;opacity:0.5;"
+                disabled>
+          📤 Send Signed Document
         </button>
         <div id="send-status" style="margin-top:8px;font-size:13px;color:#999;text-align:center;"></div>
       </div>
@@ -153,23 +178,23 @@ let dragOffsetY = 0;
 let currentPage = 0;
 let totalPages = 1;
 let docId = {{ doc.id }};
-let signaturePage = null;  // which page the overlay was placed on (null = not yet placed)
+let signaturePage = null;  // which page the active overlay was placed on (null = not yet placed)
+let placements = [];       // {page, x, y} — frozen placements
 
 // Load preview on page load
 document.addEventListener('DOMContentLoaded', function() {
   loadPreview(currentPage);
+  updatePlacementCount();
 });
 
 function jumpToPage(inputEl) {
   const val = parseInt(inputEl.value, 10);
   if (isNaN(val) || val < 1) {
-    // Revert to current page on invalid input
     inputEl.value = currentPage + 1;
     return;
   }
   const clamped = Math.max(1, Math.min(val, totalPages));
   if (clamped === currentPage + 1) {
-    // Same page, just ensure input shows current value
     inputEl.value = clamped;
     return;
   }
@@ -194,18 +219,17 @@ async function loadPreview(page) {
       loading.style.display = 'none';
       currentPage = data.current_page || 0;
       updatePageIndicator();
-      // Show overlay only on the page it was placed; hide on other pages
+      // Show active overlay only on the page it was placed; hide on other pages
       const overlay = document.getElementById('signature-overlay');
-      if (signaturePage === null && selectedSignatureData) {
-        // First load — show overlay and record page
-        showSignatureOverlay();
-      } else if (signaturePage === currentPage) {
-        // Back on the page where signature was placed — show it
+      if (signaturePage !== null && signaturePage === currentPage) {
         overlay.style.display = 'block';
+      } else if (signaturePage === null && selectedSignatureData) {
+        showSignatureOverlay();
       } else {
-        // Different page — hide overlay
         overlay.style.display = 'none';
       }
+      // Render frozen placements for the current page
+      renderFrozenOverlays();
     } else {
       loading.textContent = 'Could not load preview.';
     }
@@ -225,7 +249,6 @@ function updatePageIndicator() {
   document.getElementById('pos-page').textContent = currentPage + 1;
   document.getElementById('btn-prev-page').style.opacity = currentPage > 0 ? '1' : '0.3';
   document.getElementById('btn-next-page').style.opacity = currentPage < totalPages - 1 ? '1' : '0.3';
-  // Sync jump-to-page input
   const input = document.getElementById('jump-to-page-input');
   if (input) input.value = currentPage + 1;
 }
@@ -235,9 +258,8 @@ function showSignatureOverlay() {
   const img = document.getElementById('sig-overlay-img');
   img.src = 'data:image/png;base64,' + selectedSignatureData;
   overlay.style.display = 'block';
-  signaturePage = currentPage;  // record which page the overlay is on
+  signaturePage = currentPage;
 
-  // Position at center bottom of the preview area
   const container = document.getElementById('pdf-preview-container');
   const containerRect = container.getBoundingClientRect();
   const overlayWidth = 150;
@@ -251,9 +273,8 @@ function showSignatureOverlay() {
 function selectSignature(id, data) {
   selectedSignatureId = id;
   selectedSignatureData = data;
-  signaturePage = null;  // reset so showSignatureOverlay records the current page
+  signaturePage = null;
 
-  // Update card styles
   document.querySelectorAll('[id^="sig-card-"]').forEach(card => {
     card.style.borderColor = 'transparent';
     card.style.background = '';
@@ -300,7 +321,6 @@ document.addEventListener('mousemove', function(e) {
   let newLeft = e.clientX - containerRect.left - dragOffsetX;
   let newTop = e.clientY - containerRect.top - dragOffsetY;
 
-  // Clamp to container
   const overlayWidth = overlay.offsetWidth;
   const overlayHeight = overlay.offsetHeight;
   newLeft = Math.max(0, Math.min(containerRect.width - overlayWidth, newLeft));
@@ -320,9 +340,152 @@ document.addEventListener('mouseup', function(e) {
   }
 });
 
+// ── Multi-page placement logic ──
+
+function placeSignature() {
+  if (!selectedSignatureId) {
+    alert('Please select a signature first.');
+    return;
+  }
+
+  const x = parseFloat(document.getElementById('pos-x').textContent);
+  const y = parseFloat(document.getElementById('pos-y').textContent);
+  const page = currentPage;
+
+  // Check if we already have a placement on this exact page
+  const existingIdx = placements.findIndex(p => p.page === page);
+  if (existingIdx !== -1) {
+    // Replace existing placement on this page
+    placements[existingIdx] = { page, x, y };
+  } else {
+    // Add new placement
+    placements.push({ page, x, y });
+  }
+
+  // Hide the active overlay — placement is now frozen
+  document.getElementById('signature-overlay').style.display = 'none';
+  // Reset signaturePage so next navigation triggers a fresh overlay
+  signaturePage = null;
+
+  renderFrozenOverlays();
+  renderPlacementList();
+  updatePlacementCount();
+  updateSendButton();
+}
+
+function startOver() {
+  if (placements.length === 0) return;
+  if (!confirm('Clear all signature placements and start over?')) return;
+
+  placements = [];
+  document.getElementById('frozen-overlays-container').innerHTML = '';
+  document.getElementById('placement-list').innerHTML = '';
+  updatePlacementCount();
+  updateSendButton();
+
+  // Show fresh overlay on current page
+  signaturePage = null;
+  showSignatureOverlay();
+  renderFrozenOverlays(); // clear frozen overlays
+}
+
+function renderFrozenOverlays() {
+  const container = document.getElementById('frozen-overlays-container');
+  container.innerHTML = '';
+
+  const pagePlacements = placements.filter(p => p.page === currentPage);
+
+  pagePlacements.forEach((pl, idx) => {
+    const frozen = document.createElement('div');
+    frozen.dataset.placementPage = pl.page;
+    frozen.style.cssText = 'position:absolute;z-index:9;opacity:0.7;pointer-events:none;';
+
+    const img = document.createElement('img');
+    img.src = 'data:image/png;base64,' + selectedSignatureData;
+    img.style.cssText = 'max-width:150px;max-height:50px;';
+    frozen.appendChild(img);
+
+    // Position using the same logic as the active overlay
+    const containerEl = document.getElementById('pdf-preview-container');
+    const containerRect = containerEl.getBoundingClientRect();
+
+    // We'll place it later after container is laid out; but since we're in the DOM,
+    // we need relative positioning within the container. Convert rel coords to px.
+    // Since container might not have natural width/height known in JS, use offset
+    // from previous known container size. We'll use percentage-based positioning.
+    frozen.style.left = (pl.x * 100) + '%';
+    frozen.style.top = (pl.y * 100) + '%';
+    frozen.style.transform = 'translate(-50%, -50%)';
+
+    // Also store data for server
+    const pageSpan = document.createElement('span');
+    pageSpan.style.cssText = 'position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:10px;color:#999;white-space:nowrap;background:rgba(255,255,255,0.8);padding:0 4px;border-radius:2px;';
+    pageSpan.textContent = 'p.' + (pl.page + 1);
+    frozen.appendChild(pageSpan);
+
+    container.appendChild(frozen);
+  });
+}
+
+function renderPlacementList() {
+  const list = document.getElementById('placement-list');
+  if (placements.length === 0) {
+    list.innerHTML = '<div style="color:#ccc;font-style:italic;">No placements yet. Navigate to a page and click "Place on This Page".</div>';
+    return;
+  }
+
+  list.innerHTML = placements.map((pl, i) => {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f0f0f0;">' +
+      '<span>Page ' + (pl.page + 1) + ' <span style="color:#bbb;">(X:' + pl.x.toFixed(2) + ', Y:' + pl.y.toFixed(2) + ')</span></span>' +
+      '<button onclick="removePlacement(' + i + ')" style="background:none;border:none;color:#e53e3e;cursor:pointer;font-size:12px;padding:2px 6px;">✕</button>' +
+      '</div>';
+  }).join('');
+}
+
+function removePlacement(index) {
+  placements.splice(index, 1);
+  // If the removed placement was on the current page, re-render frozen overlays
+  renderFrozenOverlays();
+  renderPlacementList();
+  updatePlacementCount();
+  updateSendButton();
+
+  // If no placements left, show fresh overlay
+  if (placements.length === 0) {
+    signaturePage = null;
+    showSignatureOverlay();
+  }
+}
+
+function updatePlacementCount() {
+  const el = document.getElementById('placement-count');
+  if (el) {
+    el.textContent = placements.length;
+  }
+}
+
+function updateSendButton() {
+  const btn = document.getElementById('btn-sign-send');
+  if (placements.length > 0) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+  } else {
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+  }
+}
+
 async function signAndSend(docId) {
   if (!selectedSignatureId) {
     document.getElementById('send-status').textContent = 'Please select a signature first.';
+    document.getElementById('send-status').style.color = '#e53e3e';
+    return;
+  }
+
+  if (placements.length === 0) {
+    document.getElementById('send-status').textContent = 'Please place the signature on at least one page.';
     document.getElementById('send-status').style.color = '#e53e3e';
     return;
   }
@@ -334,8 +497,6 @@ async function signAndSend(docId) {
   status.textContent = '';
   status.style.color = '#999';
 
-  const posX = parseFloat(document.getElementById('pos-x').textContent);
-  const posY = parseFloat(document.getElementById('pos-y').textContent);
   const additional = document.getElementById('additional-recipients').value.trim();
 
   try {
@@ -344,9 +505,11 @@ async function signAndSend(docId) {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         signature_id: selectedSignatureId,
-        position_x: posX,
-        position_y: posY,
-        page_number: currentPage,
+        placements: placements.map(p => ({
+          page: p.page,
+          x: p.x,
+          y: p.y
+        })),
         additional_recipients: additional
       })
     });
@@ -362,8 +525,10 @@ async function signAndSend(docId) {
   } catch(e) {
     status.textContent = '❌ ' + e.message;
     status.style.color = '#e53e3e';
-    btn.textContent = '✍️ Sign & Send';
+    btn.textContent = '📤 Send Signed Document';
     btn.disabled = false;
+    // Re-enable only if still have placements
+    updateSendButton();
   }
 }
 </script>

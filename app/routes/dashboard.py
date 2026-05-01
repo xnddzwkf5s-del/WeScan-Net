@@ -9,7 +9,7 @@ import base64
 import smtplib
 from email.mime.text import MIMEText
 from werkzeug.security import generate_password_hash
-from app.pdf_utils import pdf_page_as_png, pdf_page_count, overlay_signature_on_pdf
+from app.pdf_utils import pdf_page_as_png, pdf_page_count, overlay_signature_on_pdf, overlay_signature_on_pdf_multi
 from app.email import send_with_attachment
 
 dashboard = Blueprint('dashboard', __name__)
@@ -350,9 +350,10 @@ def sign_and_send(doc_id):
 
     data = request.get_json(silent=True) or {}
     signature_id = data.get('signature_id')
-    sig_x = float(data.get('position_x', 0.5))
-    sig_y = float(data.get('position_y', 0.85))
-    sig_page = int(data.get('page_number', 0))
+    sig_x = float(data.get('position_x', 0.5)) if 'position_x' in data else None
+    sig_y = float(data.get('position_y', 0.85)) if 'position_y' in data else None
+    sig_page = int(data.get('page_number', 0)) if 'page_number' in data else None
+    placements = data.get('placements')
     additional_recipients = data.get('additional_recipients', '').strip()
 
     if not signature_id:
@@ -373,12 +374,35 @@ def sign_and_send(doc_id):
         if count >= 10:
             return jsonify({'error': 'Monthly limit reached. Upgrade to Enterprise for unlimited signed sends.'}), 403
 
-    # ── Overlay signature on PDF ──
+    # ── Overlay signature(s) on PDF ──
     try:
-        signed_pdf_bytes = overlay_signature_on_pdf(
-            doc.file_data, signature.data,
-            sig_x, sig_y, sig_page
-        )
+        if placements:
+            # Multi-page placements
+            placement_list = []
+            for p in placements:
+                placement_list.append({
+                    'page': int(p.get('page', 0)),
+                    'x': float(p.get('x', 0.5)),
+                    'y': float(p.get('y', 0.85)),
+                    'sigData': signature.data
+                })
+            signed_pdf_bytes = overlay_signature_on_pdf_multi(doc.file_data, placement_list)
+            # Use the first placement for the signed document record
+            sig_x = float(placements[0].get('x', 0.5))
+            sig_y = float(placements[0].get('y', 0.85))
+            sig_page = int(placements[0].get('page', 0))
+        else:
+            # Fallback: single-page placement
+            if sig_x is None:
+                sig_x = 0.5
+            if sig_y is None:
+                sig_y = 0.85
+            if sig_page is None:
+                sig_page = 0
+            signed_pdf_bytes = overlay_signature_on_pdf(
+                doc.file_data, signature.data,
+                sig_x, sig_y, sig_page
+            )
     except Exception as e:
         return jsonify({'error': f'Failed to sign PDF: {str(e)}'}), 500
 
