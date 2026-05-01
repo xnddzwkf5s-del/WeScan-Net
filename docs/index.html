@@ -20,6 +20,26 @@
  transform: translateY(-5px);
  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
  }
+
+ /* ── Slide-in mobile nav (Straya Co style) ──────────────────── */
+ .nav-icon{display:flex;flex-direction:column;justify-content:space-between;width:26px;height:20px;cursor:pointer;z-index:1100;flex-shrink:0;}
+ .nav-icon span{display:block;height:2.5px;width:100%;background:#111;border-radius:9px;transition:all 0.25s ease-in-out;transform-origin:left center;}
+ .nav-icon.open span:nth-child(1){transform:rotate(45deg);top:-3px;left:3px;position:relative;}
+ .nav-icon.open span:nth-child(2){width:0;opacity:0;}
+ .nav-icon.open span:nth-child(3){transform:rotate(-45deg);top:18px;left:3px;position:relative;}
+ .slide-navigation{right:-420px;transition:right 0.4s ease;width:420px;max-width:100vw;position:fixed;top:0;height:100vh;background:#111;z-index:100;padding:7rem 3rem 3rem;overflow-y:auto;}
+ .slide-navigation.open{right:0;}
+ .slide-navigation .nav-icon{position:absolute;top:30px;right:20px;}
+ .slide-navigation .nav-icon span{background:#fff;}
+ .slide-nav-logo{margin-bottom:2.5rem;font-size:1.4rem;font-weight:700;color:#fff;}
+ .slide-nav-logo span{color:#888;font-weight:300;}
+ .slide-nav-links{list-style:none;padding:0;margin:0;}
+ .slide-nav-links li{margin-bottom:0.1rem;}
+ .slide-nav-links a{display:block;color:rgba(255,255,255,0.7);font-size:1rem;padding:0.7rem 0;transition:all 0.2s;border-bottom:1px solid rgba(255,255,255,0.06);}
+ .slide-nav-links a:hover{color:#fff;padding-left:0.5rem;}
+ .nav-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;opacity:0;pointer-events:none;transition:opacity 0.3s ease;}
+ .nav-backdrop.open{opacity:1;pointer-events:auto;}
+ @media(max-width:768px){.slide-navigation{width:100%;}}
  </style>
 </head>
 <body class="bg-white">
@@ -43,15 +63,39 @@
  Start Free
  </a>
  </div>
- <!-- Hamburger toggle button -->
- <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="md:hidden flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-expanded="false" aria-label="Toggle navigation menu">
- <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
- </svg>
- </button>
+ <!-- Animated hamburger icon (Straya Co style) -->
+ <div class="nav-icon md:hidden" id="navIcon"><span></span><span></span><span></span></div>
  </div>
  </div>
  </nav>
+
+ <!-- Slide-in mobile nav -->
+ <div class="nav-backdrop" id="navBackdrop"></div>
+ <div class="slide-navigation" id="slideNav">
+   <div class="nav-icon" id="slideClose"><span></span><span></span><span></span></div>
+   <div class="slide-nav-logo">We<span>Scan</span></div>
+   <ul class="slide-nav-links">
+     <li><a href="#features" onclick="closeNav()">Features</a></li>
+     <li><a href="ocr.html" onclick="closeNav()">Free OCR</a></li>
+     <li><a href="pdf-edit.html" onclick="closeNav()">PDF Editor</a></li>
+     <li><a href="#pricing" onclick="closeNav()">Pricing</a></li>
+     <li><a href="setup-guide.html" onclick="closeNav()">Setup Guide</a></li>
+     <li><a href="signup.html" onclick="closeNav()">Sign In</a></li>
+   </ul>
+   <div style="margin-top:2rem;">
+     <a href="signup.html" onclick="closeNav()" style="display:block;text-align:center;padding:14px 0;background:#fff;color:#111;border-radius:50px;font-size:1rem;font-weight:600;">Start Free</a>
+   </div>
+ </div>
+
+ <script>
+ (function(){
+   var n=document.getElementById('navIcon'),s=document.getElementById('slideNav'),c=document.getElementById('slideClose'),b=document.getElementById('navBackdrop');
+   function openNav(){n.classList.add('open');c.classList.add('open');s.classList.add('open');b.classList.add('open');document.body.style.overflow='hidden';}
+   function closeNav(){n.classList.remove('open');c.classList.remove('open');s.classList.remove('open');b.classList.remove('open');document.body.style.overflow='';}
+   n.addEventListener('click',openNav);c.addEventListener('click',closeNav);b.addEventListener('click',closeNav);
+   window.closeNav=closeNav; // expose for onclick in links
+ })();
+ </script>
 
  <!-- Hero Section -->
  <section class="pt-32 pb-24 px-6">
@@ -391,34 +435,6 @@
 
  <!-- Footer -->
  <!-- Mobile Menu -->
- <div id="mobile-menu" class="hidden md:hidden fixed top-20 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-lg">
- <div class="px-6 py-6 flex flex-col space-y-4">
- <a href="#features" onclick="closeMobileMenu()" class="text-sm text-gray-600 hover:text-black transition-colors py-2">Features</a>
- <a href="ocr.html" onclick="closeMobileMenu()" class="text-sm text-gray-600 hover:text-black transition-colors py-2">Free OCR</a>
- <a href="pdf-edit.html" onclick="closeMobileMenu()" class="text-sm text-gray-600 hover:text-black transition-colors py-2">PDF Editor</a>
- <a href="#pricing" onclick="closeMobileMenu()" class="text-sm text-gray-600 hover:text-black transition-colors py-2">Pricing</a>
- <a href="setup-guide.html" onclick="closeMobileMenu()" class="text-sm text-gray-600 hover:text-black transition-colors py-2">Setup Guide</a>
- <a href="signup.html" onclick="closeMobileMenu()" class="text-sm text-gray-600 hover:text-black transition-colors py-2">Sign In</a>
- <a href="signup.html" onclick="closeMobileMenu()" class="text-sm px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-center mt-2">
- Start Free
- </a>
- </div>
- </div>
-
- <script>
- function toggleMobileMenu() {
- const menu = document.getElementById('mobile-menu');
- const btn = document.getElementById('mobile-menu-btn');
- const isOpen = !menu.classList.contains('hidden');
- menu.classList.toggle('hidden');
- btn.setAttribute('aria-expanded', !isOpen);
- }
- function closeMobileMenu() {
- document.getElementById('mobile-menu').classList.add('hidden');
- document.getElementById('mobile-menu-btn').setAttribute('aria-expanded', 'false');
- }
- </script>
-
  <footer class="border-t border-gray-100 py-12">
  <div class="max-w-7xl mx-auto px-6">
  <div class="grid md:grid-cols-4 gap-8">
