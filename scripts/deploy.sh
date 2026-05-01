@@ -35,8 +35,8 @@ case "$1" in
       --exclude='.DS_Store' \
       "$LOCAL_DIR/" "$SERVER:$REMOTE_DIR/"
 
-    echo "=== Fixing permissions (CRITICAL)..."
-    ssh "$SERVER" "chown -R www-data:www-data $REMOTE_DIR/app/templates && chmod -R 640 $REMOTE_DIR/app/templates && chmod 755 $REMOTE_DIR/docs/*.html 2>/dev/null; true"
+    echo "=== Fixing ownership (CRITICAL - rsync preserves 501:staff)..."
+    ssh "$SERVER" "chown -R www-data:www-data $REMOTE_DIR && chmod 755 $REMOTE_DIR && chmod -R 640 $REMOTE_DIR/app/templates && chmod 755 $REMOTE_DIR/docs/*.html 2>/dev/null; true"
 
     echo "=== Restarting wescan service..."
     ssh "$SERVER" "systemctl restart wescan"
