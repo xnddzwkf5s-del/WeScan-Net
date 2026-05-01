@@ -86,35 +86,64 @@
   <!-- ════════════════════════════════════════════════════════════════ -->
   <div id="tab-overview" class="dash-tab-content">
 
-    <!-- Stats row -->
-    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:28px;">
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;">
-        <div style="font-size:20px;font-weight:700;color:#111;">{{ stats.emails_today }}</div>
-        <div style="font-size:11px;color:#999;margin-top:3px;">Emails today</div>
+    <!-- Stats grid: 3 rows × 4 columns -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;">
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.emails_today }}</div>
+        <div style="font-size:12px;color:#999;margin-top:3px;">📨 Emails today</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;">
-        <div style="font-size:20px;font-weight:700;color:#111;">{{ stats.emails_7d }}</div>
-        <div style="font-size:11px;color:#999;margin-top:3px;">Emails (7d)</div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.emails_7d }}</div>
+        <div style="font-size:12px;color:#999;margin-top:3px;">📨 Emails (7d)</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;">
-        <div style="font-size:20px;font-weight:700;color:#111;">{{ stats.emails_30d }}</div>
-        <div style="font-size:11px;color:#999;margin-top:3px;">Emails (30d)</div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.emails_30d }}</div>
+        <div style="font-size:12px;color:#999;margin-top:3px;">📨 Emails (30d)</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;">
-        <div style="font-size:20px;font-weight:700;color:#111;">{{ stats.emails_total }}</div>
-        <div style="font-size:11px;color:#999;margin-top:3px;">All time</div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.emails_total }}</div>
+        <div style="font-size:12px;color:#999;margin-top:3px;">📨 All time</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;">
-        <div style="font-size:20px;font-weight:700;{% if stats.blocked_today > 0 %}color:#e53e3e;{% else %}color:#ccc;{% endif %}">
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:26px;font-weight:700;{% if stats.blocked_today > 0 %}color:#e53e3e;{% else %}color:#ccc;{% endif %}">
           {{ stats.blocked_today }}
         </div>
-        <div style="font-size:11px;color:#999;margin-top:3px;">Blocked today</div>
+        <div style="font-size:12px;color:#999;margin-top:3px;">🚫 Blocked today</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;">
-        <div style="font-size:20px;font-weight:700;{% if stats.blocked_30d > 0 %}color:#dd6b20;{% else %}color:#ccc;{% endif %}">
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:26px;font-weight:700;{% if stats.blocked_30d > 0 %}color:#dd6b20;{% else %}color:#ccc;{% endif %}">
           {{ stats.blocked_30d }}
         </div>
-        <div style="font-size:11px;color:#999;margin-top:3px;">Blocked (30d)</div>
+        <div style="font-size:12px;color:#999;margin-top:3px;">🚫 Blocked (30d)</div>
+      </div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:26px;font-weight:700;{% if stats.blocked_total > 0 %}color:#dd6b20;{% else %}color:#ccc;{% endif %}">
+          {{ stats.blocked_total }}
+        </div>
+        <div style="font-size:12px;color:#999;margin-top:3px;">🚫 Blocked all time</div>
+      </div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.doc_count }}</div>
+        <div style="font-size:12px;color:#999;margin-top:3px;">📄 Documents in inbox</div>
+      </div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:26px;font-weight:700;color:#111;">{{ storage_used_mb }}<span style="font-size:14px;font-weight:400;color:#999;"> / {{ storage_limit_mb }} MB</span></div>
+        <div style="font-size:12px;color:#999;margin-top:3px;">💾 Storage used</div>
+      </div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.sig_count }}</div>
+        <div style="font-size:12px;color:#999;margin-top:3px;">🖊️ Saved signatures</div>
+      </div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:26px;font-weight:700;color:#111;">
+          {{ stats.send_count }}
+          {% if signed_send_limit is not none %}<span style="font-size:14px;font-weight:400;color:#999;"> / {{ signed_send_limit }}</span>{% endif %}
+        </div>
+        <div style="font-size:12px;color:#999;margin-top:3px;">✍️ Sends this month</div>
+      </div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.recipient_count }}<span style="font-size:14px;font-weight:400;color:#999;"> / {{ stats.recipient_limit }}</span></div>
+        <div style="font-size:12px;color:#999;margin-top:3px;">👥 Scan recipients</div>
       </div>
     </div>
 
@@ -427,7 +456,42 @@
   <!-- ════════════════════════════════════════════════════════════════ -->
   <div id="tab-docs" class="dash-tab-content" style="display:none;">
 
-    <!-- Upload PDF Button -->
+    <!-- Compact stats row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
+      <div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:12px 14px;">
+        <div style="font-size:18px;font-weight:700;color:#111;">{{ stats.emails_today }}</div>
+        <div style="font-size:11px;color:#999;margin-top:2px;">Emails today</div>
+      </div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:12px 14px;">
+        <div style="font-size:18px;font-weight:700;color:#111;">{{ stats.doc_count }}</div>
+        <div style="font-size:11px;color:#999;margin-top:2px;">Docs in inbox</div>
+      </div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:12px 14px;">
+        <div style="font-size:18px;font-weight:700;color:#111;">{{ stats.send_count }}{% if signed_send_limit is not none %}<span style="font-size:12px;font-weight:400;color:#999;"> / {{ signed_send_limit }}</span>{% endif %}</div>
+        <div style="font-size:11px;color:#999;margin-top:2px;">Sends this month</div>
+      </div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:12px 14px;">
+        <div style="font-size:18px;font-weight:700;color:#111;">{{ storage_used_mb }} <span style="font-size:12px;font-weight:400;color:#999;">/ {{ storage_limit_mb }} MB</span></div>
+        <div style="font-size:11px;color:#999;margin-top:2px;">Storage used</div>
+      </div>
+    </div>
+
+    <!-- Inbox Address Card (repeated from Overview) -->
+    {% if inbox_full %}
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px;">📬 Your Inbox Address</div>
+        <p style="font-size:12px;color:#999;margin:0;">Forward any PDF here and it appears in your Document Inbox below.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <input readonly value="{{ inbox_full }}"
+          id="inbox-addr-docs"
+          style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:6px;padding:6px 10px;font-size:13px;font-family:monospace;color:#333;width:220px;text-align:center;">
+        <button onclick="navigator.clipboard.writeText(this.previousElementSibling.value).then(()=>{this.textContent='✓ Copied';setTimeout(()=>{this.textContent='Copy'},2000)})"
+          style="background:#000;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">Copy</button>
+      </div>
+    </div>
+    {% endif %}
     <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:24px 28px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
       <div>
         <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:2px;">📤 Upload a PDF</div>

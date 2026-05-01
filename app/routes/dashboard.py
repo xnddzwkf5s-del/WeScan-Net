@@ -26,6 +26,8 @@ def index():
     usage      = UsageStat.query.filter_by(user_id=current_user.id)\
                     .order_by(UsageStat.sent_at.desc()).limit(10).all()
 
+    total_blocked = BlockedEmail.query.filter_by(user_id=current_user.id).count()
+
     stats = {
         'emails_today':    UsageStat.query.filter_by(user_id=current_user.id)
                             .filter(UsageStat.sent_at > cutoff_1d).count(),
@@ -38,7 +40,12 @@ def index():
                             .filter(BlockedEmail.blocked_at > cutoff_1d).count(),
         'blocked_30d':     BlockedEmail.query.filter_by(user_id=current_user.id)
                             .filter(BlockedEmail.blocked_at > cutoff_30d).count(),
+        'blocked_total':   total_blocked,
         'recipient_limit': 100 if current_user.plan == 'enterprise' else 5,
+        'doc_count':       len(documents_list),
+        'sig_count':       len(signatures_list),
+        'send_count':      signed_sends_this_month,
+        'recipient_count': len(recipients),
     }
 
     blocked_recent = BlockedEmail.query\
