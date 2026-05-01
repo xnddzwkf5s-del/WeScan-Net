@@ -2,7 +2,7 @@ from flask import Blueprint, redirect, url_for, request, jsonify, render_templat
 from flask_login import login_user, logout_user, login_required, current_user
 from authlib.integrations.flask_client import OAuth
 from app.models import db, User, OTPToken
-from app.email import send_otp_email, send_welcome_email
+from app.email import send_otp_email, send_welcome_email, send_admin_signup_notification
 from datetime import datetime, timedelta
 import os
 import requests as http_requests
@@ -159,6 +159,7 @@ def oauth_callback(provider):
             db.session.commit()
             try:
                 send_welcome_email(user.email, user.smtp_username)
+                send_admin_signup_notification(user.email, plan, signup_method='oauth')
             except Exception:
                 pass
             login_user(user)
@@ -236,6 +237,7 @@ def email_verify():
     if is_new_user:
         try:
             send_welcome_email(user.email, user.smtp_username)
+            send_admin_signup_notification(user.email, plan, signup_method='email')
         except Exception:
             pass
 

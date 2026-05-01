@@ -293,3 +293,21 @@ If you need help, reply to this email.
 """
 
     return send_email(to, subject, text, html)
+
+
+def send_admin_signup_notification(user_email, plan='free', signup_method='email'):
+    """Notify admin (Vincent) when a new user signs up."""
+    admin_email = os.getenv('ADMIN_EMAIL', 'vwoo@outlook.com.au')
+    from datetime import datetime
+    iso_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+
+    subject = f'🔔 New WeScan signup: {user_email}'
+    text = (
+        f'New user signed up on wescan.net\n'
+        f'Email: {user_email}\n'
+        f'Plan: {plan}\n'
+        f'Method: {signup_method}\n'
+        f'Time: {iso_time}\n'
+    )
+
+    return send_email(admin_email, subject, text)
