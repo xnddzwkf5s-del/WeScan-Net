@@ -49,8 +49,29 @@
         </p>
       </div>
 
+      <!-- Signature Prerequisites -->
+      <div class="max-w-3xl mx-auto mb-12 p-6 bg-gray-50 rounded-xl border border-gray-200" data-aos="fade-up" data-aos-delay="100">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 bg-black rounded-full flex items-center justify-center flex-shrink-0">
+            <span class="text-white text-lg">✍️</span>
+          </div>
+          <div class="text-left">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Digital Signatures Preview — Set Your Scanner to PDF</h3>
+            <p class="text-sm text-gray-600 mb-3">
+              WeScan will soon support <strong>digital signatures</strong> — scan a document, add your signature,
+              and send the signed PDF anywhere. To be ready, set your scanner to output <strong>PDF format</strong>.
+            </p>
+            <p class="text-sm text-gray-500 mb-0">
+              Most printers default to JPG. Go to <strong>Scan Settings → File Format</strong> on your printer's touchscreen
+              and select <strong>PDF</strong>. Multi-page documents should also be PDF — it preserves all pages.
+              JPG, PNG, and TIFF scans work for regular forwarding but won't be usable for signing.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Brand Quick Nav -->
-      <div class="flex flex-wrap justify-center gap-4" data-aos="fade-up" data-aos-delay="100">
+      <div class="flex flex-wrap justify-center gap-4" data-aos="fade-up" data-aos-delay="200">
         <a href="#hp" class="px-6 py-3 rounded-full border border-black text-black hover:bg-black hover:text-white transition-colors text-sm">HP</a>
         <a href="#brother" class="px-6 py-3 rounded-full border border-black text-black hover:bg-black hover:text-white transition-colors text-sm">Brother</a>
         <a href="#epson" class="px-6 py-3 rounded-full border border-black text-black hover:bg-black hover:text-white transition-colors text-sm">Epson</a>
@@ -146,7 +167,10 @@
                 <li>&bull; Add recipients via the Dashboard before scanning</li>
               </ul>
               <div class="mt-4 p-4 bg-green-50 rounded-lg">
-                <p class="text-sm text-green-800"><strong>Tip:</strong> Most HP printers have a "Test Email" option. Use it to verify your settings before scanning important documents.</p>
+                <p class="text-sm text-green-800"><strong>Tip:</strong> Most HP printers have a "Test Email" option. Use it to verify your settings. For digital signatures, set <strong>File Format</strong> to <strong>PDF</strong> in your scan settings.</p>
+              </div>
+              <div class="mt-3 p-4 bg-blue-50 rounded-lg">
+                <p class="text-sm text-blue-800"><strong>Scan Format:</strong> To use WeScan's signature feature later, set your HP printer to scan as <strong>PDF</strong>. On most HP touchscreens: <strong>Scan → File Type → PDF</strong>.</p>
               </div>
             </div>
           </div>
@@ -228,6 +252,9 @@
               </ul>
               <div class="mt-4 p-4 bg-green-50 rounded-lg">
                 <p class="text-sm text-green-800"><strong>Tip:</strong> Use <strong>STARTTLS</strong>, not SSL/TLS. Brother's menu can be confusing — look for SMTP Port 587 with TLS enabled, not SSL port 465.</p>
+              </div>
+              <div class="mt-3 p-4 bg-blue-50 rounded-lg">
+                <p class="text-sm text-blue-800"><strong>Scan Format:</strong> For digital signatures, configure your Brother printer to scan as <strong>PDF</strong>. In Web Based Management: <strong>Scan → File Format → PDF</strong>.</p>
               </div>
             </div>
           </div>
@@ -320,6 +347,9 @@
               <div class="mt-4 p-4 bg-green-50 rounded-lg">
                 <p class="text-sm text-green-800"><strong>Tip:</strong> Keep SSL/TLS set to <strong>OFF</strong> when using port 587. Epson handles encryption automatically via STARTTLS.</p>
               </div>
+              <div class="mt-3 p-4 bg-blue-50 rounded-lg">
+                <p class="text-sm text-blue-800"><strong>Scan Format:</strong> For digital signatures, set your Epson printer to scan as <strong>PDF</strong>. On the touchscreen: <strong>Scan Settings → File Format → PDF</strong>.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -411,6 +441,9 @@
               <p class="text-gray-500 mt-4">Set <strong>Send From</strong> to your SMTP username and specify the <strong>Default Recipient</strong>.</p>
               <div class="mt-4 p-4 bg-green-50 rounded-lg">
                 <p class="text-sm text-green-800"><strong>Tip:</strong> Canon's web interface provides the most detailed configuration. Use it instead of the printer's touchscreen if you have trouble finding the SMTP settings.</p>
+              </div>
+              <div class="mt-3 p-4 bg-blue-50 rounded-lg">
+                <p class="text-sm text-blue-800"><strong>Scan Format:</strong> For digital signatures, set your Canon printer to scan as <strong>PDF</strong>. In the web interface: <strong>Settings → Scan Settings → File Format → PDF</strong>.</p>
               </div>
             </div>
           </div>

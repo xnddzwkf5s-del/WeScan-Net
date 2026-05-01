@@ -95,6 +95,30 @@
     </div>
   </div>
 
+  <!-- Inbox Stats (second row) -->
+  <div class="grid grid-cols-5 gap-3 mb-6">
+    <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div class="text-xl font-bold text-gray-900">{{ stats.documents_total }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Documents stored</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div class="text-xl font-bold text-gray-900">{{ stats.signed_total }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Signed & sent</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div class="text-xl font-bold text-gray-900">{{ stats.signatures_total }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Signatures saved</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div class="text-xl font-bold text-gray-900">{{ stats.inbox_size_mb }} MB</div>
+      <div class="text-xs text-gray-400 mt-0.5">Inbox storage used</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div class="text-xl font-bold text-gray-300">—</div>
+      <div class="text-xs text-gray-400 mt-0.5">—</div>
+    </div>
+  </div>
+
   <!-- Users section -->
   <div class="flex items-center justify-between mb-3">
     <h2 class="text-lg font-semibold text-gray-800">Accounts</h2>

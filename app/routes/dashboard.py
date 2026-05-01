@@ -1,12 +1,16 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
-from app.models import db, User, Recipient, UsageStat, BlockedEmail
+from app.models import db, User, Recipient, UsageStat, BlockedEmail, Document, Signature, SignedDocument
 from datetime import datetime, timedelta
 import subprocess
 import os
+import io
+import base64
 import smtplib
 from email.mime.text import MIMEText
 from werkzeug.security import generate_password_hash
+from app.pdf_utils import pdf_page_as_png, pdf_page_count, overlay_signature_on_pdf
+from app.email import send_with_attachment
 
 dashboard = Blueprint('dashboard', __name__)
 
@@ -45,11 +49,10 @@ def index():
     # Trial / cancellation state
     trial_days_left = None
     trial_expired = False
-    cancelling = False  # paid sub cancelled, still active until period end
+    cancelling = False
     if current_user.trial_end:
         delta = (current_user.trial_end - now).days
         if delta >= 0:
-            # Distinguish: has stripe_subscription_id = cancelling paid sub, else = trial
             if current_user.stripe_subscription_id:
                 cancelling = True
                 trial_days_left = delta
@@ -63,11 +66,45 @@ def index():
     if current_user.scan_verified_at:
         scan_verify_status = 'verified'
     elif current_user.verify_requested_at:
-        # Check if it's been more than 1 hour (expired)
         if datetime.utcnow() - current_user.verify_requested_at > timedelta(hours=1):
             scan_verify_status = 'expired'
         else:
             scan_verify_status = 'waiting'
+
+    # ── Document Inbox data ──
+    now_utc = datetime.utcnow()
+    documents_list = Document.query.filter(
+        Document.user_id == current_user.id,
+        Document.expires_at > now_utc,
+        Document.status != 'expired'
+    ).order_by(Document.created_at.desc()).all()
+
+    # Storage usage
+    storage_used = db.session.query(db.func.sum(Document.file_size)).filter(
+        Document.user_id == current_user.id
+    ).scalar() or 0
+    storage_limit_mb = 200 if current_user.plan == 'enterprise' else 15
+    storage_used_mb = round(storage_used / (1024 * 1024), 1)
+
+    # Signatures
+    signatures_list = Signature.query.filter_by(user_id=current_user.id).all()
+
+    # Sent documents
+    sent_documents = SignedDocument.query.filter_by(user_id=current_user.id)\
+        .order_by(SignedDocument.created_at.desc()).limit(20).all()
+
+    # Monthly signed send count for quota display
+    month_start = now_utc.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    signed_sends_this_month = SignedDocument.query.filter(
+        SignedDocument.user_id == current_user.id,
+        SignedDocument.created_at >= month_start
+    ).count()
+
+    signed_send_limit = 10 if current_user.plan == 'free' else None  # None = unlimited
+
+    # Inbox address
+    inbox_slug = current_user.inbox_address
+    inbox_full = f'{inbox_slug}@inbox.wescan.net' if inbox_slug else None
 
     return render_template('dashboard/index.html',
         user=current_user,
@@ -78,7 +115,15 @@ def index():
         trial_days_left=trial_days_left,
         trial_expired=trial_expired,
         cancelling=cancelling,
-        scan_verify_status=scan_verify_status
+        scan_verify_status=scan_verify_status,
+        documents=documents_list,
+        signatures=signatures_list,
+        sent_documents=sent_documents,
+        storage_used_mb=storage_used_mb,
+        storage_limit_mb=storage_limit_mb,
+        signed_sends_this_month=signed_sends_this_month,
+        signed_send_limit=signed_send_limit,
+        inbox_full=inbox_full
     )
 
 @dashboard.route('/dashboard/smtp/generate', methods=['POST'])
@@ -182,3 +227,259 @@ def delete_recipient(id):
         db.session.commit()
         flash(f'{email} removed.', 'success')
     return redirect(url_for('dashboard.index'))
+
+
+# ── Document Inbox Endpoints ──
+
+@dashboard.route('/dashboard/documents', methods=['GET'])
+@login_required
+def list_documents():
+    now_utc = datetime.utcnow()
+    docs = Document.query.filter(
+        Document.user_id == current_user.id,
+        Document.expires_at > now_utc,
+        Document.status != 'expired'
+    ).order_by(Document.created_at.desc()).all()
+    return jsonify([{
+        'id': d.id,
+        'filename': d.filename,
+        'file_size': d.file_size,
+        'status': d.status,
+        'created_at': d.created_at.isoformat(),
+        'expires_at': d.expires_at.isoformat()
+    } for d in docs])
+
+
+@dashboard.route('/dashboard/documents/<int:doc_id>/download', methods=['GET'])
+@login_required
+def download_document(doc_id):
+    from flask import send_file
+    doc = Document.query.get_or_404(doc_id)
+    if doc.user_id != current_user.id:
+        return 'Not found', 404
+    if doc.expires_at < datetime.utcnow():
+        return 'Document expired', 410
+    return send_file(
+        io.BytesIO(doc.file_data),
+        mimetype=doc.mime_type or 'application/pdf',
+        as_attachment=True,
+        download_name=doc.filename
+    )
+
+
+@dashboard.route('/dashboard/documents/<int:doc_id>/preview', methods=['GET'])
+@login_required
+def preview_document(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.user_id != current_user.id:
+        return jsonify({'error': 'Not found'}), 404
+    if doc.expires_at < datetime.utcnow():
+        return jsonify({'error': 'Document expired'}), 410
+
+    page = request.args.get('page', 0, type=int)
+    page = max(0, page)
+    page_count = pdf_page_count(doc.file_data)
+
+    if page >= page_count:
+        return jsonify({'error': 'Page out of range'}), 400
+
+    png_b64 = pdf_page_as_png(doc.file_data, page)
+    if not png_b64:
+        return jsonify({'error': 'Could not render PDF'}), 500
+
+    return jsonify({
+        'id': doc.id,
+        'filename': doc.filename,
+        'preview': png_b64,
+        'page_count': page_count,
+        'current_page': page,
+        'file_size': doc.file_size
+    })
+
+
+@dashboard.route('/dashboard/documents/<int:doc_id>/sign', methods=['GET'])
+@login_required
+def sign_document_page(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.user_id != current_user.id:
+        abort(404)
+    if doc.expires_at < datetime.utcnow():
+        flash('This document has expired.', 'error')
+        return redirect(url_for('dashboard.index'))
+
+    signatures_list = Signature.query.filter_by(user_id=current_user.id).all()
+
+    now_utc = datetime.utcnow()
+    month_start = now_utc.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    signed_sends_this_month = SignedDocument.query.filter(
+        SignedDocument.user_id == current_user.id,
+        SignedDocument.created_at >= month_start
+    ).count()
+    signed_send_limit = 10 if current_user.plan == 'free' else None
+
+    return render_template('dashboard/sign.html',
+        user=current_user,
+        doc=doc,
+        signatures=signatures_list,
+        signed_sends_this_month=signed_sends_this_month,
+        signed_send_limit=signed_send_limit
+    )
+
+
+@dashboard.route('/dashboard/documents/<int:doc_id>/sign-and-send', methods=['POST'])
+@login_required
+def sign_and_send(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.user_id != current_user.id:
+        return jsonify({'error': 'Not found'}), 404
+    if doc.expires_at < datetime.utcnow():
+        return jsonify({'error': 'Document expired'}), 410
+    if doc.status != 'pending':
+        return jsonify({'error': 'Document already processed'}), 400
+
+    data = request.get_json(silent=True) or {}
+    signature_id = data.get('signature_id')
+    sig_x = float(data.get('position_x', 0.5))
+    sig_y = float(data.get('position_y', 0.85))
+    sig_page = int(data.get('page_number', 0))
+    additional_recipients = data.get('additional_recipients', '').strip()
+
+    if not signature_id:
+        return jsonify({'error': 'Signature ID required'}), 400
+
+    signature = Signature.query.filter_by(id=signature_id, user_id=current_user.id).first()
+    if not signature:
+        return jsonify({'error': 'Signature not found'}), 404
+
+    # ── Quota check ──
+    now_utc = datetime.utcnow()
+    month_start = now_utc.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    if current_user.plan == 'free':
+        count = SignedDocument.query.filter(
+            SignedDocument.user_id == current_user.id,
+            SignedDocument.sent_at >= month_start
+        ).count()
+        if count >= 10:
+            return jsonify({'error': 'Monthly limit reached. Upgrade to Enterprise for unlimited signed sends.'}), 403
+
+    # ── Overlay signature on PDF ──
+    try:
+        signed_pdf_bytes = overlay_signature_on_pdf(
+            doc.file_data, signature.data,
+            sig_x, sig_y, sig_page
+        )
+    except Exception as e:
+        return jsonify({'error': f'Failed to sign PDF: {str(e)}'}), 500
+
+    # ── Parse additional recipients ──
+    extra_recipients = []
+    if additional_recipients:
+        extra_recipients = [
+            r.strip() for r in additional_recipients.split('\n')
+            if r.strip() and '@' in r.strip()
+        ]
+
+    # ── Send via Mailgun ──
+    try:
+        # Send to primary (user's email)
+        send_with_attachment(
+            to=current_user.email,
+            subject=f'Signed: {doc.filename}',
+            text=f'Please find the signed version of {doc.filename} attached.\n\nSigned via WeScan.',
+            pdf_bytes=signed_pdf_bytes,
+            filename=f'signed-{doc.filename}'
+        )
+
+        # Send to additional recipients (no whitelisting needed — key selling point)
+        for recipient_email in extra_recipients:
+            try:
+                send_with_attachment(
+                    to=recipient_email,
+                    subject=f'Signed: {doc.filename}',
+                    text=f'Please find the signed version of {doc.filename} attached.\n\nSigned via WeScan.',
+                    pdf_bytes=signed_pdf_bytes,
+                    filename=f'signed-{doc.filename}'
+                )
+            except Exception as e:
+                # Log but continue — don't fail the whole operation
+                print(f'Failed to send to {recipient_email}: {e}')
+    except Exception as e:
+        return jsonify({'error': f'Failed to send email: {str(e)}'}), 500
+
+    # ── Create SignedDocument record ──
+    signed_doc = SignedDocument(
+        user_id=current_user.id,
+        document_id=doc.id,
+        signature_id=signature.id,
+        signature_x=sig_x,
+        signature_y=sig_y,
+        signature_page=sig_page,
+        signed_file_data=signed_pdf_bytes,
+        signed_file_size=len(signed_pdf_bytes),
+        status='sent',
+        sent_at=datetime.utcnow(),
+        sent_to_primary=current_user.email,
+        sent_to_additional=','.join(extra_recipients) if extra_recipients else None
+    )
+    db.session.add(signed_doc)
+
+    # Mark document as signed
+    doc.status = 'signed'
+    doc.signed_at = datetime.utcnow()
+
+    db.session.commit()
+
+    return jsonify({'ok': True, 'signed_document_id': signed_doc.id})
+
+
+# ── Signature Management ──
+
+@dashboard.route('/dashboard/signatures', methods=['GET'])
+@login_required
+def list_signatures():
+    sigs = Signature.query.filter_by(user_id=current_user.id).all()
+    return jsonify([{
+        'id': s.id,
+        'name': s.name,
+        'data': s.data,
+        'created_at': s.created_at.isoformat()
+    } for s in sigs])
+
+
+@dashboard.route('/dashboard/signatures', methods=['POST'])
+@login_required
+def create_signature():
+    # Check max limit (3 per user)
+    count = Signature.query.filter_by(user_id=current_user.id).count()
+    if count >= 3:
+        return jsonify({'error': 'Maximum 3 signatures allowed. Delete one to create another.'}), 403
+
+    data = request.get_json(silent=True) or {}
+    name = data.get('name', '').strip()
+    sig_data = data.get('data', '').strip()  # base64 PNG
+
+    if not name:
+        return jsonify({'error': 'Signature name is required'}), 400
+    if not sig_data:
+        return jsonify({'error': 'Signature data is required'}), 400
+
+    signature = Signature(
+        user_id=current_user.id,
+        name=name,
+        data=sig_data
+    )
+    db.session.add(signature)
+    db.session.commit()
+
+    return jsonify({'ok': True, 'id': signature.id, 'name': signature.name}), 201
+
+
+@dashboard.route('/dashboard/signatures/<int:sig_id>', methods=['DELETE'])
+@login_required
+def delete_signature(sig_id):
+    sig = Signature.query.get_or_404(sig_id)
+    if sig.user_id != current_user.id:
+        return jsonify({'error': 'Not found'}), 404
+    db.session.delete(sig)
+    db.session.commit()
+    return jsonify({'ok': True})

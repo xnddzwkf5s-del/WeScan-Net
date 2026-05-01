@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
 WeScan content filter / relay script.
-Called by Postfix as: content-filter.py {sasl_username} {recipient}
+Called by Postfix as: content-filter.py {sasl_username|->} {recipient}
 Reads the full email from stdin, validates against Flask API,
 then delivers via Mailgun HTTP API (bypasses DO port 25 block).
+When sasl_username is "-", treats as inbound inbox mail for i-xxxx@inbox.wescan.net.
 """
 import sys
 import os
+import base64
 import email as emaillib
 import requests
 
@@ -57,6 +59,57 @@ def record_sent(user_id, recipient, file_size_bytes):
         sys.stderr.write(f'Record error (non-fatal): {e}\n')
 
 
+def process_inbox_email(recipient, raw_message):
+    """Handle email sent to a user's inbox address (i-xxxx@inbox.wescan.net).
+    Extracts and stores the PDF — no forwarding."""
+    local_part = recipient.split('@')[0] if '@' in recipient else ''
+    if not local_part.startswith('i-'):
+        sys.stderr.write(f'Invalid inbox address format: {recipient}\n')
+        return False
+    try:
+        email_b64 = base64.b64encode(raw_message).decode('ascii')
+        resp = requests.post(
+            f'{FLASK_URL}/api/documents/inbox-store',
+            json={'inbox_address': local_part, 'email_data': email_b64},
+            timeout=15
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            sys.stderr.write(f'Inbox doc stored: id={data.get("document_id")} filename={data.get("filename")}\n')
+            return True
+        sys.stderr.write(f'Inbox store error {resp.status_code}: {resp.text[:200]}\n')
+        return False
+    except Exception as e:
+        sys.stderr.write(f'Inbox store exception: {e}\n')
+        return False
+
+
+def store_document(smtp_username, recipient, raw_message):
+    """Store the email as a Document in the Flask DB inbox.
+    Returns True on success, False on failure."""
+    try:
+        email_b64 = base64.b64encode(raw_message).decode('ascii')
+        resp = requests.post(
+            f'{FLASK_URL}/api/documents/store',
+            json={
+                'smtp_username': smtp_username,
+                'recipient': recipient,
+                'email_data': email_b64
+            },
+            timeout=15
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            sys.stderr.write(f'Document stored: id={data.get("document_id")} filename={data.get("filename")}\n')
+            return True
+        else:
+            sys.stderr.write(f'Store document error {resp.status_code}: {resp.text[:200]}\n')
+            return False
+    except Exception as e:
+        sys.stderr.write(f'Store document exception: {e}\n')
+        return False
+
+
 def fix_from_header(raw_message, sender, domain):
     """
     Rewrite the From: header to a valid @domain address.
@@ -85,7 +138,6 @@ def send_via_mailgun(env, sender, recipient, raw_message):
         sys.stderr.write('MAILGUN_API_KEY not set\n')
         return False
 
-    # Ensure From: is a valid wescan.net address (Mailgun rejects sandbox/blank senders)
     raw_message = fix_from_header(raw_message, sender, domain)
 
     try:
@@ -107,28 +159,38 @@ def send_via_mailgun(env, sender, recipient, raw_message):
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        sys.stderr.write('Usage: content-filter.py <sasl_username> <recipient>\n')
+        sys.stderr.write('Usage: content-filter.py <sasl_username|-> <recipient>\n')
         sys.exit(1)
 
-    sender    = sys.argv[1]
-    recipient = sys.argv[2]
-
-    # Read full email from stdin
+    sasl_user  = sys.argv[1]
+    recipient  = sys.argv[2]
     raw_message = sys.stdin.buffer.read()
 
-    # 1. Validate recipient against whitelist
-    user_id = validate(sender, recipient)
+    # INBOX FLOW: unauthenticated mail arriving for i-xxxx@inbox.wescan.net
+    if sasl_user == '-':
+        result = process_inbox_email(recipient, raw_message)
+        sys.exit(0 if result else 1)
+
+    # EXISTING AUTHENTICATED SMTP FLOW (unchanged)
+    user_id = validate(sasl_user, recipient)
     if not user_id:
-        sys.stderr.write(f'Rejected: {sender} ___ {recipient}\n')
+        sys.stderr.write(f'Rejected: {sasl_user} ___ {recipient}\n')
         sys.exit(1)
 
-    # 2. Send via Mailgun API
     env = get_env()
-    if not send_via_mailgun(env, sender, recipient, raw_message):
-        sys.stderr.write(f'Delivery failed: {sender} ___ {recipient}\n')
-        sys.exit(1)
+    document_storage_mode = env.get('DOCUMENT_STORAGE_MODE', '').lower() == 'true'
 
-    # 3. Record successful delivery
-    record_sent(user_id, recipient, len(raw_message))
+    if document_storage_mode:
+        if not store_document(sasl_user, recipient, raw_message):
+            sys.stderr.write(f'Document storage failed: {sasl_user} ___ {recipient}\n')
+            if not send_via_mailgun(env, sasl_user, recipient, raw_message):
+                sys.stderr.write(f'Delivery failed: {sasl_user} ___ {recipient}\n')
+                sys.exit(1)
+            record_sent(user_id, recipient, len(raw_message))
+    else:
+        if not send_via_mailgun(env, sasl_user, recipient, raw_message):
+            sys.stderr.write(f'Delivery failed: {sasl_user} ___ {recipient}\n')
+            sys.exit(1)
+        record_sent(user_id, recipient, len(raw_message))
 
     sys.exit(0)

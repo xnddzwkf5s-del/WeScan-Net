@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="font-family:'Inter',sans-serif;background:#f8f8f8;min-height:100vh;padding:32px 0;">
+<div style="max-width:960px;margin:0 auto;padding:0 24px;">
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+    <div style="margin-bottom:16px;padding:12px 16px;border-radius:8px;font-size:14px;
+      {% if category == 'error' %}background:#fff5f5;color:#c53030;border:1px solid #fed7d7;
+      {% else %}background:#f0fff4;color:#276749;border:1px solid #c6f6d5;{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+  <!-- Back link -->
+  <a href="/dashboard" style="display:inline-block;margin-bottom:20px;font-size:13px;color:#888;text-decoration:none;">
+    ← Back to Dashboard
+  </a>
+
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <div>
+      <h1 style="margin:0 0 4px;font-size:20px;font-weight:700;color:#111;">Sign & Send</h1>
+      <p style="margin:0;font-size:14px;color:#888;">{{ doc.filename }}</p>
+    </div>
+    <div style="font-size:13px;color:#999;">
+      {% if signed_send_limit %}
+        {{ signed_sends_this_month }} of {{ signed_send_limit }} signed sends remaining this month
+      {% else %}
+        Unlimited signed sends
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Main layout: PDF preview + signing controls -->
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;">
+
+    <!-- LEFT: PDF Preview -->
+    <div>
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;position:relative;">
+        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:12px;">Document Preview</div>
+
+        <!-- PDF preview container -->
+        <div id="pdf-preview-container" style="position:relative;background:#f5f5f5;border-radius:8px;overflow:hidden;min-height:400px;display:flex;align-items:center;justify-content:center;">
+          <div id="loading-preview" style="text-align:center;color:#999;font-size:14px;padding:40px;">
+            Loading preview...
+          </div>
+          <img id="pdf-preview-img" src="" alt="PDF Preview"
+               style="display:none;width:100%;height:auto;border-radius:6px;cursor:crosshair;">
+          <!-- Signature overlay -->
+          <div id="signature-overlay" style="display:none;position:absolute;cursor:move;z-index:10;opacity:0.85;"
+               onmousedown="startDrag(event)">
+            <img id="sig-overlay-img" src="" alt="Signature"
+                 style="pointer-events:none;max-width:150px;max-height:50px;">
+          </div>
+        </div>
+
+        <!-- Page navigation -->
+        <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#aaa;">
+          <div>
+            Position: X=<span id="pos-x">0.50</span>, Y=<span id="pos-y">0.85</span>, Page=<span id="pos-page">1</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button id="btn-prev-page" onclick="changePage(-1)"
+              style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#555;">◀</button>
+            <span id="page-indicator" style="font-size:13px;font-weight:500;color:#333;">1 / 1</span>
+            <button id="btn-next-page" onclick="changePage(1)"
+              style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#555;">▶</button>
+          </div>
+        </div>
+        <div style="margin-top:4px;font-size:11px;color:#bbb;text-align:right;">Drag the signature to position it on the document.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Signature Selection + Send Form -->
+    <div>
+      <!-- Signature Selection -->
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:12px;">Select Signature</div>
+
+        {% if signatures %}
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          {% for sig in signatures %}
+          <label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:2px solid transparent;border-radius:8px;cursor:pointer;
+                 {% if loop.first %}border-color:#000;background:#f9f9f9;{% endif %}"
+                 id="sig-card-{{ sig.id }}"
+                 onclick="selectSignature({{ sig.id }}, '{{ sig.data }}')">
+            <input type="radio" name="signature" value="{{ sig.id }}"
+                   style="display:none;" {% if loop.first %}checked{% endif %}>
+            <img src="data:image/png;base64,{{ sig.data }}"
+                 alt="{{ sig.name }}" style="max-width:80px;max-height:30px;border:1px solid #eee;border-radius:4px;padding:2px;">
+            <span style="font-size:13px;color:#111;">{{ sig.name }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:16px 0;">
+          <p style="font-size:13px;color:#bbb;margin:0 0 12px;">No signatures saved yet.</p>
+          <a href="/dashboard" style="background:#000;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:12px;font-weight:500;text-decoration:none;display:inline-block;">
+            Create Signature
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Send Form -->
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;">
+        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:12px;">Send To</div>
+
+        <div style="margin-bottom:12px;">
+          <label style="font-size:12px;color:#888;display:flex;align-items:center;gap:6px;">
+            <input type="checkbox" id="send-to-self" checked disabled
+                   style="accent-color:#000;">
+            Send to my email (<strong style="color:#111;">{{ user.email }}</strong>)
+          </label>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-size:12px;color:#888;margin-bottom:4px;">Additional recipients</label>
+          <textarea id="additional-recipients" rows="3" placeholder="one@example.com&#10;two@example.com"
+                    style="width:100%;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;resize:vertical;font-family:'Inter',sans-serif;"></textarea>
+          <p style="margin:4px 0 0;font-size:11px;color:#aaa;">One email per line. No whitelisting required — they'll receive the signed document directly.</p>
+        </div>
+
+        <button id="btn-sign-send" onclick="signAndSend({{ doc.id }})"
+                style="width:100%;background:#000;color:#fff;border:none;border-radius:8px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;"
+                {% if not signatures %}disabled style="opacity:0.5;cursor:not-allowed;"{% endif %}>
+          ✍️ Sign & Send
+        </button>
+        <div id="send-status" style="margin-top:8px;font-size:13px;color:#999;text-align:center;"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<script>
+let selectedSignatureId = {% if signatures %}{{ signatures[0].id }}{% else %}null{% endif %};
+let selectedSignatureData = {% if signatures %}'{{ signatures[0].data }}'{% else %}''{% endif %};
+let isDragging = false;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+let currentPage = 0;
+let totalPages = 1;
+let docId = {{ doc.id }};
+
+// Load preview on page load
+document.addEventListener('DOMContentLoaded', function() {
+  loadPreview(currentPage);
+});
+
+async function loadPreview(page) {
+  const loading = document.getElementById('loading-preview');
+  loading.style.display = 'block';
+  loading.textContent = 'Loading preview...';
+  document.getElementById('pdf-preview-img').style.display = 'none';
+  document.getElementById('signature-overlay').style.display = 'none';
+
+  try {
+    const resp = await fetch('/dashboard/documents/' + docId + '/preview?page=' + page);
+    const data = await resp.json();
+    if (data.page_count) totalPages = data.page_count;
+    if (data.preview) {
+      const img = document.getElementById('pdf-preview-img');
+      img.src = 'data:image/png;base64,' + data.preview;
+      img.style.display = 'block';
+      loading.style.display = 'none';
+      currentPage = data.current_page || 0;
+      updatePageIndicator();
+      // Restore signature overlay on new page
+      if (selectedSignatureData && !isDragging) {
+        showSignatureOverlay();
+      }
+    } else {
+      loading.textContent = 'Could not load preview.';
+    }
+  } catch(e) {
+    loading.textContent = 'Error loading preview: ' + e.message;
+  }
+}
+
+function changePage(delta) {
+  const newPage = currentPage + delta;
+  if (newPage < 0 || newPage >= totalPages) return;
+  loadPreview(newPage);
+}
+
+function updatePageIndicator() {
+  document.getElementById('page-indicator').textContent = (currentPage + 1) + ' / ' + totalPages;
+  document.getElementById('pos-page').textContent = currentPage + 1;
+  document.getElementById('btn-prev-page').style.opacity = currentPage > 0 ? '1' : '0.3';
+  document.getElementById('btn-next-page').style.opacity = currentPage < totalPages - 1 ? '1' : '0.3';
+}
+
+function showSignatureOverlay() {
+  const overlay = document.getElementById('signature-overlay');
+  const img = document.getElementById('sig-overlay-img');
+  img.src = 'data:image/png;base64,' + selectedSignatureData;
+  overlay.style.display = 'block';
+
+  // Position at center bottom of the preview area
+  const container = document.getElementById('pdf-preview-container');
+  const containerRect = container.getBoundingClientRect();
+  const overlayWidth = 150;
+  const overlayHeight = 50;
+  overlay.style.left = (containerRect.width / 2 - overlayWidth / 2) + 'px';
+  overlay.style.top = (containerRect.height * 0.85 - overlayHeight / 2) + 'px';
+
+  updatePositionDisplay();
+}
+
+function selectSignature(id, data) {
+  selectedSignatureId = id;
+  selectedSignatureData = data;
+
+  // Update card styles
+  document.querySelectorAll('[id^="sig-card-"]').forEach(card => {
+    card.style.borderColor = 'transparent';
+    card.style.background = '';
+  });
+  const card = document.getElementById('sig-card-' + id);
+  if (card) {
+    card.style.borderColor = '#000';
+    card.style.background = '#f9f9f9';
+  }
+
+  showSignatureOverlay();
+}
+
+function updatePositionDisplay() {
+  const overlay = document.getElementById('signature-overlay');
+  const container = document.getElementById('pdf-preview-container');
+  const containerRect = container.getBoundingClientRect();
+  const overlayRect = overlay.getBoundingClientRect();
+
+  const relX = ((overlayRect.left - containerRect.left) + overlayRect.width / 2) / containerRect.width;
+  const relY = ((overlayRect.top - containerRect.top) + overlayRect.height / 2) / containerRect.height;
+
+  document.getElementById('pos-x').textContent = Math.max(0, Math.min(1, relX)).toFixed(2);
+  document.getElementById('pos-y').textContent = Math.max(0, Math.min(1, relY)).toFixed(2);
+}
+
+function startDrag(e) {
+  if (e.button !== 0) return;
+  isDragging = true;
+  const overlay = document.getElementById('signature-overlay');
+  const rect = overlay.getBoundingClientRect();
+  dragOffsetX = e.clientX - rect.left;
+  dragOffsetY = e.clientY - rect.top;
+  overlay.style.cursor = 'grabbing';
+  e.preventDefault();
+}
+
+document.addEventListener('mousemove', function(e) {
+  if (!isDragging) return;
+  const overlay = document.getElementById('signature-overlay');
+  const container = document.getElementById('pdf-preview-container');
+  const containerRect = container.getBoundingClientRect();
+
+  let newLeft = e.clientX - containerRect.left - dragOffsetX;
+  let newTop = e.clientY - containerRect.top - dragOffsetY;
+
+  // Clamp to container
+  const overlayWidth = overlay.offsetWidth;
+  const overlayHeight = overlay.offsetHeight;
+  newLeft = Math.max(0, Math.min(containerRect.width - overlayWidth, newLeft));
+  newTop = Math.max(0, Math.min(containerRect.height - overlayHeight, newTop));
+
+  overlay.style.left = newLeft + 'px';
+  overlay.style.top = newTop + 'px';
+
+  updatePositionDisplay();
+});
+
+document.addEventListener('mouseup', function(e) {
+  if (isDragging) {
+    isDragging = false;
+    const overlay = document.getElementById('signature-overlay');
+    overlay.style.cursor = 'move';
+  }
+});
+
+async function signAndSend(docId) {
+  if (!selectedSignatureId) {
+    document.getElementById('send-status').textContent = 'Please select a signature first.';
+    document.getElementById('send-status').style.color = '#e53e3e';
+    return;
+  }
+
+  const btn = document.getElementById('btn-sign-send');
+  const status = document.getElementById('send-status');
+  btn.textContent = 'Signing & Sending…';
+  btn.disabled = true;
+  status.textContent = '';
+  status.style.color = '#999';
+
+  const posX = parseFloat(document.getElementById('pos-x').textContent);
+  const posY = parseFloat(document.getElementById('pos-y').textContent);
+  const additional = document.getElementById('additional-recipients').value.trim();
+
+  try {
+    const resp = await fetch('/dashboard/documents/' + docId + '/sign-and-send', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        signature_id: selectedSignatureId,
+        position_x: posX,
+        position_y: posY,
+        page_number: currentPage,
+        additional_recipients: additional
+      })
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      status.textContent = '✅ Signed and sent! Redirecting…';
+      status.style.color = '#38a169';
+      btn.textContent = '✅ Done';
+      setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch(e) {
+    status.textContent = '❌ ' + e.message;
+    status.style.color = '#e53e3e';
+    btn.textContent = '✍️ Sign & Send';
+    btn.disabled = false;
+  }
+}
+</script>
+{% endblock %}

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, abort, flash
 from flask_login import login_required, current_user
-from app.models import db, User, UsageStat, Recipient, BlockedEmail
+from app.models import db, User, UsageStat, Recipient, BlockedEmail, Document, Signature, SignedDocument
 from datetime import datetime, timedelta
 from sqlalchemy import func
 
@@ -74,6 +74,8 @@ def index():
         u.blocked_count_30d = blocked_30d_by_user.get(u.id, 0)
         u.blocked_emails   = blocked_recent_by_user.get(u.id, [])[:20]
 
+    inbox_size = db.session.query(db.func.sum(Document.file_size)).scalar() or 0
+
     stats = {
         'total_users':      len(users),
         'free_users':       sum(1 for u in users if u.plan == 'free'),
@@ -85,6 +87,10 @@ def index():
         'smtp_active':      User.query.filter(User.smtp_password_hash.isnot(None)).count(),
         'blocked_today':    BlockedEmail.query.filter(BlockedEmail.blocked_at > cutoff_1d).count(),
         'blocked_30d':      BlockedEmail.query.filter(BlockedEmail.blocked_at > cutoff_30d).count(),
+        'documents_total':  Document.query.count(),
+        'signed_total':     SignedDocument.query.count(),
+        'signatures_total': Signature.query.count(),
+        'inbox_size_mb':    round(inbox_size / (1024 * 1024), 1),
     }
 
     return render_template('admin/index.html', users=users, stats=stats)

@@ -99,6 +99,65 @@
 
   </div>
 
+  <!-- ── Inbox Address Card ──────────────────────────────────────────── -->
+  {% if inbox_full %}
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px;">📬 Your Inbox Address</div>
+      <p style="font-size:12px;color:#999;margin:0;">Forward any PDF here and it appears in your Document Inbox for signing.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <input readonly value="{{ inbox_full }}"
+        id="inbox-addr"
+        style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:6px;padding:6px 10px;font-size:13px;font-family:monospace;color:#333;width:220px;text-align:center;">
+      <button onclick="navigator.clipboard.writeText(this.previousElementSibling.value).then(()=>{this.textContent='✓ Copied';setTimeout(()=>{this.textContent='Copy'},2000)})"
+        style="background:#000;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">Copy</button>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Document Inbox ─────────────────────────────────────────────── -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="margin:0;font-size:16px;font-weight:700;color:#111;">📄 Document Inbox</h2>
+      <span style="font-size:13px;color:#999;">
+        {{ storage_used_mb }} / {{ storage_limit_mb }} MB used
+      </span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      {% for doc in documents %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid #f0f0f0;border-radius:8px;">
+        <div>
+          <span style="font-size:14px;font-weight:500;color:#111;">{{ doc.filename }}</span>
+          <span style="font-size:12px;color:#999;margin-left:8px;">
+            {% if doc.file_size < 1024 %}
+              {{ doc.file_size }} B
+            {% elif doc.file_size < 1048576 %}
+              {{ (doc.file_size / 1024)|round(1) }} KB
+            {% else %}
+              {{ (doc.file_size / 1048576)|round(1) }} MB
+            {% endif %}
+          </span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:11px;color:#aaa;">{{ doc.created_at.strftime('%d %b %Y') }}</span>
+          <a href="/dashboard/documents/{{ doc.id }}/sign"
+             style="background:#000;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:500;text-decoration:none;display:inline-block;">
+            Sign & Send
+          </a>
+        </div>
+      </div>
+      {% else %}
+      <p style="text-align:center;color:#bbb;font-size:14px;padding:24px 0;margin:0;">
+        No documents yet.{% if inbox_full %} Forward a PDF to <strong>{{ inbox_full }}</strong> to see it here.{% else %} Scan a document to your WeScan email to see it here.{% endif %}
+      </p>
+      {% endfor %}
+    </div>
+    <p style="margin:12px 0 0;font-size:12px;color:#ccc;">
+      Documents auto-expire after 14 days.
+    </p>
+  </div>
+
   <!-- ── Setup Wizard ──────────────────────────────────────────── -->
   <div style="background:#fff;border:1px solid #eee;border-radius:12px;margin-bottom:20px;">
     <button onclick="toggleWizard()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:none;border:none;cursor:pointer;text-align:left;">
@@ -311,6 +370,118 @@
       {% endfor %}
     </div>
   </div>
+
+  <!-- ── My Signatures ─────────────────────────────────────────── -->
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="margin:0;font-size:16px;font-weight:700;color:#111;">🖊️ My Signatures</h2>
+      <span style="font-size:13px;color:#999;">{{ signatures|length }} / 3</span>
+    </div>
+
+    <!-- Signature list -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+      {% for sig in signatures %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid #f0f0f0;border-radius:8px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <img src="data:image/png;base64,{{ sig.data }}" alt="{{ sig.name }}"
+               style="max-width:100px;max-height:35px;border:1px solid #eee;border-radius:4px;padding:2px;">
+          <span style="font-size:14px;font-weight:500;color:#111;">{{ sig.name }}</span>
+        </div>
+        <button onclick="deleteSignature({{ sig.id }})"
+                style="background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0;"
+                onmouseover="this.style.color='#e53e3e'" onmouseout="this.style.color='#ccc'">
+          Delete
+        </button>
+      </div>
+      {% else %}
+      <p style="text-align:center;color:#bbb;font-size:14px;padding:12px 0;margin:0;">
+        No signatures saved. Create one below.
+      </p>
+      {% endfor %}
+    </div>
+
+    {% if signatures|length < 3 %}
+    <!-- Add Signature button triggers signature creator modal -->
+    <button id="btn-add-signature" onclick="openSignatureModal()"
+            style="background:#000;color:#fff;border:none;border-radius:6px;padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;">
+      + Add Signature
+    </button>
+    {% else %}
+    <p style="font-size:12px;color:#ccc;margin:0;">Maximum 3 signatures reached. Delete one to create another.</p>
+    {% endif %}
+  </div>
+
+  <!-- Signature Creator Modal -->
+  <div id="signature-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeSignatureModal()">
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:480px;width:90%;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="margin:0;font-size:16px;font-weight:700;color:#111;">Create Signature</h3>
+        <button onclick="closeSignatureModal()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;color:#888;margin-bottom:4px;">Signature Name</label>
+        <input type="text" id="sig-name" placeholder="e.g. My Signature" maxlength="50"
+               style="width:100%;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;color:#888;margin-bottom:8px;">Draw Your Signature</label>
+        <canvas id="sig-canvas" width="400" height="120"
+                style="width:100%;height:auto;border:1px solid #e8e8e8;border-radius:6px;background:#fff;cursor:crosshair;touch-action:none;"></canvas>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button onclick="clearCanvas()"
+                  style="background:#f5f5f5;color:#666;border:1px solid #eee;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;">
+            Clear
+          </button>
+          <button onclick="undoStroke()"
+                  style="background:#f5f5f5;color:#666;border:1px solid #eee;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;">
+            Undo
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;display:none;" id="sig-preview-area">
+        <label style="display:block;font-size:12px;color:#888;margin-bottom:8px;">Preview</label>
+        <img id="sig-preview-img" src="" alt="Signature Preview"
+             style="max-width:200px;max-height:50px;border:1px solid #eee;border-radius:4px;padding:4px;">
+      </div>
+
+      <button id="btn-save-signature" onclick="saveSignature()"
+              style="width:100%;background:#000;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">
+        Save Signature
+      </button>
+      <div id="sig-save-status" style="margin-top:8px;font-size:13px;color:#999;text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- ── Signed Documents History ──────────────────────────────── -->
+  {% if sent_documents %}
+  <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
+    <h2 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#111;">📬 Sent Documents</h2>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      {% for sd in sent_documents %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #f0f0f0;border-radius:8px;">
+        <div>
+          <span style="font-size:14px;font-weight:500;color:#111;">{{ sd.document.filename }}</span>
+          <span style="font-size:12px;color:#999;margin-left:8px;">
+            Sent to {{ sd.sent_to_primary }}
+            {% if sd.sent_to_additional %}+ {{ sd.sent_to_additional.split(',')|length }} more{% endif %}
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;padding:2px 8px;border-radius:4px;{% if sd.status == 'sent' %}background:#f0fff4;color:#38a169;{% else %}background:#fff5f5;color:#e53e3e;{% endif %}">
+            {{ sd.status }}
+          </span>
+          <span style="font-size:11px;color:#aaa;">
+            {% if sd.sent_at %}{{ sd.sent_at.strftime('%d %b %Y') }}{% endif %}
+          </span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
   <!-- ── Blocked attempts (last 30 days) ───────────────────────────── -->
   {% if blocked_recent %}
@@ -580,6 +751,196 @@ async function openBillingPortal() {
     else throw new Error(data.error || 'Unknown error');
   } catch(e) {
     alert('Could not open billing portal: ' + e.message);
+  }
+}
+
+// ── Signature Creator ──
+
+let canvas, ctx, isDrawing = false;
+let strokes = [];
+let currentStroke = [];
+
+function openSignatureModal() {
+  document.getElementById('signature-modal').style.display = 'flex';
+  document.getElementById('sig-name').value = '';
+  document.getElementById('sig-preview-area').style.display = 'none';
+  document.getElementById('sig-save-status').textContent = '';
+  document.getElementById('btn-save-signature').disabled = false;
+  document.getElementById('btn-save-signature').textContent = 'Save Signature';
+  initCanvas();
+}
+
+function closeSignatureModal() {
+  document.getElementById('signature-modal').style.display = 'none';
+}
+
+function initCanvas() {
+  canvas = document.getElementById('sig-canvas');
+  ctx = canvas.getContext('2d');
+  strokes = [];
+  currentStroke = [];
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  canvas.onmousedown = function(e) {
+    isDrawing = true;
+    currentStroke = [];
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    currentStroke.push({x, y});
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  canvas.onmousemove = function(e) {
+    if (!isDrawing) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    currentStroke.push({x, y});
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  canvas.onmouseup = function() {
+    if (isDrawing && currentStroke.length > 0) {
+      strokes.push([...currentStroke]);
+    }
+    isDrawing = false;
+  };
+
+  canvas.onmouseleave = function() {
+    if (isDrawing && currentStroke.length > 0) {
+      strokes.push([...currentStroke]);
+    }
+    isDrawing = false;
+  };
+
+  // Touch support
+  canvas.ontouchstart = function(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    isDrawing = true;
+    currentStroke = [];
+    const rect = canvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+    currentStroke.push({x, y});
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  canvas.ontouchmove = function(e) {
+    e.preventDefault();
+    if (!isDrawing) return;
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+    currentStroke.push({x, y});
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  canvas.ontouchend = function(e) {
+    e.preventDefault();
+    if (isDrawing && currentStroke.length > 0) {
+      strokes.push([...currentStroke]);
+    }
+    isDrawing = false;
+  };
+}
+
+function clearCanvas() {
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  strokes = [];
+  currentStroke = [];
+  document.getElementById('sig-preview-area').style.display = 'none';
+}
+
+function undoStroke() {
+  if (strokes.length === 0) return;
+  strokes.pop();
+  // Redraw all strokes
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (const stroke of strokes) {
+    if (stroke.length === 0) continue;
+    ctx.beginPath();
+    ctx.moveTo(stroke[0].x, stroke[0].y);
+    for (let i = 1; i < stroke.length; i++) {
+      ctx.lineTo(stroke[i].x, stroke[i].y);
+    }
+    ctx.stroke();
+  }
+  document.getElementById('sig-preview-area').style.display = 'none';
+}
+
+async function saveSignature() {
+  const name = document.getElementById('sig-name').value.trim();
+  if (!name) {
+    document.getElementById('sig-save-status').textContent = 'Please enter a signature name.';
+    document.getElementById('sig-save-status').style.color = '#e53e3e';
+    return;
+  }
+  if (strokes.length === 0) {
+    document.getElementById('sig-save-status').textContent = 'Please draw your signature.';
+    document.getElementById('sig-save-status').style.color = '#e53e3e';
+    return;
+  }
+
+  // Convert canvas to base64 PNG
+  const dataUrl = canvas.toDataURL('image/png');
+  const base64 = dataUrl.split(',')[1];
+
+  const btn = document.getElementById('btn-save-signature');
+  const status = document.getElementById('sig-save-status');
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
+  status.textContent = '';
+
+  try {
+    const resp = await fetch('/dashboard/signatures', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name, data: base64})
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      status.textContent = '✅ Signature saved! Reloading…';
+      status.style.color = '#38a169';
+      setTimeout(() => window.location.reload(), 1200);
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch(e) {
+    status.textContent = '❌ ' + e.message;
+    status.style.color = '#e53e3e';
+    btn.textContent = 'Save Signature';
+    btn.disabled = false;
+  }
+}
+
+async function deleteSignature(id) {
+  if (!confirm('Delete this signature?')) return;
+  try {
+    const resp = await fetch('/dashboard/signatures/' + id, { method: 'DELETE' });
+    const data = await resp.json();
+    if (data.ok) {
+      window.location.reload();
+    }
+  } catch(e) {
+    alert('Failed to delete signature: ' + e.message);
   }
 }
 

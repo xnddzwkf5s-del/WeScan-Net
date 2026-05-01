@@ -29,6 +29,36 @@ def send_email(to, subject, text, html=None):
     return resp.json()
 
 
+def send_with_attachment(to, subject, text, pdf_bytes, filename='signed-document.pdf'):
+    """Send email with PDF attachment via Mailgun."""
+    api_key = os.getenv('MAILGUN_API_KEY')
+    domain  = os.getenv('MAILGUN_DOMAIN', 'wescan.net')
+
+    if not api_key:
+        raise RuntimeError('MAILGUN_API_KEY not set')
+
+    data = {
+        'from': f'WeScan <noreply@{domain}>',
+        'to':   [to],
+        'subject': subject,
+        'text': text,
+    }
+
+    files = [
+        ('attachment', (filename, pdf_bytes, 'application/pdf'))
+    ]
+
+    resp = requests.post(
+        f'https://api.mailgun.net/v3/{domain}/messages',
+        auth=('api', api_key),
+        data=data,
+        files=files,
+        timeout=30
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
 def send_otp_email(to, otp):
     """Send OTP verification email."""
     subject = 'Your WeScan verification code'

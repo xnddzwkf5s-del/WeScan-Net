@@ -33,12 +33,14 @@ def create_app():
     from app.routes.smtp import smtp
     from app.routes.admin import admin
     from app.routes.payments import payments
+    from app.api import api_bp
 
     app.register_blueprint(auth)
     app.register_blueprint(dashboard)
     app.register_blueprint(smtp)
     app.register_blueprint(admin)
     app.register_blueprint(payments)
+    app.register_blueprint(api_bp)
 
     # User loader
     from app.models import User
