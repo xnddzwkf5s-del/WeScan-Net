@@ -163,8 +163,9 @@
               <p class="text-gray-500 mb-4">Set the default "To" address on your printer:</p>
               <ul class="space-y-2 text-gray-500">
                 <li>&bull; Enter the email address you want scanned documents sent to</li>
-                <li>&bull; This address must be in your WeScan recipient whitelist</li>
-                <li>&bull; Add recipients via the Dashboard before scanning</li>
+                <li>&bull; This address must be in your WeScan <strong>Printer Scan Recipients</strong> list</li>
+                <li>&bull; Add scan recipients via the Dashboard before scanning</li>
+                <li>&bull; Note: recipient restrictions apply to printer scanning only &mdash; signing and sending signed documents has no restrictions</li>
               </ul>
               <div class="mt-4 p-4 bg-green-50 rounded-lg">
                 <p class="text-sm text-green-800"><strong>Tip:</strong> Most HP printers have a "Test Email" option. Use it to verify your settings. For digital signatures, set <strong>File Format</strong> to <strong>PDF</strong> in your scan settings.</p>
@@ -248,7 +249,7 @@
                 <li>&bull; <strong>From Address:</strong> Use your WeScan SMTP username</li>
                 <li>&bull; <strong>User ID / Auth:</strong> Same SMTP username</li>
                 <li>&bull; <strong>Password:</strong> Your generated SMTP password</li>
-                <li>&bull; <strong>To Address:</strong> An email on your recipient whitelist</li>
+                <li>&bull; <strong>To Address:</strong> An email on your Printer Scan Recipients list</li>
               </ul>
               <div class="mt-4 p-4 bg-green-50 rounded-lg">
                 <p class="text-sm text-green-800"><strong>Tip:</strong> Use <strong>STARTTLS</strong>, not SSL/TLS. Brother's menu can be confusing — look for SMTP Port 587 with TLS enabled, not SSL port 465.</p>
@@ -330,7 +331,7 @@
                   </div>
                 </div>
               </div>
-              <p class="text-gray-500 mt-4">Set <strong>Send From</strong> to your SMTP username and <strong>Send To</strong> to your whitelisted recipient.</p>
+              <p class="text-gray-500 mt-4">Set <strong>Send From</strong> to your SMTP username and <strong>Send To</strong> to a recipient from your Printer Scan Recipients list.</p>
             </div>
           </div>
 
