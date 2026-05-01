@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Free OCR - Make PDFs Searchable - WeScan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .card-hover { transition: all 0.3s ease; }
+    .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    #drop-zone.dragover { border-color: #000; background: #f9f9f9; }
+    #drop-zone.has-file { border-color: #16a34a; background: #f0fdf4; }
+    .spinner { border: 3px solid #e5e7eb; border-top: 3px solid #000; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- Navigation -->
+  <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex justify-between h-20">
+        <div class="flex items-center">
+          <a href="index.html" class="text-2xl font-light tracking-tight">
+            We<span class="font-semibold">Scan</span>
+          </a>
+        </div>
+        <div class="flex items-center space-x-8">
+          <a href="index.html" class="text-sm text-gray-600 hover:text-black transition-colors">Home</a>
+          <a href="index.html#features" class="text-sm text-gray-600 hover:text-black transition-colors">Features</a>
+          <a href="index.html#pricing" class="text-sm text-gray-600 hover:text-black transition-colors">Pricing</a>
+          <a href="signup.html" class="text-sm px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
+            Sign Up Free
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="pt-32 pb-12 px-6">
+    <div class="max-w-3xl mx-auto text-center">
+      <span class="text-xs font-medium text-gray-400 uppercase tracking-widest">Free Tool</span>
+      <h1 class="text-4xl md:text-5xl font-light tracking-tight text-gray-900 mt-4 mb-6">
+        Make Any PDF <span class="font-semibold">Searchable</span>
+      </h1>
+      <p class="text-lg text-gray-500 max-w-xl mx-auto mb-2">
+        Upload a scanned PDF or image. We'll run OCR and give you a searchable PDF you can Ctrl+F, copy text from, and actually use.
+      </p>
+      <p class="text-sm text-gray-400">
+        All processing happens in your browser. Nothing is uploaded to any server.
+      </p>
+    </div>
+  </section>
+
+  <!-- OCR Tool -->
+  <section class="pb-16 px-6">
+    <div class="max-w-2xl mx-auto">
+
+      <!-- Drop Zone -->
+      <div id="drop-zone"
+           class="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center transition-all duration-200 bg-white cursor-pointer"
+           onclick="document.getElementById('file-input').click()">
+
+        <div id="drop-default" class="text-gray-400">
+          <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+          <p class="text-base font-medium">Drop a PDF or image here</p>
+          <p class="text-sm mt-1">or click to browse</p>
+          <p class="text-xs mt-3 text-gray-300">Supports PDF, JPG, PNG, TIFF &mdash; max 20 MB</p>
+        </div>
+
+        <div id="drop-file" class="hidden">
+          <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <p id="file-name" class="text-base font-medium text-gray-900"></p>
+          <p id="file-size" class="text-sm text-gray-400 mt-1"></p>
+          <button onclick="event.stopPropagation();resetUpload()" class="mt-3 text-sm text-gray-500 hover:text-black underline">Choose a different file</button>
+        </div>
+      </div>
+
+      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.tiff,.tif" class="hidden" onchange="handleFile(this.files[0])">
+
+      <!-- Options -->
+      <div id="options-panel" class="hidden mt-6 bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <h3 class="text-sm font-semibold text-gray-700">OCR Options</h3>
+        <div>
+          <label class="block text-sm text-gray-600 mb-2">Language</label>
+          <select id="lang-select" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-black focus:border-transparent outline-none">
+            <option value="eng">English</option>
+            <option value="fra">French</option>
+            <option value="deu">German</option>
+            <option value="spa">Spanish</option>
+            <option value="ita">Italian</option>
+            <option value="por">Portuguese</option>
+            <option value="nld">Dutch</option>
+            <option value="jpn">Japanese</option>
+            <option value="chi_sim">Chinese (Simplified)</option>
+            <option value="kor">Korean</option>
+          </select>
+        </div>
+
+        <button onclick="runOcr()"
+                id="ocr-btn"
+                class="w-full px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled>
+          Run OCR
+        </button>
+
+        <!-- Status -->
+        <div id="ocr-status" class="hidden text-center py-4">
+          <div class="flex items-center justify-center gap-3">
+            <span class="spinner"></span>
+            <span id="status-text" class="text-sm text-gray-500">Downloading OCR engine...</span>
+          </div>
+          <p id="status-detail" class="text-xs text-gray-400 mt-2"></p>
+        </div>
+
+        <!-- Result -->
+        <div id="ocr-result" class="hidden text-center space-y-4">
+          <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+            <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-base font-semibold text-gray-900">Your searchable PDF is ready</p>
+            <p id="result-text" class="text-sm text-gray-500 mt-1"></p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a id="download-link" download="searchable.pdf"
+               class="px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-sm font-medium inline-block">
+              Download Searchable PDF
+            </a>
+            <button onclick="resetUpload()"
+                    class="px-6 py-3 border border-black text-black rounded-full hover:bg-gray-100 transition-colors text-sm font-medium">
+              OCR Another Document
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="py-16 bg-white">
+    <div class="max-w-5xl mx-auto px-6">
+      <h2 class="text-3xl font-light tracking-tight text-gray-900 text-center mb-12">
+        How It <span class="font-semibold">Works</span>
+      </h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-white text-lg font-medium">1</span>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Upload</h3>
+          <p class="text-sm text-gray-500">Drop a scanned PDF or image. Your file never leaves your device.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-white text-lg font-medium">2</span>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Process</h3>
+          <p class="text-sm text-gray-500">Tesseract.js runs inside your browser. No uploads, no servers, no privacy concerns.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-white text-lg font-medium">3</span>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Download</h3>
+          <p class="text-sm text-gray-500">Get a searchable PDF with a hidden text layer. Ctrl+F, select &amp; copy, extract data.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Use Cases -->
+  <section class="py-16 bg-gray-50">
+    <div class="max-w-5xl mx-auto px-6">
+      <h2 class="text-3xl font-light tracking-tight text-gray-900 text-center mb-12">
+        Why <span class="font-semibold">OCR Your Scans?</span>
+      </h2>
+      <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        <div class="bg-white rounded-xl p-6 border border-gray-100">
+          <h3 class="font-semibold text-gray-900 mb-1">Search invoices</h3>
+          <p class="text-sm text-gray-500">Find that invoice from last month by searching for the reference number.</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 border border-gray-100">
+          <h3 class="font-semibold text-gray-900 mb-1">Copy from contracts</h3>
+          <p class="text-sm text-gray-500">Select and paste clauses from scanned agreements instead of retyping.</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 border border-gray-100">
+          <h3 class="font-semibold text-gray-900 mb-1">Organise archives</h3>
+          <p class="text-sm text-gray-500">Make your entire document library keyword-searchable in seconds.</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 border border-gray-100">
+          <h3 class="font-semibold text-gray-900 mb-1">Extract data</h3>
+          <p class="text-sm text-gray-500">Pull numbers, dates, and names from scanned forms without manual entry.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-16 bg-black text-white text-center">
+    <div class="max-w-xl mx-auto px-6">
+      <h2 class="text-3xl font-light mb-4">
+        Need OCR for your <span class="font-semibold">entire workflow?</span>
+      </h2>
+      <p class="text-gray-400 mb-8">
+        WeScan subscribers get automatic OCR on every scanned document &mdash; plus digital signatures, SMTP relay, and recipient management. No manual uploads needed.
+      </p>
+      <a href="signup.html" class="inline-block px-8 py-4 bg-white text-black rounded-full hover:bg-gray-100 transition-colors text-sm font-medium">
+        Try WeScan Free
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-100 py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid md:grid-cols-4 gap-8">
+        <div>
+          <a href="index.html" class="text-2xl font-light tracking-tight">
+            We<span class="font-semibold">Scan</span>
+          </a>
+          <p class="mt-4 text-sm text-gray-500">
+            Professional scan-to-email solution for businesses and individuals.
+          </p>
+        </div>
+        <div>
+          <h4 class="font-medium mb-4">Product</h4>
+          <ul class="space-y-2 text-sm text-gray-500">
+            <li><a href="index.html#features" class="hover:text-black transition-colors">Features</a></li>
+            <li><a href="ocr.html" class="hover:text-black transition-colors">Free OCR Tool</a></li>
+            <li><a href="index.html#pricing" class="hover:text-black transition-colors">Pricing</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium mb-4">Support</h4>
+          <ul class="space-y-2 text-sm text-gray-500">
+            <li><a href="setup-guide.html" class="hover:text-black transition-colors">Setup Guide</a></li>
+            <li><a href="troubleshooting.html" class="hover:text-black transition-colors">Troubleshooting</a></li>
+            <li><a href="compatibility.html" class="hover:text-black transition-colors">Compatibility</a></li>
+            <li><a href="mailto:support@strayaco.com.au" class="hover:text-black transition-colors">Email Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium mb-4">Company</h4>
+          <ul class="space-y-2 text-sm text-gray-500">
+            <li><a href="https://strayaco.com.au" target="_blank" class="hover:text-black transition-colors">Straya Co</a></li>
+            <li><a href="privacy.html" class="hover:text-black transition-colors">Privacy Policy</a></li>
+            <li><a href="terms.html" class="hover:text-black transition-colors">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center">
+        <div class="text-sm text-gray-500">
+          &copy; 2026 WeScan. All rights reserved.
+        </div>
+        <div class="text-sm text-gray-500">
+          Built for reliable scan-to-email
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Support widget -->
+  <div id="support-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.4);" onclick="if(event.target===this)toggleSupport()">
+    <div style="position:fixed;bottom:90px;right:24px;background:#fff;border-radius:16px;padding:28px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <span style="font-size:16px;font-weight:700;color:#111;">Need help?</span>
+        <button onclick="toggleSupport()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;line-height:1;">&times;</button>
+      </div>
+      <p style="font-size:13px;color:#666;margin:0 0 20px;">WeScan is a product by <a href="https://strayaco.com.au" target="_blank" style="color:#000;font-weight:500;">Straya Co</a>. We're happy to help.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <a href="mailto:support@strayaco.com.au" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #eee;border-radius:10px;text-decoration:none;color:#111;font-size:13px;font-weight:500;">
+          <span style="font-size:18px;">📧</span> Email us
+          <span style="font-size:11px;color:#999;margin-left:auto;">support@strayaco.com.au</span>
+        </a>
+        <a href="troubleshooting.html" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #eee;border-radius:10px;text-decoration:none;color:#111;font-size:13px;font-weight:500;">
+          <span style="font-size:18px;">🔧</span> Troubleshooting guide
+        </a>
+        <a href="setup-guide.html" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #eee;border-radius:10px;text-decoration:none;color:#111;font-size:13px;font-weight:500;">
+          <span style="font-size:18px;">📖</span> Setup guide
+        </a>
+      </div>
+    </div>
+  </div>
+  <button onclick="toggleSupport()" style="position:fixed;bottom:24px;right:24px;z-index:999;background:#000;color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px;">
+    <span style="font-size:16px;">💬</span> Support
+  </button>
+
+  <!-- Tesseract.js -->
+  <script src="https://unpkg.com/tesseract.js@v5.1.1/dist/tesseract.min.js"></script>
+  <!-- jsPDF -->
+  <script src="https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+
+  <script>
+    let selectedFile = null;
+    let langData = {};
+
+    async function loadLanguage(lang) {
+      // Tesseract.js v5 auto-downloads language data on first use
+      return lang;
+    }
+
+    function handleFile(file) {
+      if (!file) return;
+      const maxSize = 20 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert('File is too large. Maximum size is 20 MB.');
+        return;
+      }
+      selectedFile = file;
+      document.getElementById('file-name').textContent = file.name;
+      document.getElementById('file-size').textContent = (file.size / 1024 / 1024).toFixed(1) + ' MB';
+      document.getElementById('drop-default').classList.add('hidden');
+      document.getElementById('drop-file').classList.remove('hidden');
+      document.getElementById('drop-zone').classList.add('has-file');
+      document.getElementById('options-panel').classList.remove('hidden');
+      document.getElementById('ocr-result').classList.add('hidden');
+      document.getElementById('ocr-status').classList.add('hidden');
+      document.getElementById('ocr-btn').disabled = false;
+    }
+
+    function resetUpload() {
+      selectedFile = null;
+      document.getElementById('file-input').value = '';
+      document.getElementById('drop-default').classList.remove('hidden');
+      document.getElementById('drop-file').classList.add('hidden');
+      document.getElementById('drop-zone').classList.remove('has-file');
+      document.getElementById('options-panel').classList.add('hidden');
+      document.getElementById('ocr-result').classList.add('hidden');
+      document.getElementById('ocr-status').classList.add('hidden');
+      document.getElementById('ocr-btn').disabled = true;
+    }
+
+    // Drag and drop
+    const dropZone = document.getElementById('drop-zone');
+    dropZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      this.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', function(e) {
+      e.preventDefault();
+      this.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      this.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) handleFile(files[0]);
+    });
+
+    // Prevent default on whole page to avoid browser opening dropped files
+    document.addEventListener('dragover', e => e.preventDefault());
+    document.addEventListener('drop', e => e.preventDefault());
+
+    async function runOcr() {
+      if (!selectedFile) return;
+
+      const btn = document.getElementById('ocr-btn');
+      const status = document.getElementById('ocr-status');
+      const statusText = document.getElementById('status-text');
+      const statusDetail = document.getElementById('status-detail');
+      const result = document.getElementById('ocr-result');
+
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+      status.classList.remove('hidden');
+      result.classList.add('hidden');
+      statusText.textContent = 'Initialising OCR engine...';
+
+      try {
+        const lang = document.getElementById('lang-select').value;
+
+        statusText.textContent = 'Reading pages...';
+        statusDetail.textContent = '';
+
+        // Read file as ArrayBuffer
+        const arrayBuffer = await selectedFile.arrayBuffer();
+        let images = [];
+
+        // Check if PDF
+        if (selectedFile.type === 'application/pdf') {
+          // Use pdf.js to render PDF pages to canvas
+          statusText.textContent = 'Rendering PDF pages...';
+          statusDetail.textContent = '';
+
+          // Load pdf.js dynamically
+          const pdfjsLib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.77/pdf.min.mjs');
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.77/pdf.worker.min.mjs';
+
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          const totalPages = pdf.numPages;
+          statusDetail.textContent = `${totalPages} page(s) found`;
+
+          for (let i = 1; i <= totalPages; i++) {
+            statusText.textContent = `Rendering page ${i} of ${totalPages}...`;
+            const page = await pdf.getPage(i);
+            const viewport = page.getViewport({ scale: 2 }); // 2x for good OCR quality
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+            images.push(canvas);
+          }
+        } else {
+          // It's an image — load it onto a canvas
+          const blob = new Blob([arrayBuffer]);
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = url;
+          });
+          const canvas = document.createElement('canvas');
+          const scale = Math.min(2000 / img.width, 2000 / img.height, 1);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          images.push(canvas);
+          URL.revokeObjectURL(url);
+        }
+
+        // Run OCR on each page
+        statusText.textContent = 'Running OCR...';
+        statusDetail.textContent = `0 / ${images.length} pages`;
+
+        let allText = '';
+        let pageTexts = [];
+
+        for (let i = 0; i < images.length; i++) {
+          statusDetail.textContent = `${i + 1} / ${images.length} pages`;
+          const canvas = images[i];
+          const dataUrl = canvas.toDataURL('image/png');
+
+          const result = await Tesseract.recognize(dataUrl, lang, {
+            logger: function(m) {
+              if (m.status === 'recognizing text') {
+                const pct = Math.round(m.progress * 100);
+                statusDetail.textContent = `${i + 1} / ${images.length} pages (${pct}%)`;
+              }
+            }
+          });
+
+          pageTexts.push({
+            text: result.data.text,
+            words: result.data.words
+          });
+          allText += result.data.text + '\n\n';
+        }
+
+        // Build a searchable PDF using jsPDF with invisible text overlay
+        statusText.textContent = 'Building searchable PDF...';
+        statusDetail.textContent = '';
+
+        const { jsPDF } = window.jspdf;
+
+        for (let i = 0; i < images.length; i++) {
+          statusDetail.textContent = `Assembling page ${i + 1} of ${images.length}`;
+          const canvas = images[i];
+
+          if (i === 0) {
+            // Use canvas dimensions for page size
+            const pdfWidth = canvas.width > canvas.height ? 297 : 210; // A4 landscape/portrait in mm
+            const pdfHeight = canvas.width > canvas.height ? 210 : 297;
+            doc = new jsPDF({
+              orientation: canvas.width > canvas.height ? 'l' : 'p',
+              unit: 'mm',
+              format: [pdfWidth, pdfHeight]
+            });
+          } else {
+            doc.addPage();
+          }
+
+          // Add the scanned image as background
+          const imgData = canvas.toDataURL('image/jpeg', 0.92);
+          const pdfW = doc.internal.pageSize.getWidth();
+          const pdfH = doc.internal.pageSize.getHeight();
+          doc.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+
+          // Add invisible text overlay for searchability
+          const fontSize = 4; // tiny, invisible for all practical purposes
+          doc.setFontSize(fontSize);
+          doc.setTextColor(255, 255, 255); // white text on white background = invisible
+
+          const pageData = pageTexts[i];
+          if (pageData && pageData.words) {
+            const canvasW = canvas.width;
+            const canvasH = canvas.height;
+
+            for (const word of pageData.words) {
+              if (!word.symbols) continue;
+              // Position the word on the PDF using proportional coordinates
+              const x0 = (word.bbox.x0 / canvasW) * pdfW;
+              const y0 = (word.bbox.y0 / canvasH) * pdfH;
+              const x1 = (word.bbox.x1 / canvasW) * pdfW;
+              const y1 = (word.bbox.y1 / canvasH) * pdfH;
+              const w = x1 - x0;
+              const h = y1 - y0;
+
+              // Place word text at the correct position with matching size
+              const wordFontSize = Math.max(1, h * 0.8);
+              doc.setFontSize(wordFontSize);
+              doc.text(word.text, x0, y0 + h * 0.85, {
+                maxWidth: w * 1.5,
+                rendering: 'invisible'
+              });
+            }
+          } else if (pageData && pageData.text) {
+            // Fallback: place text as a single block at top (less accurate but still searchable)
+            doc.setFontSize(1);
+            doc.text(pageData.text, 0, 0, {
+              rendering: 'invisible'
+            });
+          }
+        }
+
+        // Generate the PDF blob
+        const pdfBlob = doc.output('blob');
+        const downloadUrl = URL.createObjectURL(pdfBlob);
+
+        // Show result
+        const wordCount = allText.split(/\s+/).filter(w => w.length > 0).length;
+        document.getElementById('result-text').textContent =
+          `${images.length} page(s) · ${wordCount.toLocaleString()} words extracted`;
+
+        const downloadLink = document.getElementById('download-link');
+        downloadLink.href = downloadUrl;
+        const baseName = selectedFile.name.replace(/\.[^/.]+$/, '');
+        downloadLink.download = `${baseName}-searchable.pdf`;
+
+        status.classList.add('hidden');
+        result.classList.remove('hidden');
+
+        // Cleanup
+        images.forEach(c => {
+          const ctx = c.getContext('2d');
+          ctx.clearRect(0, 0, c.width, c.height);
+        });
+
+      } catch (err) {
+        console.error('OCR error:', err);
+        status.classList.add('hidden');
+        alert('Something went wrong during OCR: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Run OCR';
+      }
+    }
+
+    function toggleSupport() {
+      const m = document.getElementById('support-modal');
+      m.style.display = m.style.display === 'none' ? 'block' : 'none';
+    }
+  </script>
+</body>
+</html>
