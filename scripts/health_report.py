@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 WeScan Daily Health Report
-Sends a daily server health summary to vwoo@outlook.com.au via Mailgun.
+Sends a daily server health summary to support@strayaco.com.au via Mailgun.
 """
 import os
 import subprocess
@@ -14,7 +14,7 @@ from datetime import datetime
 
 MAILGUN_API_KEY = os.getenv('MAILGUN_API_KEY', '')
 MAILGUN_DOMAIN  = os.getenv('MAILGUN_DOMAIN', 'wescan.net')
-TO_EMAIL        = 'vwoo@outlook.com.au'
+TO_EMAIL        = 'support@strayaco.com.au'
 FROM_EMAIL      = f'WeScan Health <noreply@{MAILGUN_DOMAIN}>'
 
 DISK_WARN_PCT   = 80   # warn if disk usage % exceeds this
