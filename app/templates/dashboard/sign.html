@@ -67,6 +67,10 @@
           <div style="display:flex;align-items:center;gap:8px;">
             <button id="btn-prev-page" onclick="changePage(-1)"
               style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#555;">◀</button>
+            <input id="jump-to-page-input" type="number" min="1"
+              style="width:52px;border:1px solid #ddd;border-radius:6px;padding:4px 6px;font-size:13px;text-align:center;outline:none;"
+              onkeydown="if(event.key==='Enter')jumpToPage(this)" onblur="jumpToPage(this)"
+              title="Jump to page" tabindex="0">
             <span id="page-indicator" style="font-size:13px;font-weight:500;color:#333;">1 / 1</span>
             <button id="btn-next-page" onclick="changePage(1)"
               style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#555;">▶</button>
@@ -155,6 +159,22 @@ document.addEventListener('DOMContentLoaded', function() {
   loadPreview(currentPage);
 });
 
+function jumpToPage(inputEl) {
+  const val = parseInt(inputEl.value, 10);
+  if (isNaN(val) || val < 1) {
+    // Revert to current page on invalid input
+    inputEl.value = currentPage + 1;
+    return;
+  }
+  const clamped = Math.max(1, Math.min(val, totalPages));
+  if (clamped === currentPage + 1) {
+    // Same page, just ensure input shows current value
+    inputEl.value = clamped;
+    return;
+  }
+  loadPreview(clamped - 1);
+}
+
 async function loadPreview(page) {
   const loading = document.getElementById('loading-preview');
   loading.style.display = 'block';
@@ -196,6 +216,9 @@ function updatePageIndicator() {
   document.getElementById('pos-page').textContent = currentPage + 1;
   document.getElementById('btn-prev-page').style.opacity = currentPage > 0 ? '1' : '0.3';
   document.getElementById('btn-next-page').style.opacity = currentPage < totalPages - 1 ? '1' : '0.3';
+  // Sync jump-to-page input
+  const input = document.getElementById('jump-to-page-input');
+  if (input) input.value = currentPage + 1;
 }
 
 function showSignatureOverlay() {

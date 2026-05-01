@@ -36,7 +36,7 @@ case "$1" in
       "$LOCAL_DIR/" "$SERVER:$REMOTE_DIR/"
 
     echo "=== Fixing ownership (CRITICAL - rsync preserves 501:staff)..."
-    ssh "$SERVER" "chown -R www-data:www-data $REMOTE_DIR && chmod 755 $REMOTE_DIR && chmod -R 640 $REMOTE_DIR/app/templates && chmod 755 $REMOTE_DIR/docs/*.html 2>/dev/null; true"
+    ssh "$SERVER" "chown -R www-data:www-data $REMOTE_DIR && chmod 755 $REMOTE_DIR && find $REMOTE_DIR/app/templates -type d -exec chmod 755 {} + && find $REMOTE_DIR/app/templates -type f -exec chmod 640 {} + && chmod 755 $REMOTE_DIR/docs/*.html 2>/dev/null; true"
 
     echo "=== Restarting wescan service..."
     ssh "$SERVER" "systemctl restart wescan"
@@ -63,7 +63,7 @@ case "$1" in
     fi
 
     echo "=== Restoring from $BACKUP..."
-    ssh "$SERVER" "cd $REMOTE_DIR && rm -rf ./* && tar xzf \"$BACKUP\" && chown -R www-data:www-data $REMOTE_DIR/app/templates && chmod -R 640 $REMOTE_DIR/app/templates && chmod 755 $REMOTE_DIR/docs/*.html 2>/dev/null; true && systemctl restart wescan"
+    ssh "$SERVER" "cd $REMOTE_DIR && rm -rf ./* && tar xzf \"$BACKUP\" && chown -R www-data:www-data $REMOTE_DIR && find $REMOTE_DIR/app/templates -type d -exec chmod 755 {} + && find $REMOTE_DIR/app/templates -type f -exec chmod 640 {} + && chmod 755 $REMOTE_DIR/docs/*.html 2>/dev/null; true && systemctl restart wescan"
     echo "=== Rollback complete."
     ;;
 
