@@ -267,6 +267,17 @@ def download_document(doc_id):
     )
 
 
+@dashboard.route('/dashboard/documents/<int:doc_id>', methods=['DELETE'])
+@login_required
+def delete_document(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.user_id != current_user.id:
+        return jsonify({'error': 'Not found'}), 404
+    db.session.delete(doc)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+
 @dashboard.route('/dashboard/documents/<int:doc_id>/preview', methods=['GET'])
 @login_required
 def preview_document(doc_id):
