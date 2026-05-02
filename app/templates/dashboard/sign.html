@@ -1,7 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
-<div style="font-family:'Inter',sans-serif;background:#f8f8f8;min-height:100vh;padding:32px 0;">
-<div style="max-width:960px;margin:0 auto;padding:0 24px;">
+<style>
+@media (max-width: 640px) {
+  .sign-outer { padding: 16px 0 !important; }
+  .sign-inner { padding: 0 12px !important; }
+  .sign-grid { grid-template-columns: 1fr !important; }
+  .sign-header { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+  .sign-pos-display { font-size: 11px !important; }
+}
+</style>
+<div class="sign-outer" style="font-family:'Inter',sans-serif;background:#f8f8f8;min-height:100vh;padding:32px 0;">
+<div class="sign-inner" style="max-width:960px;margin:0 auto;padding:0 24px;">
 
   <!-- Flash messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -22,7 +31,7 @@
   </a>
 
   <!-- Header -->
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+  <div class="sign-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
     <div>
       <h1 style="margin:0 0 4px;font-size:20px;font-weight:700;color:#111;">Sign & Send</h1>
       <p style="margin:0;font-size:14px;color:#888;">{{ doc.filename }}</p>
@@ -37,7 +46,7 @@
   </div>
 
   <!-- Main layout: PDF preview + signing controls -->
-  <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;">
+  <div class="sign-grid" style="display:grid;grid-template-columns:1fr 320px;gap:20px;">
 
     <!-- LEFT: PDF Preview -->
     <div>
@@ -52,8 +61,8 @@
           <img id="pdf-preview-img" src="" alt="PDF Preview"
                style="display:none;width:100%;height:auto;border-radius:6px;cursor:crosshair;">
           <!-- Active signature overlay (draggable) -->
-          <div id="signature-overlay" style="display:none;position:absolute;cursor:move;z-index:10;opacity:0.9;border:2px solid #e53e3e;border-radius:6px;padding:4px;background:rgba(229,62,62,0.06);box-sizing:border-box;"
-               onmousedown="startDrag(event)">
+          <div id="signature-overlay" style="display:none;position:absolute;cursor:move;z-index:10;opacity:0.9;border:2px solid #e53e3e;border-radius:6px;padding:4px;background:rgba(229,62,62,0.06);box-sizing:border-box;touch-action:none;"
+               onmousedown="startDrag(event)" ontouchstart="startDrag(event)">
             <img id="sig-overlay-img" src="" alt="Signature"
                  style="pointer-events:none;max-width:150px;max-height:50px;display:block;">
           </div>
@@ -64,7 +73,7 @@
         <!-- Page navigation -->
         <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#aaa;">
           <div>
-            Position: X=<span id="pos-x">0.50</span>, Y=<span id="pos-y">0.85</span>, Page=<span id="pos-page">1</span>
+            <div class="sign-pos-display">Position: X=<span id="pos-x">0.50</span>, Y=<span id="pos-y">0.85</span>, Page=<span id="pos-page">1</span></div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
             <button id="btn-prev-page" onclick="changePage(-1)"
@@ -380,12 +389,14 @@ function updatePositionDisplay() {
 }
 
 function startDrag(e) {
-  if (e.button !== 0) return;
+  if (e.type === 'mousedown' && e.button !== 0) return;
   isDragging = true;
   const overlay = document.getElementById('signature-overlay');
   const rect = overlay.getBoundingClientRect();
-  dragOffsetX = e.clientX - rect.left;
-  dragOffsetY = e.clientY - rect.top;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  dragOffsetX = clientX - rect.left;
+  dragOffsetY = clientY - rect.top;
   overlay.style.cursor = 'grabbing';
   e.preventDefault();
 }
@@ -411,6 +422,32 @@ document.addEventListener('mousemove', function(e) {
 });
 
 document.addEventListener('mouseup', function(e) {
+  if (isDragging) {
+    isDragging = false;
+    const overlay = document.getElementById('signature-overlay');
+    overlay.style.cursor = 'move';
+  }
+});
+
+document.addEventListener('touchmove', function(e) {
+  if (!isDragging) return;
+  e.preventDefault();
+  const overlay = document.getElementById('signature-overlay');
+  const container = document.getElementById('pdf-preview-container');
+  const containerRect = container.getBoundingClientRect();
+  const touch = e.touches[0];
+  let newLeft = touch.clientX - containerRect.left - dragOffsetX;
+  let newTop = touch.clientY - containerRect.top - dragOffsetY;
+  const overlayWidth = overlay.offsetWidth;
+  const overlayHeight = overlay.offsetHeight;
+  newLeft = Math.max(0, Math.min(containerRect.width - overlayWidth, newLeft));
+  newTop = Math.max(0, Math.min(containerRect.height - overlayHeight, newTop));
+  overlay.style.left = newLeft + 'px';
+  overlay.style.top = newTop + 'px';
+  updatePositionDisplay();
+}, { passive: false });
+
+document.addEventListener('touchend', function(e) {
   if (isDragging) {
     isDragging = false;
     const overlay = document.getElementById('signature-overlay');
