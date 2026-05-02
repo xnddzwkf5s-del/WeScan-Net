@@ -158,7 +158,7 @@ def oauth_callback(provider):
             _apply_trial_if_requested(user, plan)
             db.session.commit()
             try:
-                send_welcome_email(user.email, user.smtp_username)
+                send_welcome_email(user.email, user.smtp_username, user.inbox_address)
                 send_admin_signup_notification(user.email, plan, signup_method='oauth')
             except Exception:
                 pass
@@ -236,7 +236,7 @@ def email_verify():
 
     if is_new_user:
         try:
-            send_welcome_email(user.email, user.smtp_username)
+            send_welcome_email(user.email, user.smtp_username, user.inbox_address)
             send_admin_signup_notification(user.email, plan, signup_method='email')
         except Exception:
             pass
