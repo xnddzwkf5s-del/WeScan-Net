@@ -48,14 +48,14 @@
             We<span class="font-semibold">Scan</span>
           </a>
         </div>
-        <div class="nav-desktop hidden md:flex items-center space-x-8">
+        <div class="nav-desktop items-center space-x-8" style="display:none;" id="navDesktop">
           <a href="index.html#features" class="text-sm text-gray-600 hover:text-black transition-colors">Features</a>
           <a href="index.html#pricing" class="text-sm text-gray-600 hover:text-black transition-colors">Pricing</a>
           <a href="signup.html" class="text-sm text-gray-600 hover:text-black transition-colors">Sign In</a>
           <a href="signup.html" class="text-sm px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">Start Free</a>
         </div>
         <!-- Hamburger (mobile only) -->
-        <div class="nav-icon md:hidden" id="navIcon"><span></span><span></span><span></span></div>
+        <div class="nav-icon" id="navIcon" style="display:flex;"><span></span><span></span><span></span></div>
       </div>
     </div>
   </nav>
@@ -87,6 +87,14 @@
     function openNav(){n.classList.add('open');c.classList.add('open');s.classList.add('open');b.classList.add('open');document.body.style.overflow='hidden';}
     function closeNav(){n.classList.remove('open');c.classList.remove('open');s.classList.remove('open');b.classList.remove('open');document.body.style.overflow='';}
     n.addEventListener('click',openNav);c.addEventListener('click',closeNav);b.addEventListener('click',closeNav);
+    // Show/hide desktop nav vs hamburger based on screen width
+    function checkWidth(){
+      var isDesktop = window.innerWidth >= 768;
+      document.getElementById('navDesktop').style.display = isDesktop ? 'flex' : 'none';
+      document.getElementById('navIcon').style.display = isDesktop ? 'none' : 'flex';
+    }
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
   })();
   </script>
 
