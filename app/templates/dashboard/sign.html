@@ -100,7 +100,7 @@
         <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:12px;">Select Signature</div>
 
         {% if signatures %}
-        <div style="display:flex;flex-direction:column;gap:8px;">
+        <div id="sig-list" style="display:flex;flex-direction:column;gap:8px;">
           {% for sig in signatures %}
           <label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:2px solid transparent;border-radius:8px;cursor:pointer;
                  {% if loop.first %}border-color:#000;background:#f9f9f9;{% endif %}"
@@ -115,13 +115,11 @@
           {% endfor %}
         </div>
         {% else %}
-        <div style="text-align:center;padding:16px 0;">
-          <p style="font-size:13px;color:#bbb;margin:0 0 12px;">No signatures saved yet.</p>
-          <a href="/dashboard" style="background:#000;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:12px;font-weight:500;text-decoration:none;display:inline-block;">
-            Create Signature
-          </a>
+        <div id="sig-list" style="display:flex;flex-direction:column;gap:8px;">
+          <p style="font-size:13px;color:#bbb;margin:0 0 4px;text-align:center;">No signatures saved yet.</p>
         </div>
         {% endif %}
+        <button onclick="openSignatureModal()" style="margin-top:10px;width:100%;background:#f5f5f5;color:#111;border:1px solid #e0e0e0;border-radius:6px;padding:9px;font-size:13px;font-weight:500;cursor:pointer;">+ Create New Signature</button>
       </div>
 
       <!-- Date / Time Stamp -->
@@ -645,5 +643,160 @@ async function signAndSend(docId) {
     updateSendButton();
   }
 }
+
+// ── Inline Signature Creator ─────────────────────────────────────
+let sigCanvas, sigCtx, isSigDrawing = false;
+let sigStrokes = [], sigCurrentStroke = [];
+
+function openSignatureModal() {
+  document.getElementById('sign-sig-modal').style.display = 'flex';
+  document.getElementById('sign-sig-name').value = '';
+  document.getElementById('sign-sig-status').textContent = '';
+  document.getElementById('btn-sign-save-sig').disabled = false;
+  document.getElementById('btn-sign-save-sig').textContent = 'Save Signature';
+  initSigCanvas();
+}
+
+function closeSigModal() {
+  document.getElementById('sign-sig-modal').style.display = 'none';
+}
+
+function initSigCanvas() {
+  sigCanvas = document.getElementById('sign-sig-canvas');
+  sigCtx = sigCanvas.getContext('2d');
+  sigStrokes = []; sigCurrentStroke = [];
+  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  sigCtx.strokeStyle = '#000'; sigCtx.lineWidth = 2;
+  sigCtx.lineCap = 'round'; sigCtx.lineJoin = 'round';
+
+  sigCanvas.onmousedown = function(e) {
+    isSigDrawing = true; sigCurrentStroke = [];
+    const r = sigCanvas.getBoundingClientRect();
+    const x = (e.clientX - r.left) * (sigCanvas.width / r.width);
+    const y = (e.clientY - r.top) * (sigCanvas.height / r.height);
+    sigCurrentStroke.push({x,y}); sigCtx.beginPath(); sigCtx.moveTo(x,y);
+  };
+  sigCanvas.onmousemove = function(e) {
+    if (!isSigDrawing) return;
+    const r = sigCanvas.getBoundingClientRect();
+    const x = (e.clientX - r.left) * (sigCanvas.width / r.width);
+    const y = (e.clientY - r.top) * (sigCanvas.height / r.height);
+    sigCurrentStroke.push({x,y}); sigCtx.lineTo(x,y); sigCtx.stroke();
+  };
+  sigCanvas.onmouseup = sigCanvas.onmouseleave = function() {
+    if (isSigDrawing && sigCurrentStroke.length > 0) sigStrokes.push([...sigCurrentStroke]);
+    isSigDrawing = false;
+  };
+  sigCanvas.ontouchstart = function(e) {
+    e.preventDefault(); isSigDrawing = true; sigCurrentStroke = [];
+    const t = e.touches[0]; const r = sigCanvas.getBoundingClientRect();
+    const x = (t.clientX - r.left) * (sigCanvas.width / r.width);
+    const y = (t.clientY - r.top) * (sigCanvas.height / r.height);
+    sigCurrentStroke.push({x,y}); sigCtx.beginPath(); sigCtx.moveTo(x,y);
+  };
+  sigCanvas.ontouchmove = function(e) {
+    e.preventDefault(); if (!isSigDrawing) return;
+    const t = e.touches[0]; const r = sigCanvas.getBoundingClientRect();
+    const x = (t.clientX - r.left) * (sigCanvas.width / r.width);
+    const y = (t.clientY - r.top) * (sigCanvas.height / r.height);
+    sigCurrentStroke.push({x,y}); sigCtx.lineTo(x,y); sigCtx.stroke();
+  };
+  sigCanvas.ontouchend = function(e) {
+    e.preventDefault();
+    if (isSigDrawing && sigCurrentStroke.length > 0) sigStrokes.push([...sigCurrentStroke]);
+    isSigDrawing = false;
+  };
+}
+
+function clearSigCanvas() {
+  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  sigStrokes = []; sigCurrentStroke = [];
+}
+
+function undoSigStroke() {
+  if (sigStrokes.length === 0) return;
+  sigStrokes.pop();
+  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  sigCtx.strokeStyle = '#000'; sigCtx.lineWidth = 2;
+  sigCtx.lineCap = 'round'; sigCtx.lineJoin = 'round';
+  for (const stroke of sigStrokes) {
+    if (!stroke.length) continue;
+    sigCtx.beginPath(); sigCtx.moveTo(stroke[0].x, stroke[0].y);
+    for (let i = 1; i < stroke.length; i++) sigCtx.lineTo(stroke[i].x, stroke[i].y);
+    sigCtx.stroke();
+  }
+}
+
+async function saveNewSignature() {
+  const name = document.getElementById('sign-sig-name').value.trim();
+  const status = document.getElementById('sign-sig-status');
+  const btn = document.getElementById('btn-sign-save-sig');
+  if (!name) { status.textContent = 'Please enter a name.'; status.style.color = '#e53e3e'; return; }
+  if (sigStrokes.length === 0) { status.textContent = 'Please draw your signature.'; status.style.color = '#e53e3e'; return; }
+  const base64 = sigCanvas.toDataURL('image/png').split(',')[1];
+  btn.textContent = 'Saving…'; btn.disabled = true; status.textContent = '';
+  try {
+    const resp = await fetch('/dashboard/signatures', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, data: base64})
+    });
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.error || 'Unknown error');
+    // Add new sig to the list inline without reloading
+    const list = document.getElementById('sig-list');
+    // Remove empty state message if present
+    const emptyMsg = list.querySelector('p');
+    if (emptyMsg) emptyMsg.remove();
+    const sigId = data.id;
+    const label = document.createElement('label');
+    label.id = 'sig-card-' + sigId;
+    label.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;border:2px solid #000;background:#f9f9f9;border-radius:8px;cursor:pointer;';
+    label.onclick = function() { selectSignature(sigId, base64); };
+    label.innerHTML = '<input type="radio" name="signature" value="' + sigId + '" style="display:none;" checked>' +
+      '<img src="data:image/png;base64,' + base64 + '" alt="' + name + '" style="max-width:80px;max-height:30px;border:1px solid #eee;border-radius:4px;padding:2px;">' +
+      '<span style="font-size:13px;color:#111;">' + name + '</span>';
+    // Deselect others
+    list.querySelectorAll('label').forEach(l => { l.style.borderColor = 'transparent'; l.style.background = ''; });
+    list.appendChild(label);
+    selectSignature(sigId, base64);
+    status.textContent = '✅ Saved!';
+    status.style.color = '#38a169';
+    setTimeout(closeSigModal, 800);
+  } catch(e) {
+    status.textContent = '❌ ' + e.message;
+    status.style.color = '#e53e3e';
+    btn.textContent = 'Save Signature'; btn.disabled = false;
+  }
+}
 </script>
+
+<!-- Inline Signature Creator Modal -->
+<div id="sign-sig-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;" onclick="if(event.target===this)closeSigModal()">
+  <div style="background:#fff;border-radius:12px;padding:24px;max-width:460px;width:92%;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0;font-size:16px;font-weight:700;color:#111;">Create Signature</h3>
+      <button onclick="closeSigModal()" style="background:none;border:none;font-size:22px;color:#999;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="display:block;font-size:12px;color:#888;margin-bottom:4px;">Signature Name</label>
+      <input type="text" id="sign-sig-name" placeholder="e.g. My Signature" maxlength="50"
+             style="width:100%;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:14px;outline:none;box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="display:block;font-size:12px;color:#888;margin-bottom:6px;">Draw Your Signature</label>
+      <canvas id="sign-sig-canvas" width="400" height="130"
+              style="width:100%;height:auto;border:1px solid #e8e8e8;border-radius:6px;background:#fff;cursor:crosshair;touch-action:none;"></canvas>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button onclick="clearSigCanvas()" style="background:#f5f5f5;color:#666;border:1px solid #eee;border-radius:6px;padding:7px 16px;font-size:13px;cursor:pointer;">Clear</button>
+        <button onclick="undoSigStroke()" style="background:#f5f5f5;color:#666;border:1px solid #eee;border-radius:6px;padding:7px 16px;font-size:13px;cursor:pointer;">Undo</button>
+      </div>
+    </div>
+    <button id="btn-sign-save-sig" onclick="saveNewSignature()"
+            style="width:100%;background:#000;color:#fff;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;">
+      Save Signature
+    </button>
+    <div id="sign-sig-status" style="margin-top:8px;font-size:13px;color:#999;text-align:center;"></div>
+  </div>
+</div>
 {% endblock %}
