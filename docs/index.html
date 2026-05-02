@@ -2,7 +2,8 @@
 <html>
 <head>
  <meta charset="UTF-8">
- <title>WeScan - Scan. Sign and Send</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>WeScan - Sign any document. Send it in minutes.</title>
  <script src="https://cdn.tailwindcss.com"></script>
  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
  <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
@@ -10,21 +11,11 @@
  body {
  font-family: 'Inter', sans-serif;
  }
- .gradient-bg {
- background: linear-gradient(135deg, #1a1a1a 0%, #373737 100%);
- }
- .card-hover {
- transition: all 0.3s ease;
- }
- .card-hover:hover {
- transform: translateY(-5px);
- box-shadow: 0 20px 40px rgba(0,0,0,0.1);
- }
 
  /* ── Slide-in mobile nav (Straya Co style) ──────────────────── */
  .nav-icon{display:flex;flex-direction:column;justify-content:space-between;width:34px;height:26px;cursor:pointer;z-index:1100;flex-shrink:0;}
  .nav-icon span{display:block;height:3px;width:100%;background:#111;border-radius:9px;transition:all 0.25s ease-in-out;transform-origin:left center;}
- 
+
  .nav-icon.open span:nth-child(1){transform:rotate(45deg);top:-3px;left:3px;position:relative;}
  .nav-icon.open span:nth-child(2){width:0;opacity:0;}
  .nav-icon.open span:nth-child(3){transform:rotate(-45deg);top:18px;left:3px;position:relative;}
@@ -45,29 +36,25 @@
  @media(max-width:768px){.slide-navigation{width:100%;}}
  </style>
 </head>
-<body class="bg-white">
+<body class="bg-white antialiased text-gray-900">
+
  <!-- Navigation -->
  <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
  <div class="max-w-7xl mx-auto px-6">
- <div class="flex justify-between h-20">
- <div class="flex items-center">
+ <div class="flex justify-between h-20 items-center">
  <a href="." class="text-2xl font-light tracking-tight">
- We<span class="font-semibold">Scan</span>
+ We<span style="color:#888;font-weight:300">Scan</span>
  </a>
- </div>
  <div class="hidden md:flex items-center space-x-8">
  <a href="#features" class="text-sm text-gray-600 hover:text-black transition-colors">Features</a>
-          <a href="ocr.html" class="text-sm text-gray-600 hover:text-black transition-colors">Free OCR</a>
-          <a href="pdf-edit.html" class="text-sm text-gray-600 hover:text-black transition-colors">PDF Editor</a>
-          <a href="#pricing" class="text-sm text-gray-600 hover:text-black transition-colors">Pricing</a>
- <a href="setup-guide.html" class="text-sm text-gray-600 hover:text-black transition-colors">Setup Guide</a>
+ <a href="#pricing" class="text-sm text-gray-600 hover:text-black transition-colors">Pricing</a>
  <a href="signup.html" class="text-sm text-gray-600 hover:text-black transition-colors">Sign In</a>
  <a href="signup.html" class="text-sm px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
  Start Free
  </a>
  </div>
  <!-- Animated hamburger icon (Straya Co style) -->
- <div class="nav-icon" id="navIcon"><span></span><span></span><span></span></div>
+ <div class="nav-icon md:hidden" id="navIcon"><span></span><span></span><span></span></div>
  </div>
  </div>
  </nav>
@@ -83,14 +70,12 @@
        <ul class="slide-nav-links">
          <li><a href="#features" onclick="closeNav()">Features</a></li>
          <li><a href="#pricing" onclick="closeNav()">Pricing</a></li>
-         <li><a href="setup-guide.html" onclick="closeNav()">Setup Guide</a></li>
        </ul>
      </div>
      <div>
-       <div class="slide-nav-title">Free Tools</div>
+       <div class="slide-nav-title">Account</div>
        <ul class="slide-nav-links">
-         <li><a href="ocr.html" onclick="closeNav()">OCR Tool</a></li>
-         <li><a href="pdf-edit.html" onclick="closeNav()">PDF Editor</a></li>
+         <li><a href="signup.html" onclick="closeNav()">Sign In</a></li>
        </ul>
      </div>
    </div>
@@ -108,465 +93,262 @@
  })();
  </script>
 
- <!-- Hero Section -->
- <section class="pt-28 pb-16 px-4 md:pt-32 md:pb-24 md:px-6">
- <div class="max-w-7xl mx-auto">
- <div class="text-center" data-aos="fade-up">
- <h1 class="text-4xl md:text-7xl font-light tracking-tight text-gray-900 mb-6 md:mb-8">
- Scan. <span class="font-semibold" style="color:#6366f1;">Sign.</span> Send.
+ <!-- Hero -->
+ <section class="pt-36 pb-20 md:pt-44 md:pb-28 px-6">
+ <div class="max-w-4xl mx-auto text-center" data-aos="fade-up">
+ <h1 class="text-5xl md:text-7xl font-bold tracking-tight text-gray-900 leading-tight">
+ Sign any document.<br>
+ Send it in minutes.
  </h1>
- <p class="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto mb-8 md:mb-12">
- Digital signatures for every scanned document. No Adobe, no
- dongles, no hassle &mdash; right from your WeScan dashboard.
+ <p class="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto mt-6 leading-relaxed">
+ Upload or email a PDF to your personal WeScan inbox. Draw your signature once. Send the signed copy — straight from your browser.
  </p>
- <div class="flex flex-col sm:flex-row justify-center gap-4 sm:space-x-4">
- <a href="signup.html"
- class="w-full sm:w-auto px-8 py-4 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-base font-medium">
- Try It Free
+ <div class="mt-10">
+ <a href="signup.html" class="inline-block px-10 py-4 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-lg font-medium">
+ Start Free — No credit card
  </a>
- <a href="#compatible-printers"
- class="w-full sm:w-auto px-8 py-4 border-2 border-black text-black hover:bg-black hover:text-white transition-colors rounded-full text-base font-medium">
- View Compatible Printers
- </a>
+ </div>
+ <p class="text-sm text-gray-400 mt-4">
+ Free plan included · No app to install · Works on any device
+ </p>
+ </div>
+ </section>
+
+ <!-- How it works -->
+ <section id="features" class="py-20 md:py-28 bg-gray-50">
+ <div class="max-w-6xl mx-auto px-6">
+ <h2 class="text-3xl md:text-4xl font-light text-center text-gray-900 mb-16" data-aos="fade-up">
+ Simple as <span class="font-semibold">1, 2, 3</span>
+ </h2>
+ <div class="grid md:grid-cols-3 gap-10 md:gap-12">
+ <div class="text-center" data-aos="fade-up">
+ <div class="text-6xl mb-6">📄</div>
+ <h3 class="text-xl font-semibold mb-3">1. Get your document</h3>
+ <p class="text-gray-500 leading-relaxed text-base">
+ Upload a PDF from your device, or email it directly to your personal WeScan inbox address. It appears in your dashboard instantly.
+ </p>
+ </div>
+ <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+ <div class="text-6xl mb-6">✍️</div>
+ <h3 class="text-xl font-semibold mb-3">2. Sign it</h3>
+ <p class="text-gray-500 leading-relaxed text-base">
+ Draw your signature once with your mouse or finger. Position it anywhere on the page. Resize it to fit.
+ </p>
+ </div>
+ <div class="text-center" data-aos="fade-up" data-aos-delay="200">
+ <div class="text-6xl mb-6">📤</div>
+ <h3 class="text-xl font-semibold mb-3">3. Send it</h3>
+ <p class="text-gray-500 leading-relaxed text-base">
+ Hit send. The signed PDF is emailed to your recipient automatically. Done.
+ </p>
  </div>
  </div>
  </div>
  </section>
 
- <!-- Features Grid -->
- <section id="features" class="py-12 md:py-24 bg-gray-50">
- <div class="max-w-7xl mx-auto px-6">
+ <!-- Use cases strip -->
+ <section class="py-16 bg-gray-100">
+ <div class="max-w-5xl mx-auto px-6 text-center">
+ <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-8">Used for</h3>
+ <div class="flex flex-wrap justify-center gap-3">
+ <span class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium">Lease agreements</span>
+ <span class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium">Employment contracts</span>
+ <span class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium">Tax returns</span>
+ <span class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium">NDAs</span>
+ <span class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium">Invoices</span>
+ <span class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium">Permission slips</span>
+ <span class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium">Consent forms</span>
+ <span class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium">Legal documents</span>
+ </div>
+ </div>
+ </section>
+
+ <!-- Why WeScan -->
+ <section class="py-20 md:py-28 bg-white">
+ <div class="max-w-6xl mx-auto px-6">
+ <h2 class="text-3xl md:text-4xl font-light text-center text-gray-900 mb-16" data-aos="fade-up">
+ Why <span class="font-semibold">WeScan</span>
+ </h2>
+ <div class="grid md:grid-cols-3 gap-8 md:gap-12">
+ <div class="bg-gray-50 rounded-2xl p-8" data-aos="fade-up">
+ <h3 class="text-lg font-semibold mb-3">No Adobe required</h3>
+ <p class="text-gray-500 leading-relaxed text-base">
+ Draw your signature directly in the browser. No software to install, no dongles, no subscriptions to Adobe.
+ </p>
+ </div>
+ <div class="bg-gray-50 rounded-2xl p-8" data-aos="fade-up" data-aos-delay="100">
+ <h3 class="text-lg font-semibold mb-3">Your personal inbox</h3>
+ <p class="text-gray-500 leading-relaxed text-base">
+ Every account gets a private email address. Forward any PDF to it and it's ready to sign. Works with any email client or scanner.
+ </p>
+ </div>
+ <div class="bg-gray-50 rounded-2xl p-8" data-aos="fade-up" data-aos-delay="200">
+ <h3 class="text-lg font-semibold mb-3">Works on any device</h3>
+ <p class="text-gray-500 leading-relaxed text-base">
+ Sign from your phone, tablet, or desktop. Touch-optimised for mobile — drag and resize your signature with your finger.
+ </p>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- Pricing -->
+ <section id="pricing" class="py-20 md:py-28 bg-gray-50">
+ <div class="max-w-5xl mx-auto px-6">
  <div class="text-center mb-16" data-aos="fade-up">
- <h2 class="text-3xl font-light tracking-tight text-gray-900 mb-4">
- Everything you need for <span class="font-semibold">paperless workflows</span>
+ <h2 class="text-3xl md:text-4xl font-light text-gray-900 mb-3">
+ Plans
  </h2>
- <p class="text-lg text-gray-500 max-w-xl mx-auto">
- Scan from any office printer, sign documents right in your browser, and send them anywhere.
+ <p class="text-gray-500 text-lg">
+ Start free. Upgrade when you need more.
  </p>
  </div>
- <div class="grid md:grid-cols-3 gap-6 md:gap-12">
- <div class="card-hover bg-white p-5 md:p-8 rounded-2xl" data-aos="fade-up">
- <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center mb-6">
- <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
- </svg>
- </div>
- <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4">Secure SMTP Relay</h3>
- <p class="text-base text-gray-500">smtp.wescan.net with TLS encryption and authentication.</p>
+
+ <div class="grid md:grid-cols-2 gap-6">
+ <!-- Essential (Free) -->
+ <div class="bg-white rounded-2xl p-8 border border-gray-100" data-aos="fade-up">
+ <h3 class="text-xl font-semibold mb-1">Essential</h3>
+ <div class="text-4xl font-light mb-6">Free</div>
+ <ul class="space-y-3 mb-8">
+ <li class="flex items-start gap-3">
+ <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+ <span class="text-gray-600">10 signatures / month</span>
+ </li>
+ <li class="flex items-start gap-3">
+ <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+ <span class="text-gray-600">5 MB file size</span>
+ </li>
+ <li class="flex items-start gap-3">
+ <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+ <span class="text-gray-600">5 recipients</span>
+ </li>
+ </ul>
+ <a href="signup.html?plan=free" class="block text-center px-8 py-3.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors font-medium">
+ Start Free
+ </a>
  </div>
 
- <div class="card-hover bg-white p-5 md:p-8 rounded-2xl" data-aos="fade-up" data-aos-delay="100">
- <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center mb-6">
- <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
- </svg>
- </div>
- <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4">Recipient Whitelist</h3>
- <p class="text-base text-gray-500">Control exactly who can receive your scanned documents.</p>
+ <!-- Pro -->
+ <div class="bg-white rounded-2xl p-8 border border-gray-100" data-aos="fade-up" data-aos-delay="100">
+ <h3 class="text-xl font-semibold mb-1">Pro</h3>
+ <div class="text-4xl font-light mb-1">$10 <span class="text-base text-gray-400 font-normal">AUD/mo</span></div>
+ <ul class="space-y-3 mt-6 mb-8">
+ <li class="flex items-start gap-3">
+ <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+ <span class="text-gray-600">50 signatures / month</span>
+ </li>
+ <li class="flex items-start gap-3">
+ <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+ <span class="text-gray-600">25 MB file size</span>
+ </li>
+ <li class="flex items-start gap-3">
+ <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+ <span class="text-gray-600">15 recipients</span>
+ </li>
+ </ul>
+ <a href="signup.html?plan=pro" class="block text-center px-8 py-3.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors font-medium">
+ Get Pro
+ </a>
  </div>
 
- <div class="card-hover bg-white p-5 md:p-8 rounded-2xl border-2 border-black/10 relative" data-aos="fade-up" data-aos-delay="200">
- <div class="absolute -top-3 right-6 bg-black text-white text-xs font-medium px-3 py-1 rounded-full">
- New
+ <!-- Business (highlighted) -->
+ <div class="bg-black text-white rounded-2xl p-8 border-2 border-black" data-aos="fade-up" data-aos-delay="200">
+ <h3 class="text-xl font-semibold mb-1">Business</h3>
+ <div class="text-4xl font-light mb-1">$20 <span class="text-base text-gray-400 font-normal">AUD/mo</span></div>
+ <ul class="space-y-3 mt-6 mb-8">
+ <li class="flex items-start gap-3">
+ <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+ <span class="text-white">Unlimited signatures</span>
+ </li>
+ <li class="flex items-start gap-3">
+ <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+ <span class="text-white">25 MB file size</span>
+ </li>
+ <li class="flex items-start gap-3">
+ <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+ <span class="text-white">Unlimited recipients</span>
+ </li>
+ </ul>
+ <a href="signup.html?plan=business" class="block text-center px-8 py-3.5 bg-white text-black rounded-full hover:bg-gray-100 transition-colors font-medium">
+ Get Business
+ </a>
  </div>
- <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center mb-6">
- <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
- </svg>
- </div>
- <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4">Digital Signatures</h3>
- <p class="text-base text-gray-500 mb-4">Email or scan documents to your WeScan inbox, sign them, and forward anywhere &mdash; no whitelisting needed.</p>
- <a href="signup.html" class="text-sm font-medium text-black hover:underline">
- Try it now &rarr;
+
+ <!-- Enterprise -->
+ <div class="bg-white rounded-2xl p-8 border border-gray-100" data-aos="fade-up" data-aos-delay="300">
+ <h3 class="text-xl font-semibold mb-1">Enterprise</h3>
+ <div class="text-4xl font-light mb-1">$30 <span class="text-base text-gray-400 font-normal">AUD/mo</span></div>
+ <ul class="space-y-3 mt-6 mb-8">
+ <li class="flex items-start gap-3">
+ <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+ <span class="text-gray-600">Unlimited signatures</span>
+ </li>
+ <li class="flex items-start gap-3">
+ <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+ <span class="text-gray-600">Priority support</span>
+ </li>
+ <li class="flex items-start gap-3">
+ <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+ <span class="text-gray-600">Password protect + watermark</span>
+ </li>
+ </ul>
+ <a href="signup.html?plan=enterprise" class="block text-center px-8 py-3.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors font-medium">
+ Get Enterprise
  </a>
  </div>
  </div>
  </div>
  </section>
 
- <!-- Pricing Section -->
-  <section id="pricing" class="py-12 md:py-24 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="text-center mb-16" data-aos="fade-up">
-        <h2 class="text-4xl font-light tracking-tight text-gray-900 mb-4">
-          Simple, <span class="font-semibold">Transparent</span> Pricing
-        </h2>
-        <p class="text-xl text-gray-500">
-          Choose the plan that fits your needs
-        </p>
-      </div>
-
-      <div class="grid md:grid-cols-2 gap-6 md:gap-12">
-        <!-- Essential (Free) Plan -->
-        <div class="card-hover bg-white rounded-2xl p-6 md:p-12 border border-gray-100" data-aos="fade-up">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="text-2xl font-semibold">Essential</h3>
-              <p class="text-gray-500 mt-2">For personal use only</p>
-            </div>
-            <div class="text-right">
-              <div class="text-4xl font-light">$0</div>
-              <div class="text-gray-500">Forever free</div>
-            </div>
-          </div>
-
-          <div class="mt-8 space-y-4">
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">5 whitelisted scan addresses</span>
-                <p class="text-sm md:text-base text-gray-500">Perfect for home office setup</p>
-              </div>
-            </div>
-
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">5 MB file size limit</span>
-                <p class="text-sm md:text-base text-gray-500">Suitable for most documents</p>
-              </div>
-            </div>
-
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">5 emails per hour</span>
-                <p class="text-sm md:text-base text-gray-500">Rate limit applies</p>
-              </div>
-            </div>
-
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">PDF, JPG & PNG support</span>
-                <p class="text-sm md:text-base text-gray-500">Common document formats</p>
-              </div>
-            </div>
-
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">10 digital signatures / month</span>
-                <p class="text-sm md:text-base text-gray-500">Sign &amp; send scanned PDFs with date/time stamp</p>
-              </div>
-            </div>
-
-            <div class="flex items-start text-gray-500">
-              <svg class="w-5 h-5 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              <div class="text-sm">
-                Personal use only. Not for commercial or business use.
-              </div>
-            </div>
-
-            <div class="flex items-start text-gray-400 border-t border-gray-200 pt-4">
-              <svg class="w-5 h-5 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-              </svg>
-              <div class="text-sm">
-                🔒 Password protection, watermarking &amp; share links on Enterprise plan.
-              </div>
-            </div>
-          </div>
-
-          <a href="signup.html?plan=free"
-             class="mt-8 block text-center px-8 py-4 bg-black text-white hover:bg-gray-800 transition-colors rounded-full">
-            Start Free
-          </a>
-        </div>
-
-        <!-- Pro Plan -->
-        <div class="card-hover bg-white rounded-2xl p-6 md:p-12 border border-gray-100" data-aos="fade-up" data-aos-delay="100">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="text-2xl font-semibold">Pro</h3>
-              <p class="text-gray-500 mt-2">For power users</p>
-            </div>
-            <div class="text-right">
-              <div class="text-4xl font-light">$10</div>
-              <div class="text-gray-500">AUD / month</div>
-              <div class="text-xs text-gray-400 mt-1">USD $8 &middot; EUR &euro;7 &middot; GBP &pound;6</div>
-            </div>
-          </div>
-          <div class="mt-8 space-y-4">
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <div><span class="font-medium">15 whitelisted scan addresses</span><p class="text-sm md:text-base text-gray-500">For home offices & freelancers</p></div>
-            </div>
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <div><span class="font-medium">50 MB storage</span><p class="text-sm md:text-base text-gray-500">More room for your documents</p></div>
-            </div>
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <div><span class="font-medium">25 MB file size limit</span><p class="text-sm md:text-base text-gray-500">Larger scans supported</p></div>
-            </div>
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <div><span class="font-medium">50 digital signatures / month</span><p class="text-sm md:text-base text-gray-500">Sign &amp; send with date/time stamp</p></div>
-            </div>
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <div><span class="font-medium">50 emails / hour</span><p class="text-sm md:text-base text-gray-500">Higher send rate</p></div>
-            </div>
-          </div>
-          <a href="signup.html?plan=pro" class="mt-8 block text-center px-8 py-4 bg-black text-white hover:bg-gray-800 transition-colors rounded-full">Get Pro</a>
-        </div>
-
-        <!-- Business Plan -->
-        <div class="card-hover bg-white rounded-2xl p-6 md:p-12 border border-gray-100" data-aos="fade-up" data-aos-delay="200">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="text-2xl font-semibold">Business</h3>
-              <p class="text-gray-500 mt-2">For growing teams</p>
-            </div>
-            <div class="text-right">
-              <div class="text-4xl font-light">$20</div>
-              <div class="text-gray-500">AUD / month</div>
-              <div class="text-xs text-gray-400 mt-1">USD $15 &middot; EUR &euro;14 &middot; GBP &pound;12</div>
-            </div>
-          </div>
-          <div class="mt-8 space-y-4">
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <div><span class="font-medium">50 whitelisted scan addresses</span><p class="text-sm md:text-base text-gray-500">Ideal for small teams</p></div>
-            </div>
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <div><span class="font-medium">200 MB storage</span><p class="text-sm md:text-base text-gray-500">Ample space for busy teams</p></div>
-            </div>
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <div><span class="font-medium">Unlimited digital signatures</span><p class="text-sm md:text-base text-gray-500">No monthly cap</p></div>
-            </div>
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <div><span class="font-medium">🔒 Password protect &middot; 💧 Watermark &middot; 🔗 Share links</span><p class="text-sm md:text-base text-gray-500">Full document control</p></div>
-            </div>
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <div><span class="font-medium">Priority support</span><p class="text-sm md:text-base text-gray-500">Email &amp; phone</p></div>
-            </div>
-          </div>
-          <a href="signup.html?plan=business" class="mt-8 block text-center px-8 py-4 bg-black text-white hover:bg-gray-800 transition-colors rounded-full">Get Business</a>
-        </div>
-
-        <!-- Enterprise Plan -->
-        <div class="card-hover bg-black text-white rounded-2xl p-6 md:p-12" data-aos="fade-up" data-aos-delay="300">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="text-2xl font-semibold">Enterprise</h3>
-              <p class="text-gray-400 mt-2">For businesses & teams</p>
-            </div>
-            <div class="text-right">
-              <div class="text-4xl font-light">$30</div>
-              <div class="text-gray-400">AUD / month</div>
-              <div class="text-xs text-gray-500 mt-1">USD $22 &middot; EUR &euro;19 &middot; GBP &pound;16</div>
-            </div>
-          </div>
-
-          <div class="mt-8 space-y-4">
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-400 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">100 whitelisted scan addresses</span>
-                <p class="text-sm md:text-base text-gray-400">Ideal for departments & teams</p>
-              </div>
-            </div>
-
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-400 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">25 MB file size limit</span>
-                <p class="text-sm md:text-base text-gray-400">For larger documents & high-res scans</p>
-              </div>
-            </div>
-
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-400 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">Unlimited emails</span>
-                <p class="text-sm md:text-base text-gray-400">No rate limiting</p>
-              </div>
-            </div>
-
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-400 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">Unlimited digital signatures</span>
-                <p class="text-sm md:text-base text-gray-400">Sign &amp; send with date/time stamp, no monthly cap</p>
-              </div>
-            </div>
-
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-400 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">Priority support</span>
-                <p class="text-sm md:text-base text-gray-400">24/7 email &amp; phone support</p>
-              </div>
-            </div>
-
-            <div class="flex items-start border-t border-gray-800 pt-4">
-              <svg class="w-5 h-5 text-green-400 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">🔒 Password-protect PDFs</span>
-                <p class="text-sm md:text-base text-gray-400">AES-256 encrypted downloads</p>
-              </div>
-            </div>
-
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-400 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">💧 Watermark documents</span>
-                <p class="text-sm md:text-base text-gray-400">CONFIDENTIAL, DRAFT, and custom text</p>
-              </div>
-            </div>
-
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-400 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <div>
-                <span class="font-medium">🔗 Share via expiring links</span>
-                <p class="text-sm md:text-base text-gray-400">7-day links with download tracking</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-8 space-y-4">
-            <a href="signup.html?plan=enterprise-trial"
-               class="block text-center px-8 py-4 bg-white text-black hover:bg-gray-100 transition-colors rounded-full">
-              Start 14-Day Trial
-            </a>
-            <p class="text-center text-sm md:text-base text-gray-400">
-              No credit card required for trial
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
- <!-- Compatible Printers -->
- <section id="compatible-printers" class="py-12 md:py-24 bg-white">
- <div class="max-w-7xl mx-auto px-6 text-center">
- <h2 class="text-3xl font-light mb-6">Works with Any Scanner</h2>
- <p class="text-gray-500 max-w-xl mx-auto mb-10">
- WeScan supports all major printer brands — HP, Brother, Epson, Canon, and more.
- See our full compatibility list for tested models.
- </p>
- <a href="compatibility.html" class="inline-flex items-center px-8 py-4 border-2 border-black text-black hover:bg-black hover:text-white transition-colors rounded-full text-sm font-medium">
- View Compatible Devices
- </a>
- </div>
- </section>
-
- <!-- Free OCR CTA -->
- <section class="py-12 md:py-24 bg-gray-50">
- <div class="max-w-7xl mx-auto px-6 text-center">
- <span class="text-xs font-medium text-gray-400 uppercase tracking-widest">Free Tool</span>
- <h2 class="text-3xl font-light tracking-tight text-gray-900 mt-4 mb-6">
- Make Scanned PDFs <span class="font-semibold">Searchable</span>
+ <!-- Final CTA -->
+ <section class="py-24 bg-black">
+ <div class="max-w-3xl mx-auto px-6 text-center">
+ <h2 class="text-3xl md:text-5xl font-bold text-white mb-8 leading-tight">
+ Ready to sign your first document?
  </h2>
- <p class="text-gray-500 max-w-xl mx-auto mb-10">
- Try our free online OCR tool. Upload a scanned PDF or image, get a searchable PDF back.
- All processing happens in your browser &mdash; nothing is uploaded to any server.
- </p>
- <a href="ocr.html" class="inline-flex items-center px-8 py-4 bg-black text-white hover:bg-gray-800 transition-colors rounded-full text-sm font-medium">
- Try Free OCR Tool &rarr;
+ <a href="signup.html" class="inline-block px-10 py-4 bg-white text-black rounded-full hover:bg-gray-100 transition-colors text-lg font-medium">
+ Start Free
  </a>
- </div>
- </section>
-
- <!-- Free PDF Editor CTA -->
- <section class="py-12 md:py-24 bg-white">
- <div class="max-w-7xl mx-auto px-6 text-center">
- <span class="text-xs font-medium text-gray-400 uppercase tracking-widest">Free Tool</span>
- <h2 class="text-3xl font-light tracking-tight text-gray-900 mt-4 mb-6">
- Edit PDFs <span class="font-semibold">Online</span>
- </h2>
- <p class="text-gray-500 max-w-xl mx-auto mb-10">
- Merge multiple PDFs, split pages, rotate, and delete &mdash; all free.
- No account needed, files are deleted after download.
+ <p class="text-sm text-gray-400 mt-4">
+ Takes 30 seconds to set up.
  </p>
- <a href="pdf-edit.html" class="inline-flex items-center px-8 py-4 bg-black text-white hover:bg-gray-800 transition-colors rounded-full text-sm font-medium">
- Try Free PDF Editor &rarr;
- </a>
  </div>
  </section>
 
  <!-- Footer -->
- <!-- Mobile Menu -->
- <footer class="border-t border-gray-100 py-12">
+ <footer class="border-t border-gray-100 py-14">
  <div class="max-w-7xl mx-auto px-6">
- <div class="grid md:grid-cols-4 gap-8">
+ <div class="grid md:grid-cols-3 gap-10">
  <div>
  <a href="." class="text-2xl font-light tracking-tight">
- We<span class="font-semibold">Scan</span>
+ We<span style="color:#888;font-weight:300">Scan</span>
  </a>
  <p class="mt-4 text-sm text-gray-500">
- Scan. Sign. Send. Document workflow made simple.
+ Sign. Send. Done.
  </p>
  </div>
  <div>
- <h4 class="font-medium mb-4">Product</h4>
+ <h4 class="font-medium mb-4 text-sm text-gray-900">Product</h4>
  <ul class="space-y-2 text-sm text-gray-500">
- <li><a href="index.html#features" class="text-base md:text-sm hover:text-black transition-colors">Features</a></li>
-            <li><a href="ocr.html" class="text-base md:text-sm hover:text-black transition-colors">Free OCR Tool</a></li>
-            <li><a href="pdf-edit.html" class="text-base md:text-sm hover:text-black transition-colors">Free PDF Editor</a></li>
-            <li><a href="index.html#pricing" class="text-base md:text-sm hover:text-black transition-colors">Pricing</a></li>
+ <li><a href="#features" class="hover:text-black transition-colors">Features</a></li>
+ <li><a href="#pricing" class="hover:text-black transition-colors">Pricing</a></li>
+ <li><a href="signup.html" class="hover:text-black transition-colors">Sign In</a></li>
+ <li><a href="signup.html" class="hover:text-black transition-colors">Start Free</a></li>
  </ul>
  </div>
  <div>
- <h4 class="font-medium mb-4">Support</h4>
+ <h4 class="font-medium mb-4 text-sm text-gray-900">Resources</h4>
  <ul class="space-y-2 text-sm text-gray-500">
- <li><a href="setup-guide.html" class="text-base md:text-sm hover:text-black transition-colors">Setup Guide</a></li>
- <li><a href="troubleshooting.html" class="text-base md:text-sm hover:text-black transition-colors">Troubleshooting</a></li>
- <li><a href="compatibility.html" class="text-base md:text-sm hover:text-black transition-colors">Compatibility</a></li>
- <li><a href="mailto:support@wescan.net" class="text-base md:text-sm hover:text-black transition-colors">Email Support</a></li>
- </ul>
- </div>
- <div>
- <h4 class="font-medium mb-4">Company</h4>
- <ul class="space-y-2 text-sm text-gray-500">
- <li><a href="https://strayaco.com.au" target="_blank" class="text-base md:text-sm hover:text-black transition-colors">Straya Co</a></li>
- <li><a href="privacy.html" class="text-base md:text-sm hover:text-black transition-colors">Privacy Policy</a></li>
- <li><a href="terms.html" class="text-base md:text-sm hover:text-black transition-colors">Terms of Service</a></li>
+ <li><a href="setup-guide.html" class="hover:text-black transition-colors">Setup Guide</a></li>
+ <li><a href="ocr.html" class="hover:text-black transition-colors">Free OCR</a></li>
+ <li><a href="pdf-edit.html" class="hover:text-black transition-colors">PDF Editor</a></li>
+ <li><a href="privacy.html" class="hover:text-black transition-colors">Privacy</a></li>
+ <li><a href="terms.html" class="hover:text-black transition-colors">Terms</a></li>
  </ul>
  </div>
  </div>
- <div class="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center">
- <div class="text-sm text-gray-500">
- © 2026 WeScan. All rights reserved.
- </div>
- <div class="text-sm text-gray-500">
- Built for your document workflow
- </div>
+ <div class="mt-12 pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-2">
+ <p class="text-sm text-gray-500">© 2026 WeScan · <a href="mailto:support@wescan.net" class="hover:text-black transition-colors">support@wescan.net</a></p>
  </div>
  </div>
  </footer>
@@ -579,36 +361,5 @@
  once: true
  });
  </script>
-<!-- Support widget -->
-<div id="support-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.4);" onclick="if(event.target===this)toggleSupport()">
-  <div style="position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));right:24px;background:#fff;border-radius:16px;padding:28px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <span style="font-size:16px;font-weight:700;color:#111;">Need help?</span>
-      <button onclick="toggleSupport()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;line-height:1;">&times;</button>
-    </div>
-    <p style="font-size:13px;color:#666;margin:0 0 20px;">WeScan is a product by <a href="https://strayaco.com.au" target="_blank" style="color:#000;font-weight:500;">Straya Co</a>. We're happy to help.</p>
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <a href="mailto:support@wescan.net" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #eee;border-radius:10px;text-decoration:none;color:#111;font-size:13px;font-weight:500;">
-        <span style="font-size:18px;">✉️</span> Email us
-        <span style="font-size:11px;color:#999;margin-left:auto;">support@wescan.net</span>
-      </a>
-      <a href="troubleshooting.html" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #eee;border-radius:10px;text-decoration:none;color:#111;font-size:13px;font-weight:500;">
-        <span style="font-size:18px;">🔧</span> Troubleshooting guide
-      </a>
-      <a href="setup-guide.html" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #eee;border-radius:10px;text-decoration:none;color:#111;font-size:13px;font-weight:500;">
-        <span style="font-size:18px;">📖</span> Setup guide
-      </a>
-    </div>
-  </div>
-</div>
-<button onclick="toggleSupport()" style="position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0px));right:24px;z-index:999;background:#000;color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px;">
-  <span style="font-size:16px;">💬</span> Support
-</button>
-<script>
-function toggleSupport() {
-  const m = document.getElementById('support-modal');
-  m.style.display = m.style.display === 'none' ? 'block' : 'none';
-}
-</script>
 </body>
 </html>
