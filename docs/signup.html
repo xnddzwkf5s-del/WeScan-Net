@@ -86,8 +86,8 @@
 
       <!-- Logo -->
       <div style="text-align:center;margin-bottom:40px;">
-        <a href="index.html" style="font-size:2.6rem;font-weight:300;color:#111;text-decoration:none;letter-spacing:-0.03em;">We<span style="font-weight:700;">Scan</span></a>
-        <p style="margin:12px 0 0;font-size:18px;color:#888;line-height:1.5;">Sign any document. Send it in minutes.</p>
+        <a href="index.html" style="font-size:2rem;font-weight:300;color:#111;text-decoration:none;letter-spacing:-0.03em;">We<span style="font-weight:700;">Scan</span></a>
+        <p style="margin:8px 0 0;font-size:16px;color:#888;line-height:1.5;">Sign any document. Send it in minutes.</p>
       </div>
 
       <!-- Sign Up Card -->
@@ -95,11 +95,11 @@
         <div id="trial-badge" style="display:none;margin-bottom:16px;padding:10px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:50px;font-size:15px;color:#166534;text-align:center;font-weight:500;">
           🎉 14-Day Enterprise Trial — No credit card required
         </div>
-        <h2 id="signup-heading" style="margin:0 0 28px;font-size:1.9rem;font-weight:700;color:#111;">Create your account</h2>
+        <h2 id="signup-heading" style="margin:0 0 24px;font-size:1.5rem;font-weight:700;color:#111;">Create your account</h2>
 
         <!-- OAuth Buttons -->
         <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
-          <button onclick="oauthLogin('google')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;padding:20px;border:1px solid #e0e0e0;border-radius:50px;font-size:18px;font-weight:500;color:#333;background:#fff;cursor:pointer;">
+          <button onclick="oauthLogin('google')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:15px;border:1px solid #e0e0e0;border-radius:50px;font-size:16px;font-weight:500;color:#333;background:#fff;cursor:pointer;">
             <svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -109,7 +109,7 @@
             Continue with Google
           </button>
 
-          <button onclick="oauthLogin('microsoft')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;padding:20px;border:1px solid #e0e0e0;border-radius:50px;font-size:18px;font-weight:500;color:#333;background:#fff;cursor:pointer;">
+          <button onclick="oauthLogin('microsoft')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:15px;border:1px solid #e0e0e0;border-radius:50px;font-size:16px;font-weight:500;color:#333;background:#fff;cursor:pointer;">
             <svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 21 21">
               <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
               <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
@@ -130,11 +130,11 @@
         <form action="/api/auth/signup" method="POST" id="signup-form" style="display:flex;flex-direction:column;gap:12px;">
           <input type="hidden" name="plan" id="plan-input" value="free">
           <div>
-            <label style="display:block;font-size:17px;font-weight:500;color:#444;margin-bottom:8px;">Email address</label>
+            <label style="display:block;font-size:15px;font-weight:500;color:#444;margin-bottom:6px;">Email address</label>
             <input type="email" name="email" required placeholder="you@example.com"
-                   style="width:100%;padding:20px 24px;border:1px solid #e0e0e0;border-radius:50px;font-size:18px;outline:none;box-sizing:border-box;font-family:inherit;">
+                   style="width:100%;padding:14px 20px;border:1px solid #e0e0e0;border-radius:50px;font-size:16px;outline:none;box-sizing:border-box;font-family:inherit;">
           </div>
-          <button type="submit" style="width:100%;padding:20px;background:#000;color:#fff;border:none;border-radius:50px;font-size:18px;font-weight:600;cursor:pointer;font-family:inherit;">
+          <button type="submit" style="width:100%;padding:15px;background:#000;color:#fff;border:none;border-radius:50px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;">
             Continue with email
           </button>
         </form>
@@ -144,7 +144,7 @@
         </p>
       </div>
 
-      <p style="text-align:center;margin-top:28px;font-size:18px;color:#666;">
+      <p style="text-align:center;margin-top:20px;font-size:15px;color:#666;">
         Already have an account? <a href="signup.html" style="color:#111;font-weight:600;">Sign in</a>
       </p>
 
