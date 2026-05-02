@@ -5,10 +5,29 @@
     .dash-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
     .dash-upgrade-plans { grid-template-columns: 1fr !important; }
     .dash-doc-actions { flex-direction: column !important; gap: 4px !important; }
+    .dash-outer { padding: 16px 0 !important; }
+    .dash-inner { padding: 0 12px !important; }
+    .tab-label-short { display: inline !important; }
+    .tab-label-full { display: none !important; }
+    .dash-stat-label { font-size: 13px !important; }
+    .dash-stat-card { padding: 12px 14px !important; }
+    .dash-inbox-card { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+    .dash-inbox-inner { width: 100% !important; }
+    .dash-inbox-inner input { width: 100% !important; box-sizing: border-box !important; }
+    .dash-banner { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+    .dash-banner-btn { width: 100% !important; margin-left: 0 !important; }
+    .dash-smtp-grid { grid-template-columns: 1fr !important; }
+    .dash-recipient-form { flex-direction: column !important; }
+    .dash-recipient-form input { width: 100% !important; box-sizing: border-box !important; }
+    .dash-recipient-form button { width: 100% !important; }
+    .dash-recipient-row { flex-wrap: wrap !important; gap: 6px !important; }
+    .dash-recipient-row span[style*="font-size:14px"] { word-break: break-all !important; }
+    .dash-blocked-row { flex-direction: column !important; align-items: flex-start !important; gap: 4px !important; }
+    .dash-docs-stats { grid-template-columns: repeat(2, 1fr) !important; }
   }
 </style>
-<div style="font-family:'Inter',sans-serif;background:#f8f8f8;min-height:100vh;padding:32px 0;">
-<div style="max-width:960px;margin:0 auto;padding:0 24px;">
+<div class="dash-outer" style="font-family:'Inter',sans-serif;background:#f8f8f8;min-height:100vh;padding:32px 0;">
+<div class="dash-inner" style="max-width:960px;margin:0 auto;padding:0 24px;">
 
   <!-- Flash messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -26,35 +45,35 @@
   <!-- ── Trial banner ───────────────────────────────────────────── -->
   {% if trial_days_left is not none %}
   {% if cancelling %}
-  <div style="margin-bottom:20px;padding:16px 20px;background:#fff8f0;border:1px solid #f6ad55;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+  <div class="dash-banner" style="margin-bottom:20px;padding:16px 20px;background:#fff8f0;border:1px solid #f6ad55;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
     <div>
       <span style="font-size:14px;font-weight:700;color:#c05621;">⚠️ Subscription cancelled — Enterprise access ends in {{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }}</span>
       <span style="font-size:13px;color:#dd6b20;margin-left:8px;">You can reactivate anytime before then.</span>
     </div>
-    <button onclick="openBillingPortal()"
+    <button class="dash-banner-btn" onclick="openBillingPortal()"
       style="background:#c05621;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;margin-left:16px;">
       Reactivate
     </button>
   </div>
   {% else %}
-  <div style="margin-bottom:20px;padding:16px 20px;background:#f0fff4;border:1px solid #9ae6b4;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+  <div class="dash-banner" style="margin-bottom:20px;padding:16px 20px;background:#f0fff4;border:1px solid #9ae6b4;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
     <div>
       <span style="font-size:14px;font-weight:700;color:#276749;">🎉 Enterprise Trial — {{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }} remaining</span>
       <span style="font-size:13px;color:#48bb78;margin-left:8px;">You have full Enterprise access until your trial ends.</span>
     </div>
-    <button onclick="document.getElementById('upgrade-section').scrollIntoView({behavior:'smooth'})"
+    <button class="dash-banner-btn" onclick="document.getElementById('upgrade-section').scrollIntoView({behavior:'smooth'})"
       style="background:#276749;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;margin-left:16px;">
       Upgrade now
     </button>
   </div>
   {% endif %}
   {% elif trial_expired %}
-  <div style="margin-bottom:20px;padding:16px 20px;background:#fffbeb;border:1px solid #f6e05e;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+  <div class="dash-banner" style="margin-bottom:20px;padding:16px 20px;background:#fffbeb;border:1px solid #f6e05e;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
     <div>
       <span style="font-size:14px;font-weight:700;color:#7b6002;">⚠️ Your trial has ended</span>
       <span style="font-size:13px;color:#975a16;margin-left:8px;">You've been moved to the free plan. Upgrade to regain Enterprise access.</span>
     </div>
-    <button onclick="document.getElementById('upgrade-section').scrollIntoView({behavior:'smooth'})"
+    <button class="dash-banner-btn" onclick="document.getElementById('upgrade-section').scrollIntoView({behavior:'smooth'})"
       style="background:#d69e2e;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;margin-left:16px;">
       Upgrade
     </button>
@@ -84,7 +103,8 @@
     </button>
     <button class="dash-tab" data-tab="docs" onclick="switchTab('docs')"
       style="flex:1;padding:10px 16px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s;background:transparent;color:#888;">
-      Documents — Sign &amp; Send
+      <span class="tab-label-short" style="display:none;">Documents</span>
+      <span class="tab-label-full">Documents — Sign &amp; Send</span>
     </button>
   </div>
 
@@ -95,73 +115,73 @@
 
     <!-- Stats grid: 3 rows × 4 columns -->
     <div class="dash-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;">
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+      <div class="dash-stat-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.emails_today }}</div>
-        <div style="font-size:12px;color:#999;margin-top:3px;">📨 Emails today</div>
+        <div class="dash-stat-label" style="font-size:12px;color:#999;margin-top:3px;">📨 Emails today</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+      <div class="dash-stat-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.emails_7d }}</div>
-        <div style="font-size:12px;color:#999;margin-top:3px;">📨 Emails (7d)</div>
+        <div class="dash-stat-label" style="font-size:12px;color:#999;margin-top:3px;">📨 Emails (7d)</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+      <div class="dash-stat-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.emails_30d }}</div>
-        <div style="font-size:12px;color:#999;margin-top:3px;">📨 Emails (30d)</div>
+        <div class="dash-stat-label" style="font-size:12px;color:#999;margin-top:3px;">📨 Emails (30d)</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+      <div class="dash-stat-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.emails_total }}</div>
-        <div style="font-size:12px;color:#999;margin-top:3px;">📨 All time</div>
+        <div class="dash-stat-label" style="font-size:12px;color:#999;margin-top:3px;">📨 All time</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+      <div class="dash-stat-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;{% if stats.blocked_today > 0 %}color:#e53e3e;{% else %}color:#ccc;{% endif %}">
           {{ stats.blocked_today }}
         </div>
-        <div style="font-size:12px;color:#999;margin-top:3px;">🚫 Blocked today</div>
+        <div class="dash-stat-label" style="font-size:12px;color:#999;margin-top:3px;">🚫 Blocked today</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+      <div class="dash-stat-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;{% if stats.blocked_30d > 0 %}color:#dd6b20;{% else %}color:#ccc;{% endif %}">
           {{ stats.blocked_30d }}
         </div>
-        <div style="font-size:12px;color:#999;margin-top:3px;">🚫 Blocked (30d)</div>
+        <div class="dash-stat-label" style="font-size:12px;color:#999;margin-top:3px;">🚫 Blocked (30d)</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+      <div class="dash-stat-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;{% if stats.blocked_total > 0 %}color:#dd6b20;{% else %}color:#ccc;{% endif %}">
           {{ stats.blocked_total }}
         </div>
-        <div style="font-size:12px;color:#999;margin-top:3px;">🚫 Blocked all time</div>
+        <div class="dash-stat-label" style="font-size:12px;color:#999;margin-top:3px;">🚫 Blocked all time</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+      <div class="dash-stat-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.doc_count }}</div>
-        <div style="font-size:12px;color:#999;margin-top:3px;">📄 Documents in inbox</div>
+        <div class="dash-stat-label" style="font-size:12px;color:#999;margin-top:3px;">📄 Documents in inbox</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+      <div class="dash-stat-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;color:#111;">{{ storage_used_mb }}<span style="font-size:14px;font-weight:400;color:#999;"> / {{ storage_limit_mb }} MB</span></div>
-        <div style="font-size:12px;color:#999;margin-top:3px;">💾 Storage used</div>
+        <div class="dash-stat-label" style="font-size:12px;color:#999;margin-top:3px;">💾 Storage used</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+      <div class="dash-stat-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.sig_count }}</div>
-        <div style="font-size:12px;color:#999;margin-top:3px;">🖊️ Saved signatures</div>
+        <div class="dash-stat-label" style="font-size:12px;color:#999;margin-top:3px;">🖊️ Saved signatures</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+      <div class="dash-stat-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;color:#111;">
           {{ stats.send_count }}
           {% if signed_send_limit is not none %}<span style="font-size:14px;font-weight:400;color:#999;"> / {{ signed_send_limit }}</span>{% endif %}
         </div>
-        <div style="font-size:12px;color:#999;margin-top:3px;">✍️ Sends this month</div>
+        <div class="dash-stat-label" style="font-size:12px;color:#999;margin-top:3px;">✍️ Sends this month</div>
       </div>
-      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
+      <div class="dash-stat-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:18px 20px;">
         <div style="font-size:26px;font-weight:700;color:#111;">{{ stats.recipient_count }}<span style="font-size:14px;font-weight:400;color:#999;"> / {{ stats.recipient_limit }}</span></div>
-        <div style="font-size:12px;color:#999;margin-top:3px;">👥 Scan recipients</div>
+        <div class="dash-stat-label" style="font-size:12px;color:#999;margin-top:3px;">👥 Scan recipients</div>
       </div>
     </div>
 
     <!-- Inbox Address Card -->
     {% if inbox_full %}
-    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+    <div class="dash-inbox-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
       <div>
         <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px;">📬 Your Inbox Address</div>
         <p style="font-size:12px;color:#999;margin:0;">Forward any PDF here and it appears in your Document Inbox for signing.</p>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <div class="dash-inbox-inner" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
         <input readonly value="{{ inbox_full }}"
           id="inbox-addr"
           style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:6px;padding:6px 10px;font-size:13px;font-family:monospace;color:#333;width:220px;text-align:center;">
@@ -403,7 +423,7 @@
     <!-- SMTP Settings -->
     <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:28px;margin-bottom:20px;">
       <h2 style="margin:0 0 20px;font-size:16px;font-weight:700;color:#111;">SMTP Settings</h2>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="dash-smtp-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div>
           <label style="display:block;font-size:12px;font-weight:500;color:#888;margin-bottom:6px;">SMTP Server</label>
           <div style="display:flex;gap:8px;">
@@ -453,7 +473,7 @@
         </span>
       </div>
       {% if recipients|length < stats.recipient_limit %}
-      <form method="POST" action="{{ url_for('dashboard.manage_recipients') }}"
+      <form class="dash-recipient-form" method="POST" action="{{ url_for('dashboard.manage_recipients') }}"
             style="display:flex;gap:8px;margin-bottom:20px;">
         <input type="email" name="email" placeholder="e.g. boss@company.com" required
                style="flex:1;border:1px solid #e8e8e8;border-radius:6px;padding:9px 12px;font-size:13px;outline:none;">
@@ -478,7 +498,7 @@
       {% endif %}
       <div style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;padding-right:4px;">
         {% for r in recipients %}
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #f0f0f0;border-radius:8px;">
+        <div class="dash-recipient-row" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #f0f0f0;border-radius:8px;">
           <div>
             <span style="font-size:14px;font-weight:500;color:#111;">{{ r.email }}</span>
             {% if r.display_name %}
@@ -509,7 +529,7 @@
       </h2>
       <div style="display:flex;flex-direction:column;gap:8px;">
         {% for b in blocked_recent %}
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff8f8;border:1px solid #fee;border-radius:8px;">
+        <div class="dash-blocked-row" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff8f8;border:1px solid #fee;border-radius:8px;">
           <div style="font-size:13px;">
             <span style="color:#111;">{{ b.attempted_recipient }}</span>
             <span style="margin-left:8px;padding:2px 8px;border-radius:4px;font-size:11px;
@@ -536,7 +556,7 @@
   <div id="tab-docs" class="dash-tab-content" style="display:none;">
 
     <!-- Compact stats row -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
+    <div class="dash-docs-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
       <div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:12px 14px;">
         <div style="font-size:18px;font-weight:700;color:#111;">{{ stats.emails_today }}</div>
         <div style="font-size:11px;color:#999;margin-top:2px;">Emails today</div>
@@ -557,12 +577,12 @@
 
     <!-- Inbox Address Card (repeated from Overview) -->
     {% if inbox_full %}
-    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+    <div class="dash-inbox-card" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
       <div>
         <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px;">📬 Your Inbox Address</div>
         <p style="font-size:12px;color:#999;margin:0;">Forward any PDF here and it appears in your Document Inbox below.</p>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <div class="dash-inbox-inner" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
         <input readonly value="{{ inbox_full }}"
           id="inbox-addr-docs"
           style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:6px;padding:6px 10px;font-size:13px;font-family:monospace;color:#333;width:220px;text-align:center;">
