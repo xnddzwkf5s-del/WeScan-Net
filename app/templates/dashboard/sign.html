@@ -64,7 +64,16 @@
           <div id="signature-overlay" style="display:none;position:absolute;cursor:move;z-index:10;opacity:0.9;border:2px solid #e53e3e;border-radius:6px;padding:4px;background:rgba(229,62,62,0.06);box-sizing:border-box;touch-action:none;"
                onmousedown="startDrag(event)" ontouchstart="startDrag(event)">
             <img id="sig-overlay-img" src="" alt="Signature"
-                 style="pointer-events:none;max-width:150px;max-height:50px;display:block;">
+                 style="pointer-events:none;display:block;width:150px;height:auto;">
+            <!-- Resize handle -->
+            <div id="sig-resize-handle"
+                 style="position:absolute;bottom:0;right:0;width:16px;height:16px;cursor:se-resize;z-index:11;"
+                 onmousedown="startResize(event)" ontouchstart="startResize(event)">
+              <svg viewBox="0 0 10 10" style="width:10px;height:10px;position:absolute;bottom:2px;right:2px;pointer-events:none;">
+                <line x1="2" y1="10" x2="10" y2="2" stroke="#e53e3e" stroke-width="1.5"/>
+                <line x1="6" y1="10" x2="10" y2="6" stroke="#e53e3e" stroke-width="1.5"/>
+              </svg>
+            </div>
           </div>
           <!-- Frozen placement overlays (one per placed signature across pages) -->
           <div id="frozen-overlays-container"></div>
@@ -347,8 +356,8 @@ function showSignatureOverlay() {
 
   const container = document.getElementById('pdf-preview-container');
   const containerRect = container.getBoundingClientRect();
-  const overlayWidth = 150;
-  const overlayHeight = 50;
+  const overlayWidth = overlay.offsetWidth || 150;
+  const overlayHeight = overlay.offsetHeight || 50;
   overlay.style.left = (containerRect.width / 2 - overlayWidth / 2) + 'px';
   overlay.style.top = (containerRect.height * 0.85 - overlayHeight / 2) + 'px';
 
@@ -451,7 +460,50 @@ document.addEventListener('touchend', function(e) {
     const overlay = document.getElementById('signature-overlay');
     overlay.style.cursor = 'move';
   }
+  if (isResizing) {
+    isResizing = false;
+  }
 });
+
+// ── Resize logic ──
+let isResizing = false;
+let resizeStartX, resizeStartY, resizeStartW;
+const MIN_SIG_WIDTH = 40;
+const MAX_SIG_WIDTH = 400;
+
+function startResize(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  isResizing = true;
+  const overlay = document.getElementById('signature-overlay');
+  const img = document.getElementById('sig-overlay-img');
+  resizeStartX = e.touches ? e.touches[0].clientX : e.clientX;
+  resizeStartY = e.touches ? e.touches[0].clientY : e.clientY;
+  resizeStartW = img.offsetWidth;
+}
+
+document.addEventListener('mousemove', function(e) {
+  if (!isResizing) return;
+  const img = document.getElementById('sig-overlay-img');
+  const dx = e.clientX - resizeStartX;
+  const newW = Math.min(MAX_SIG_WIDTH, Math.max(MIN_SIG_WIDTH, resizeStartW + dx));
+  img.style.width = newW + 'px';
+  updatePositionDisplay();
+}, true);
+
+document.addEventListener('touchmove', function(e) {
+  if (!isResizing) return;
+  e.preventDefault();
+  const img = document.getElementById('sig-overlay-img');
+  const dx = e.touches[0].clientX - resizeStartX;
+  const newW = Math.min(MAX_SIG_WIDTH, Math.max(MIN_SIG_WIDTH, resizeStartW + dx));
+  img.style.width = newW + 'px';
+  updatePositionDisplay();
+}, { passive: false });
+
+document.addEventListener('mouseup', function(e) {
+  if (isResizing) isResizing = false;
+}, true);
 
 // ── Multi-page placement logic ──
 
