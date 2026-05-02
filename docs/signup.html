@@ -34,10 +34,7 @@
       .terms-text { font-size: 0.85rem !important; }
       .footer-text { font-size: 0.9rem !important; }
       .help-links a { font-size: 0.9rem !important; }
-      .nav-desktop { display: none !important; }
-      .nav-hamburger { display: flex !important; }
     }
-    .nav-hamburger { display: none; }
   </style>
 </head>
 <body class="bg-gray-50">
@@ -51,14 +48,14 @@
             We<span class="font-semibold">Scan</span>
           </a>
         </div>
-        <div class="nav-desktop flex items-center space-x-8">
+        <div class="nav-desktop hidden md:flex items-center space-x-8">
           <a href="index.html#features" class="text-sm text-gray-600 hover:text-black transition-colors">Features</a>
           <a href="index.html#pricing" class="text-sm text-gray-600 hover:text-black transition-colors">Pricing</a>
           <a href="signup.html" class="text-sm text-gray-600 hover:text-black transition-colors">Sign In</a>
           <a href="signup.html" class="text-sm px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">Start Free</a>
         </div>
         <!-- Hamburger (mobile only) -->
-        <div class="nav-hamburger nav-icon" id="navIcon"><span></span><span></span><span></span></div>
+        <div class="nav-icon md:hidden" id="navIcon"><span></span><span></span><span></span></div>
       </div>
     </div>
   </nav>
