@@ -12,7 +12,15 @@
  font-family: 'Inter', sans-serif;
  }
 
- /* ── Slide-in mobile nav (Straya Co style) ──────────────────── */
+ /* ── Responsive nav ──────────────────────────────────────────── */
+    .nav-link, .nav-cta { display: inline; }
+    .nav-icon { display: none; }
+    @media (max-width: 768px) {
+      .nav-link, .nav-cta { display: none; }
+      .nav-icon { display: flex; }
+    }
+
+    /* ── Slide-in mobile nav (Straya Co style) ──────────────────── */
  .nav-icon{display:flex;flex-direction:column;justify-content:space-between;width:34px;height:26px;cursor:pointer;z-index:1100;flex-shrink:0;}
  .nav-icon span{display:block;height:3px;width:100%;background:#111;border-radius:9px;transition:all 0.25s ease-in-out;transform-origin:left center;}
 
@@ -39,26 +47,19 @@
 <body class="bg-white antialiased text-gray-900">
 
  <!-- Navigation -->
- <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
- <div class="max-w-7xl mx-auto px-6">
- <div class="flex justify-between h-20 items-center">
- <a href="." class="text-2xl font-light tracking-tight">
- We<span style="color:#888;font-weight:300">Scan</span>
- </a>
- <div class="hidden md:flex items-center space-x-8">
- <a href="#how-it-works" class="text-sm text-gray-600 hover:text-black transition-colors">How it works</a>
- <a href="#features" class="text-sm text-gray-600 hover:text-black transition-colors">Features</a>
- <a href="#pricing" class="text-sm text-gray-600 hover:text-black transition-colors">Pricing</a>
- <a href="signup.html" class="text-sm text-gray-600 hover:text-black transition-colors">Sign In</a>
- <a href="signup.html" class="text-sm px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
- Start Free
- </a>
- </div>
- <!-- Animated hamburger icon (Straya Co style) -->
- <div class="nav-icon md:hidden" id="navIcon"><span></span><span></span><span></span></div>
- </div>
- </div>
- </nav>
+ <nav style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-bottom:1px solid #f0f0f0;">
+    <div style="max-width:960px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:center;height:64px;">
+      <a href="." style="font-size:1.6rem;font-weight:300;color:#111;text-decoration:none;letter-spacing:-0.02em;">We<span style="font-weight:700;">Scan</span></a>
+      <div style="display:flex;align-items:center;gap:20px;">
+        <a href="#how-it-works" class="nav-link" style="font-size:14px;color:#666;text-decoration:none;">How it works</a>
+        <a href="#features" class="nav-link" style="font-size:14px;color:#666;text-decoration:none;">Features</a>
+        <a href="#pricing" class="nav-link" style="font-size:14px;color:#666;text-decoration:none;">Pricing</a>
+        <a href="signup.html" class="nav-link" style="font-size:14px;color:#666;text-decoration:none;">Sign In</a>
+        <a href="signup.html" class="nav-cta" style="font-size:14px;padding:10px 22px;background:#111;color:#fff;border-radius:50px;text-decoration:none;font-weight:600;">Start Free</a>
+        <div class="nav-icon" id="navIcon"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </nav>
 
  <!-- Slide-in mobile nav -->
  <div class="nav-backdrop" id="navBackdrop"></div>
