@@ -122,7 +122,10 @@ def overlay_signature_on_pdf_multi(pdf_bytes: bytes, placements: list,
         page = doc[page_num]
         rect = page.rect
 
-        sig_w = min(150, rect.width * 0.4)
+        # Use sigScale (fraction of page width) if provided, else default to 25%
+        sig_scale = float(pl.get('sigScale', 0.25))
+        sig_scale = max(0.05, min(0.9, sig_scale))  # clamp 5%–90%
+        sig_w = rect.width * sig_scale
         sig_h = sig_w * 0.35
 
         sig_rect = fitz.Rect(

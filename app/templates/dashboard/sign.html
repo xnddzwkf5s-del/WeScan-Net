@@ -517,8 +517,14 @@ function placeSignature() {
   const y = parseFloat(document.getElementById('pos-y').textContent);
   const page = currentPage;
 
+  // Capture the current overlay width as a fraction of the container width
+  const overlay = document.getElementById('signature-overlay');
+  const img = document.getElementById('sig-overlay-img');
+  const container = document.getElementById('pdf-preview-container');
+  const sigScale = img.offsetWidth / container.offsetWidth;
+
   // Always add — multiple signatures can go on the same page
-  placements.push({ page, x, y, sigId: selectedSignatureId, sigData: selectedSignatureData });
+  placements.push({ page, x, y, sigId: selectedSignatureId, sigData: selectedSignatureData, sigScale });
 
   // Hide the active overlay — placement is now frozen
   document.getElementById('signature-overlay').style.display = 'none';
@@ -670,7 +676,8 @@ async function signAndSend(docId) {
           page: p.page,
           x: p.x,
           y: p.y,
-          sig_id: p.sigId
+          sig_id: p.sigId,
+          sig_scale: p.sigScale
         })),
         additional_recipients: additional,
         timestamp_enabled: document.getElementById('ts-toggle').checked,

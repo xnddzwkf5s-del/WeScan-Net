@@ -492,7 +492,8 @@ def sign_and_send(doc_id):
                     'page': int(p.get('page', 0)),
                     'x': float(p.get('x', 0.5)),
                     'y': float(p.get('y', 0.85)),
-                    'sigData': sig_obj.data
+                    'sigData': sig_obj.data,
+                    'sigScale': float(p.get('sig_scale', 0.25))
                 })
             signed_pdf_bytes = overlay_signature_on_pdf_multi(doc.file_data, placement_list, timestamp_enabled=timestamp_enabled, timestamp_tz=timestamp_tz)
             # Use the first placement for the signed document record
