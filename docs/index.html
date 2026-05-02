@@ -46,6 +46,7 @@
  We<span style="color:#888;font-weight:300">Scan</span>
  </a>
  <div class="hidden md:flex items-center space-x-8">
+ <a href="#how-it-works" class="text-sm text-gray-600 hover:text-black transition-colors">How it works</a>
  <a href="#features" class="text-sm text-gray-600 hover:text-black transition-colors">Features</a>
  <a href="#pricing" class="text-sm text-gray-600 hover:text-black transition-colors">Pricing</a>
  <a href="signup.html" class="text-sm text-gray-600 hover:text-black transition-colors">Sign In</a>
@@ -68,8 +69,9 @@
      <div>
        <div class="slide-nav-title">Product</div>
        <ul class="slide-nav-links">
-         <li><a href="#features" onclick="closeNav()">Features</a></li>
-         <li><a href="#pricing" onclick="closeNav()">Pricing</a></li>
+         <li><a href="#how-it-works" onclick="closeNavTo('#how-it-works')">How it works</a></li>
+         <li><a href="#features" onclick="closeNavTo('#features')">Features</a></li>
+         <li><a href="#pricing" onclick="closeNavTo('#pricing')">Pricing</a></li>
        </ul>
      </div>
      <div>
@@ -89,7 +91,14 @@
    function openNav(){n.classList.add('open');c.classList.add('open');s.classList.add('open');b.classList.add('open');document.body.style.overflow='hidden';}
    function closeNav(){n.classList.remove('open');c.classList.remove('open');s.classList.remove('open');b.classList.remove('open');document.body.style.overflow='';}
    n.addEventListener('click',openNav);c.addEventListener('click',closeNav);b.addEventListener('click',closeNav);
-   window.closeNav=closeNav; // expose for onclick in links
+   window.closeNav=closeNav;
+   window.closeNavTo=function(hash){
+     closeNav();
+     setTimeout(function(){
+       var el=document.querySelector(hash);
+       if(el) el.scrollIntoView({behavior:'smooth'});
+     }, 420);
+   };
  })();
  </script>
 
@@ -115,7 +124,7 @@
  </section>
 
  <!-- How it works -->
- <section id="features" class="py-20 md:py-28 bg-gray-50">
+ <section id="how-it-works" class="py-20 md:py-28 bg-gray-50">
  <div class="max-w-6xl mx-auto px-6">
  <h2 class="text-3xl md:text-4xl font-light text-center text-gray-900 mb-16" data-aos="fade-up">
  Simple as <span class="font-semibold">1, 2, 3</span>
@@ -164,7 +173,7 @@
  </section>
 
  <!-- Why WeScan -->
- <section class="py-20 md:py-28 bg-white">
+ <section id="features" class="py-20 md:py-28 bg-white">
  <div class="max-w-6xl mx-auto px-6">
  <h2 class="text-3xl md:text-4xl font-light text-center text-gray-900 mb-16" data-aos="fade-up">
  Why <span class="font-semibold">WeScan</span>
