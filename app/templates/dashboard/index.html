@@ -203,13 +203,20 @@
             <li>✓ 50 signed sends/mo</li>
             <li>✓ 50 emails/hour</li>
           </ul>
-          {% if 'pro' in upgrade_plans %}
+          {% if user.plan == 'pro' %}
+            {% if cancelling %}
+            <button onclick="openBillingPortal()"
+              style="background:#c05621;color:#fff;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;">
+              Reactivate
+            </button>
+            {% else %}
+            <div style="text-align:center;font-size:12px;color:#ccc;padding:12px 0;">✓ Current plan</div>
+            {% endif %}
+          {% else %}
           <button onclick="startCheckout('pro')" class="checkout-btn" data-plan="pro"
             style="background:#fff;color:#000;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;">
-            Upgrade — $10/mo
+            {% if user.plan in ('business', 'enterprise') %}Switch to Pro{% else %}Upgrade — $10/mo{% endif %}
           </button>
-          {% else %}
-          <div style="text-align:center;font-size:12px;color:#666;padding:12px 0;">Current plan</div>
           {% endif %}
         </div>
 
@@ -227,13 +234,20 @@
             <li>✓ Protect / Watermark / Share</li>
             <li>✓ Priority support</li>
           </ul>
-          {% if 'business' in upgrade_plans %}
+          {% if user.plan == 'business' %}
+            {% if cancelling %}
+            <button onclick="openBillingPortal()"
+              style="background:#c05621;color:#fff;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;">
+              Reactivate
+            </button>
+            {% else %}
+            <div style="text-align:center;font-size:12px;color:#ccc;padding:12px 0;">✓ Current plan</div>
+            {% endif %}
+          {% else %}
           <button onclick="startCheckout('business')" class="checkout-btn" data-plan="business"
             style="background:#fff;color:#000;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;">
-            Upgrade — $20/mo
+            {% if user.plan == 'enterprise' %}Switch to Business{% else %}Upgrade — $20/mo{% endif %}
           </button>
-          {% else %}
-          <div style="text-align:center;font-size:12px;color:#666;padding:12px 0;">Current plan</div>
           {% endif %}
         </div>
 
@@ -251,13 +265,20 @@
             <li>✓ Protect / Watermark / Share</li>
             <li>✓ Priority support</li>
           </ul>
-          {% if 'enterprise' in upgrade_plans %}
+          {% if user.plan == 'enterprise' %}
+            {% if cancelling %}
+            <button onclick="openBillingPortal()"
+              style="background:#c05621;color:#fff;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;">
+              Reactivate
+            </button>
+            {% else %}
+            <div style="text-align:center;font-size:12px;color:#ccc;padding:12px 0;">✓ Current plan</div>
+            {% endif %}
+          {% else %}
           <button onclick="startCheckout('enterprise')" class="checkout-btn" data-plan="enterprise"
             style="background:#fff;color:#000;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;">
             Upgrade — $30/mo
           </button>
-          {% else %}
-          <div style="text-align:center;font-size:12px;color:#666;padding:12px 0;">Current plan</div>
           {% endif %}
         </div>
       </div>
