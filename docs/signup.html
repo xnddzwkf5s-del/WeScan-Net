@@ -92,9 +92,7 @@
 
       <!-- Sign Up Card -->
       <div style="background:#fff;border-radius:16px;padding:32px 28px;box-shadow:0 1px 6px rgba(0,0,0,0.06);border:1px solid #eee;">
-        <div id="trial-badge" style="display:none;margin-bottom:16px;padding:10px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:50px;font-size:15px;color:#166534;text-align:center;font-weight:500;">
-          🎉 14-Day Enterprise Trial — No credit card required
-        </div>
+        <div id="trial-badge" style="display:none;margin-bottom:16px;padding:10px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:50px;font-size:15px;color:#166534;text-align:center;font-weight:500;"></div>
         <h2 id="signup-heading" style="margin:0 0 24px;font-size:1.5rem;font-weight:700;color:#111;">Create your account</h2>
 
         <!-- OAuth Buttons -->
@@ -165,9 +163,17 @@
     const params = new URLSearchParams(window.location.search);
     const plan = params.get('plan') || 'free';
     document.getElementById('plan-input').value = plan;
-    if (plan === 'enterprise-trial') {
+
+    const trialInfo = {
+      'pro-trial':        { days: 14, label: 'Pro' },
+      'business-trial':   { days: 14, label: 'Business' },
+      'enterprise-trial': { days: 7,  label: 'Enterprise' },
+    };
+    if (trialInfo[plan]) {
+      const t = trialInfo[plan];
+      document.getElementById('trial-badge').textContent = `🎉 ${t.days}-Day ${t.label} Trial — No credit card required`;
       document.getElementById('trial-badge').style.display = 'block';
-      document.getElementById('signup-heading').textContent = 'Start Your 14-Day Enterprise Trial';
+      document.getElementById('signup-heading').textContent = `Start Your ${t.days}-Day ${t.label} Trial`;
     }
 
     function oauthLogin(provider) {

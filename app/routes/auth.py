@@ -8,11 +8,22 @@ import os
 import requests as http_requests
 
 
+# Trial config: plan slug → (actual plan, trial days)
+TRIAL_PLANS = {
+    'pro-trial':        ('pro',        14),
+    'business-trial':   ('business',   14),
+    'enterprise-trial': ('enterprise',  7),
+}
+
 def _apply_trial_if_requested(user, plan):
-    """If plan is enterprise-trial and user is new (free), grant 14-day trial."""
-    if plan == 'enterprise-trial' and user.trial_end is None and user.plan == 'free':
-        user.plan = 'enterprise'
-        user.trial_end = datetime.utcnow() + timedelta(days=14)
+    """Grant a time-limited trial for the requested plan if user is new."""
+    if plan not in TRIAL_PLANS:
+        return
+    if user.trial_end is not None or user.plan != 'free':
+        return  # already on a trial or paid plan
+    actual_plan, trial_days = TRIAL_PLANS[plan]
+    user.plan = actual_plan
+    user.trial_end = datetime.utcnow() + timedelta(days=trial_days)
 
 
 def _expire_trial_if_due(user):
