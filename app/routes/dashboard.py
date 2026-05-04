@@ -16,10 +16,10 @@ dashboard = Blueprint('dashboard', __name__)
 
 # ── Plan limits (shared, importable by smtp.py) ─────────────────────
 PLAN_LIMITS = {
-    'free':      {'recipients': 3, 'storage_mb': 15,  'file_size_mb': 10, 'sends_per_month': 10,    'emails_per_hour': 5,  'enterprise_features': False},
-    'pro':       {'recipients': 15,'storage_mb': 50,  'file_size_mb': 25, 'sends_per_month': 50,    'emails_per_hour': 50, 'enterprise_features': False},
-    'business':  {'recipients': 50,'storage_mb': 200, 'file_size_mb': 25, 'sends_per_month': None,   'emails_per_hour': None, 'enterprise_features': True},
-    'enterprise':{'recipients': 100,'storage_mb': 200,'file_size_mb': 25, 'sends_per_month': None,   'emails_per_hour': None, 'enterprise_features': True},
+    'free':       {'recipients': 3,   'storage_mb': 15,   'file_size_mb': 10,  'sends_per_month': 10,   'emails_per_hour': 5,    'doc_retention_days': 7,   'max_signatures': 1,    'enterprise_features': False},
+    'pro':        {'recipients': 15,  'storage_mb': 100,  'file_size_mb': 25,  'sends_per_month': 50,   'emails_per_hour': 50,   'doc_retention_days': 30,  'max_signatures': 3,    'enterprise_features': False},
+    'business':   {'recipients': 50,  'storage_mb': 500,  'file_size_mb': 50,  'sends_per_month': None, 'emails_per_hour': None, 'doc_retention_days': 90,  'max_signatures': 10,   'enterprise_features': True},
+    'enterprise': {'recipients': 100, 'storage_mb': 2048, 'file_size_mb': 100, 'sends_per_month': None, 'emails_per_hour': None, 'doc_retention_days': 365, 'max_signatures': None, 'enterprise_features': True},
 }
 
 PLAN_NAMES = {
@@ -583,10 +583,12 @@ def list_signatures():
 @dashboard.route('/dashboard/signatures', methods=['POST'])
 @login_required
 def create_signature():
-    # Check max limit (3 per user)
-    count = Signature.query.filter_by(user_id=current_user.id).count()
-    if count >= 3:
-        return jsonify({'error': 'Maximum 3 signatures allowed. Delete one to create another.'}), 403
+    limits = get_plan_limits(current_user)
+    max_sigs = limits.get('max_signatures')
+    if max_sigs is not None:
+        count = Signature.query.filter_by(user_id=current_user.id).count()
+        if count >= max_sigs:
+            return jsonify({'error': f'Your plan allows up to {max_sigs} saved signature{"s" if max_sigs != 1 else ""}. Delete one to create another, or upgrade your plan.'}), 403
 
     data = request.get_json(silent=True) or {}
     name = data.get('name', '').strip()

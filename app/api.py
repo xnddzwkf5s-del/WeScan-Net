@@ -103,10 +103,11 @@ def store_document():
         return jsonify({'error': 'Could not parse email'}), 400
 
     # Check storage quota
+    from app.routes.dashboard import PLAN_LIMITS
     storage_used = db.session.query(db.func.sum(Document.file_size)).filter(
         Document.user_id == user.id
     ).scalar() or 0
-    limit_mb = 200 if user.plan == 'enterprise' else 15
+    limit_mb = PLAN_LIMITS.get(user.plan, PLAN_LIMITS['free'])['storage_mb']
     limit_bytes = limit_mb * 1024 * 1024
 
     pdf_filename = None
@@ -147,6 +148,7 @@ def store_document():
     if storage_used + len(pdf_data) > limit_bytes:
         return jsonify({'error': 'Storage quota exceeded'}), 413
 
+    retention_days = PLAN_LIMITS.get(user.plan, PLAN_LIMITS['free'])['doc_retention_days']
     doc = Document(
         user_id=user.id,
         filename=pdf_filename or 'scanned-document.pdf',
@@ -154,7 +156,7 @@ def store_document():
         file_size=len(pdf_data),
         mime_type='application/pdf',
         status='pending',
-        expires_at=datetime.utcnow() + timedelta(days=14)
+        expires_at=datetime.utcnow() + timedelta(days=retention_days)
     )
     db.session.add(doc)
     db.session.commit()
@@ -185,11 +187,13 @@ def inbox_store_document():
     except Exception:
         return jsonify({'error': 'Could not parse email'}), 400
 
+    from app.routes.dashboard import PLAN_LIMITS
     storage_used = db.session.query(db.func.sum(Document.file_size)).filter(
         Document.user_id == user.id
     ).scalar() or 0
-    limit_mb = 200 if user.plan == 'enterprise' else 15
+    limit_mb = PLAN_LIMITS.get(user.plan, PLAN_LIMITS['free'])['storage_mb']
     limit_bytes = limit_mb * 1024 * 1024
+    retention_days = PLAN_LIMITS.get(user.plan, PLAN_LIMITS['free'])['doc_retention_days']
 
     # Extract ALL PDF attachments, not just the first one
     pdf_parts = []
@@ -236,7 +240,7 @@ def inbox_store_document():
             file_size=len(data),
             mime_type='application/pdf',
             status='pending',
-            expires_at=datetime.utcnow() + timedelta(days=14)
+            expires_at=datetime.utcnow() + timedelta(days=retention_days)
         )
         db.session.add(doc)
         db.session.flush()  # flush to get doc.id assigned
