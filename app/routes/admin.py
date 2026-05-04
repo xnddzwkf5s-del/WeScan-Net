@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, abort, flash
+from flask import Blueprint, render_template, redirect, url_for, abort, flash, request
 from flask_login import login_required, current_user
 from app.models import db, User, UsageStat, Recipient, BlockedEmail, Document, Signature, SignedDocument
 from datetime import datetime, timedelta
@@ -96,14 +96,19 @@ def index():
     return render_template('admin/index.html', users=users, stats=stats)
 
 
-@admin.route('/admin/users/<int:user_id>/toggle-plan', methods=['POST'])
+@admin.route('/admin/users/<int:user_id>/set-plan', methods=['POST'])
 @login_required
 @admin_required
-def toggle_plan(user_id):
+def set_plan(user_id):
     user = User.query.get_or_404(user_id)
-    user.plan = 'enterprise' if user.plan == 'free' else 'free'
+    new_plan = request.form.get('plan', 'free')
+    if new_plan not in ['free', 'pro', 'business', 'enterprise']:
+        flash('Invalid plan.', 'error')
+        return redirect(url_for('admin.index'))
+    user.plan = new_plan
+    user.trial_end = None
     db.session.commit()
-    flash(f'{user.email} moved to {user.plan} plan.', 'success')
+    flash(f'{user.email} moved to {new_plan} plan.', 'success')
     return redirect(url_for('admin.index'))
 
 
